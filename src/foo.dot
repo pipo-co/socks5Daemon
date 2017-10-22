@@ -1,0 +1,20 @@
+digraph g {
+    rankdir=LR;
+    size= "8.27,11.69";
+
+    node       [shape = circle];
+
+    S0         [label = "0", shape = doublecircle];
+    S1         [label = "1"];
+    S2         [label = "2"];
+    EQ         [label = "EQ", shape = doublecircle];
+    NEQ        [label = "NEQ", shape = doublecircle];
+
+    S0 -> S1   [label= "'f', 'F'\neq(c)"];
+    S0 -> NEQ  [label="ANY\nneq(c)"];
+    S1 -> S2   [label= "'o', 'O'\neq(c)"];
+    S1 -> NEQ  [label="ANY\nneq(c)"];
+    S2 -> EQ   [label= "'o', 'O\neq(c)'"];
+    S2 -> NEQ  [label="ANY\nneq(c)"];
+    EQ -> NEQ  [label= "ANY\nneq(c)"];
+}
