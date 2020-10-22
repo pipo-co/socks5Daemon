@@ -12,6 +12,7 @@ typedef Suite *(*suiteSupplier)(void);
 #include "tests/parser_test.c"
 #include "tests/parser_utils_test.c"
 #include "tests/hello_test.c"
+#include "tests/request_test.c"
 
 // Tests being exercised
 static const suiteSupplier suiteSuppliers[] = {
@@ -19,6 +20,7 @@ static const suiteSupplier suiteSuppliers[] = {
     parser_test_suite,
     parser_utils_test_suite,
     hello_test_suite,
+    request_test_suite,
 };
 
 SRunner * test_srunner_init(void) {

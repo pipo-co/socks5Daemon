@@ -12,10 +12,10 @@ digraph hello {
 
     VERSION -> E_UNS_VERSION        [label= "!= '05'"];
     VERSION -> NMETHODS             [label="'05'"];
-    NMETHODS -> METHODS             [label= "n > 0"];
-    NMETHODS -> DONE                [label="n == 0"];
-    METHODS -> METHODS              [label= "n > 0; n--"];
-    METHODS -> DONE                 [label="n == 0"];
+    NMETHODS -> METHODS             [label= "b > 0\nn = b"];
+    NMETHODS -> DONE                [label="'00'"];
+    METHODS -> METHODS              [label= "n--;\non_auth_method();\nn > 0"];
+    METHODS -> DONE                 [label="n--;\nn == 0"];
     DONE -> DONE                    [label= "ANY"];
     E_UNS_VERSION -> E_UNS_VERSION  [label= "ANY"];
 }

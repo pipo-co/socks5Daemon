@@ -54,7 +54,7 @@ enum HelloState hello_parser_feed(HelloParser *p, uint8_t b) {
         break;
 
         default:
-            fprintf(stderr, "Invalid state %d\n", p->current_state);
+            fprintf(stderr, "Invalid state in hello.c %d\n", p->current_state);
             abort();
         break;
     }
@@ -103,7 +103,7 @@ bool hello_is_done(enum HelloState state, bool *errored) {
         break;
 
         default:
-            fprintf(stderr, "Invalid state %d\n", state);
+            fprintf(stderr, "Invalid state in hello.c %d\n", state);
             abort();
         break;
     }
