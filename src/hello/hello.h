@@ -13,16 +13,16 @@
 #define NO_ACCEPTABLE_METHODS 0xFF
 
 enum HelloState {
-    hello_version,
-    hello_nmethods,
-    hello_methods,
-    hello_done,
-    hello_error_unsupported_version,
+    HELLO_VERSION,
+    HELLO_NMETHODS,
+    HELLO_METHODS,
+    HELLO_DONE,
+    HELLO_ERROR_UNSUPPORTED_VERSION,
 };
 
 // Not an ADT to avoid unnecessary usages of malloc
 typedef struct HelloParser {
-    void (*onAuthMethod)(struct HelloParser *parser, uint8_t method);
+    void (*on_auth_method)(struct HelloParser *parser, uint8_t method);
 
     void *data;
 
@@ -34,13 +34,13 @@ typedef struct HelloParser {
 
 
 // Assumes pre-allocation
-void helloParserInit(HelloParser *p);
+void hello_parser_init(HelloParser *p);
 
-enum HelloState helloParserFeed(HelloParser *p, uint8_t byte);
+enum HelloState hello_parser_feed(HelloParser *p, uint8_t byte);
 
-enum HelloState helloParserConsume(buffer *buffer, HelloParser *p, bool *errored);
+enum HelloState hello_parser_consume(Buffer *buffer, HelloParser *p, bool *errored);
 
-bool helloIsDone(enum HelloState state, bool *errored);
+bool hello_is_done(enum HelloState state, bool *errored);
 
 // Reportar el problema
 

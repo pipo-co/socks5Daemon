@@ -5,51 +5,51 @@
 
 #include "hello.h"
 
-void helloParserInit(HelloParser *p) {
+void hello_parser_init(HelloParser *p) {
 
-    p->current_state = hello_version;
+    p->current_state = HELLO_VERSION;
     p->methods_remaining = 0;
 }
 
-enum HelloState helloParserFeed(HelloParser *p, uint8_t b) {
+enum HelloState hello_parser_feed(HelloParser *p, uint8_t b) {
 
     switch(p->current_state) {
 
-        case hello_version:
+        case HELLO_VERSION:
 
             if(b == SOCKS_VERSION)
-                p->current_state = hello_nmethods;
+                p->current_state = HELLO_NMETHODS;
 
             else
-                p->current_state = hello_error_unsupported_version;
+                p->current_state = HELLO_ERROR_UNSUPPORTED_VERSION;
         break;
 
-        case hello_nmethods:
+        case HELLO_NMETHODS:
 
             p->methods_remaining = b;
 
             if(b > 0) 
-                p->current_state = hello_methods;
+                p->current_state = HELLO_METHODS;
 
             else
-                p->current_state = hello_done;
+                p->current_state = HELLO_DONE;
         break;
 
-        case hello_methods:
+        case HELLO_METHODS:
 
-            p->onAuthMethod(p, b);
+            p->on_auth_method(p, b);
 
             p->methods_remaining--;
 
             if(p->methods_remaining == 0)
-                p->current_state = hello_done;
+                p->current_state = HELLO_DONE;
         break;
 
-        case hello_done:
+        case HELLO_DONE:
             // Nada que hacer
         break;
 
-        case hello_error_unsupported_version:
+        case HELLO_ERROR_UNSUPPORTED_VERSION:
         // Nada que hacer
         break;
 
@@ -62,27 +62,27 @@ enum HelloState helloParserFeed(HelloParser *p, uint8_t b) {
     return p->current_state;
 }
 
-enum HelloState helloParserConsume(buffer *buffer, HelloParser *p, bool *errored) {
+enum HelloState hello_parser_consume(Buffer *buffer, HelloParser *p, bool *errored) {
 
     uint8_t byte;
 
-    while(helloIsDone(p, errored) && buffer_can_read(buffer)) {
+    while(!hello_is_done(p->current_state, errored) && buffer_can_read(buffer)) {
 
         byte = buffer_read(buffer);
-        helloParserFeed(p, byte); 
+        hello_parser_feed(p, byte); 
     }
 
     return p->current_state;
 }
 
-bool helloIsDone(enum HelloState state, bool *errored) {
+bool hello_is_done(enum HelloState state, bool *errored) {
 
     if(errored != NULL)
         *errored = false;
 
     switch(state) {
 
-        case hello_error_unsupported_version:
+        case HELLO_ERROR_UNSUPPORTED_VERSION:
 
             if(errored != NULL)
                 *errored = true;
@@ -90,14 +90,14 @@ bool helloIsDone(enum HelloState state, bool *errored) {
             return true;
         break;
 
-        case hello_done:
+        case HELLO_DONE:
 
             return true;
         break;
 
-        case hello_version:
-        case hello_nmethods:
-        case hello_methods:
+        case HELLO_VERSION:
+        case HELLO_NMETHODS:
+        case HELLO_METHODS:
         
             return false;
         break;

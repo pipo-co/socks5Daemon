@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <check.h>
 
+// Archivo testeado
 #include "reference/parser/parser.c"
 
 // definición de maquina

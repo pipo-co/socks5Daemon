@@ -8,8 +8,8 @@
 
 
 START_TEST (buffer_test_core) {
-    struct buffer buf;
-    buffer *b = &buf;
+    struct Buffer buf;
+    Buffer *b = &buf;
     uint8_t direct_buff[6];
     buffer_init(&buf, N(direct_buff), direct_buff);
     ck_assert_ptr_eq(&buf, b);

@@ -38,7 +38,7 @@
  *                 ↑       ↑
  *                W=4      limit=6
  *
- * Quiero leer 3 del buffer
+ * Quiero leer 3 del Buffer
  * ptr + 0 <- buffer_read_ptr, wbytes=4
  * buffer_read_adv(b, 3);
  *
@@ -81,8 +81,8 @@
  * ↑                       ↑
  * W=0                     limit=6
  */
-typedef struct buffer buffer;
-struct buffer {
+typedef struct Buffer Buffer;
+struct Buffer {
     uint8_t *data;
 
     /** límite superior del buffer. inmutable */
@@ -99,51 +99,51 @@ struct buffer {
  * inicializa el buffer sin utilizar el heap
  */
 void
-buffer_init(buffer *b, const size_t n, uint8_t *data);
+buffer_init(Buffer *b, const size_t n, uint8_t *data);
 
 /**
  * Retorna un puntero donde se pueden escribir hasta `*nbytes`.
  * Se debe notificar mediante la función `buffer_write_adv'
  */
 uint8_t *
-buffer_write_ptr(buffer *b, size_t *nbyte);
+buffer_write_ptr(Buffer *b, size_t *nbyte);
 void
-buffer_write_adv(buffer *b, const ssize_t bytes);
+buffer_write_adv(Buffer *b, const ssize_t bytes);
 
 uint8_t *
-buffer_read_ptr(buffer *b, size_t *nbyte);
+buffer_read_ptr(Buffer *b, size_t *nbyte);
 void
-buffer_read_adv(buffer *b, const ssize_t bytes);
+buffer_read_adv(Buffer *b, const ssize_t bytes);
 
 /**
  * obtiene un byte
  */
 uint8_t
-buffer_read(buffer *b);
+buffer_read(Buffer *b);
 
 /** escribe un byte */
 void
-buffer_write(buffer *b, uint8_t c);
+buffer_write(Buffer *b, uint8_t c);
 
 /**
  * compacta el buffer
  */
 void
-buffer_compact(buffer *b);
+buffer_compact(Buffer *b);
 
 /**
  * Reinicia todos los punteros
  */
 void
-buffer_reset(buffer *b);
+buffer_reset(Buffer *b);
 
 /** retorna true si hay bytes para leer del buffer */
 bool
-buffer_can_read(buffer *b);
+buffer_can_read(Buffer *b);
 
 /** retorna true si se pueden escribir bytes en el buffer */
 bool
-buffer_can_write(buffer *b);
+buffer_can_write(Buffer *b);
 
 
 #endif

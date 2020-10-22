@@ -9,13 +9,13 @@
 #include "buffer.h"
 
 inline void
-buffer_reset(buffer *b) {
+buffer_reset(Buffer *b) {
     b->read  = b->data;
     b->write = b->data;
 }
 
 void
-buffer_init(buffer *b, const size_t n, uint8_t *data) {
+buffer_init(Buffer *b, const size_t n, uint8_t *data) {
     b->data = data;
     buffer_reset(b);
     b->limit = b->data + n;
@@ -23,31 +23,31 @@ buffer_init(buffer *b, const size_t n, uint8_t *data) {
 
 
 inline bool
-buffer_can_write(buffer *b) {
+buffer_can_write(Buffer *b) {
     return b->limit - b->write > 0;
 }
 
 inline uint8_t *
-buffer_write_ptr(buffer *b, size_t *nbyte) {
+buffer_write_ptr(Buffer *b, size_t *nbyte) {
     assert(b->write <= b->limit);
     *nbyte = b->limit - b->write;
     return b->write;
 }
 
 inline bool
-buffer_can_read(buffer *b) {
+buffer_can_read(Buffer *b) {
     return b->write - b->read > 0;
 }
 
 inline uint8_t *
-buffer_read_ptr(buffer *b, size_t *nbyte) {
+buffer_read_ptr(Buffer *b, size_t *nbyte) {
     assert(b->read <= b->write);
     *nbyte = b->write - b->read;
     return b->read;
 }
 
 inline void
-buffer_write_adv(buffer *b, const ssize_t bytes) {
+buffer_write_adv(Buffer *b, const ssize_t bytes) {
     if(bytes > -1) {
         b->write += (size_t) bytes;
         assert(b->write <= b->limit);
@@ -55,7 +55,7 @@ buffer_write_adv(buffer *b, const ssize_t bytes) {
 }
 
 inline void
-buffer_read_adv(buffer *b, const ssize_t bytes) {
+buffer_read_adv(Buffer *b, const ssize_t bytes) {
     if(bytes > -1) {
         b->read += (size_t) bytes;
         assert(b->read <= b->write);
@@ -68,7 +68,7 @@ buffer_read_adv(buffer *b, const ssize_t bytes) {
 }
 
 inline uint8_t
-buffer_read(buffer *b) {
+buffer_read(Buffer *b) {
     uint8_t ret;
     if(buffer_can_read(b)) {
         ret = *b->read;
@@ -80,7 +80,7 @@ buffer_read(buffer *b) {
 }
 
 inline void
-buffer_write(buffer *b, uint8_t c) {
+buffer_write(Buffer *b, uint8_t c) {
     if(buffer_can_write(b)) {
         *b->write = c;
         buffer_write_adv(b, 1);
@@ -88,7 +88,7 @@ buffer_write(buffer *b, uint8_t c) {
 }
 
 void
-buffer_compact(buffer *b) {
+buffer_compact(Buffer *b) {
     if(b->data == b->read) {
         // nada por hacer
     } else if(b->read == b->write) {
