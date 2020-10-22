@@ -7,7 +7,7 @@
  * El usuario describe estados y transiciones.
  * Las transiciones contienen una condición, un estado destino y acciones.
  *
- * El usuario provee al parser con bytes y éste retona eventos que pueden
+ * El usuario provee al parser con bytes y éste retorna eventos que pueden
  * servir para delimitar tokens o accionar directamente.
  */
 #include <stdint.h>
@@ -42,7 +42,7 @@ struct parser_state_transition {
 };
 
 /** predicado para utilizar en `when' que retorna siempre true */
-static const unsigned ANY = 1 << 9;
+#define ANY (1 << 9)
 
 /** declaración completa de una máquina de estados */
 struct parser_definition {
@@ -83,7 +83,7 @@ const struct parser_event *
 parser_feed     (struct parser *p, const uint8_t c);
 
 /**
- * En caso de la aplicacion no necesite clases caracteres, se
+ * En caso de la aplicación no necesite clases caracteres, se
  * provee dicho arreglo para ser usando en `parser_init'
  */
 const unsigned *

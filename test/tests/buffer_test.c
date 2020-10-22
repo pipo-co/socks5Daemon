@@ -1,13 +1,13 @@
 #include <stdlib.h>
 #include <check.h>
 
-// asi se puede probar las funciones internas
-#include "buffer.c"
+// Archivo testeado
+#include "buffer/buffer.c"
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 
 
-START_TEST (test_buffer_misc) {
+START_TEST (buffer_test_core) {
     struct buffer buf;
     buffer *b = &buf;
     uint8_t direct_buff[6];
@@ -44,7 +44,7 @@ START_TEST (test_buffer_misc) {
     buffer_read_ptr(b, &rbytes);
     ck_assert_uint_eq(1, rbytes);
 
-    // quiero escribir..tendria que seguir habiendo 2 libres
+    // quiero escribir..tendría que seguir habiendo 2 libres
     ptr = buffer_write_ptr(b, &wbytes);
     ck_assert_uint_eq(2, wbytes);
 
@@ -94,23 +94,12 @@ START_TEST (test_buffer_misc) {
 END_TEST
 
 Suite *
-suite(void) {
+buffer_test_suite(void) {
     Suite *s   = suite_create("buffer");
-    TCase *tc  = tcase_create("buffer");
+    TCase *tc  = tcase_create("core");
 
-    tcase_add_test(tc, test_buffer_misc);
+    tcase_add_test(tc, buffer_test_core);
     suite_add_tcase(s, tc);
 
     return s;
-}
-
-int
-main(void) {
-    SRunner *sr  = srunner_create(suite());
-    int number_failed;
-
-    srunner_run_all(sr, CK_NORMAL);
-    number_failed = srunner_ntests_failed(sr);
-    srunner_free(sr);
-    return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

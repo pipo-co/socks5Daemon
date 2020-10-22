@@ -6,7 +6,7 @@
 
 /**
  * buffer.c - buffer con acceso directo (útil para I/O) que mantiene
- *            mantiene puntero de lectura y de escritura.
+ *            puntero de lectura y de escritura.
  *
  *
  * Para esto se mantienen dos punteros, uno de lectura

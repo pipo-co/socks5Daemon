@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <check.h>
 
-#include "parser.h"
+#include "reference/parser/parser.c"
 
 // definición de maquina
 
@@ -63,7 +63,7 @@ static struct parser_definition definition = {
 //// TEST
 
 static void
-assert_eq(const unsigned type, const int c, const struct parser_event *e) {
+parser_test_assert_eq(const unsigned type, const int c, const struct parser_event *e) {
     ck_assert_ptr_eq (0,    e->next);
     ck_assert_uint_eq(1,    e->n);
     ck_assert_uint_eq(type, e->type);
@@ -71,45 +71,28 @@ assert_eq(const unsigned type, const int c, const struct parser_event *e) {
 
 }
 
-START_TEST (test_basic) {
+START_TEST (parser_test_basic) {
     struct parser *parser = parser_init(parser_no_classes(), &definition);
-    assert_eq(FOO,  'f', parser_feed(parser, 'f'));
-    assert_eq(FOO,  'F', parser_feed(parser, 'F'));
-    assert_eq(BAR,  'B', parser_feed(parser, 'B'));
-    assert_eq(BAR,  'b', parser_feed(parser, 'b'));
+    parser_test_assert_eq(FOO,  'f', parser_feed(parser, 'f'));
+    parser_test_assert_eq(FOO,  'F', parser_feed(parser, 'F'));
+    parser_test_assert_eq(BAR,  'B', parser_feed(parser, 'B'));
+    parser_test_assert_eq(BAR,  'b', parser_feed(parser, 'b'));
 
     parser_destroy(parser);
 }
 END_TEST
 
 Suite *
-suite(void) {
+parser_test_suite(void) {
     Suite *s;
     TCase *tc;
 
-    s = suite_create("parser_utils");
+    s = suite_create("parser");
 
-    /* Core test case */
-    tc = tcase_create("parser_utils");
+    tc = tcase_create("core");
 
-    tcase_add_test(tc, test_basic);
+    tcase_add_test(tc, parser_test_basic);
     suite_add_tcase(s, tc);
 
     return s;
 }
-
-int
-main(void) {
-    int number_failed;
-    Suite *s;
-    SRunner *sr;
-
-    s = suite();
-    sr = srunner_create(s);
-
-    srunner_run_all(sr, CK_NORMAL);
-    number_failed = srunner_ntests_failed(sr);
-    srunner_free(sr);
-    return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
-}
-

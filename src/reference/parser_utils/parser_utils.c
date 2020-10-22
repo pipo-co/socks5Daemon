@@ -45,7 +45,7 @@ neq(struct parser_event *ret, const uint8_t c) {
 
 /*
  * para comparar "foo" (length 3) necesitamos 3 + 2 estados.
- * Los útimos dos, son el sumidero de comparación fallida, y
+ * Los últimos dos, son el sumidero de comparación fallida, y
  * el estado donde se llegó a la comparación completa.
  *
  * static const struct parser_state_transition ST_0 [] =  {
