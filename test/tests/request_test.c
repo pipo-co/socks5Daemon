@@ -4,101 +4,156 @@
 // Archivo testeado
 #include "request/request.c"
 
-const uint8_t request_test_input_success[] = {
-    0x05, 0x01, 0x00, 0x03, 0x0a, 0x67, 0x6f, 0x6f, 
-    0x67, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 0x00, 
-    0x50
+uint8_t request_test_input_domain_success[] = {
+    SOCKS_VERSION, REQUEST_COMMAND_CONNECT, 0x00, REQUEST_ADD_TYPE_DOMAIN_NAME,
+    /* google.com */ 0x0a, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d,
+    /* Port: 592 */ 0x02, 0x50,
 };
 
-// void hello_test_init_parser(HelloParser *p, uint8_t *method) {
-//     hello_parser_init(p);
-//     *method = NO_ACCEPTABLE_METHODS;
-//     p->data = method;
-//     p->on_auth_method = hello_test_on_auth_method;
-
-//     ck_assert_uint_eq(p->methods_remaining, 0);
-
-//     ck_assert(p->current_state == HELLO_VERSION);
-// }
+// TODO: test IP4 success case and all error cases
 
 
 START_TEST (request_test_core_success_feed) {
 
-    // HelloParser parser;
-    // HelloParser *p = &parser;
-    // uint8_t method;
-    // bool errored;
-    
-    // hello_test_init_parser(p, &method);
+    uint8_t *input = request_test_input_domain_success;
+    uint16_t port = 592;
+    char domainName[] = "google.com";
 
-    // hello_parser_feed(p, hello_test_input_success[0]);
+    RequestParser parser;
+    RequestParser *p = &parser;
+    bool errored;
 
-    // ck_assert(p->current_state == HELLO_NMETHODS);
+    request_parser_init(p);
 
-    // hello_parser_feed(p, hello_test_input_success[1]);
+    ck_assert_uint_eq(p->addressLength, 0);
 
-    // ck_assert(p->current_state == HELLO_METHODS);
+    ck_assert(p->currentState == REQUEST_VERSION);
 
-    // ck_assert_uint_eq(p->methods_remaining, 2);
+    request_parser_feed(p, input[0]);
 
-    // hello_parser_feed(p, hello_test_input_success[2]);
+    ck_assert(p->currentState == REQUEST_COMMAND);
 
-    // ck_assert(p->current_state == HELLO_METHODS);
+    request_parser_feed(p, input[1]);
 
-    // ck_assert_uint_eq(p->methods_remaining, 1);
+    ck_assert(p->currentState == REQUEST_RESERVED);
 
-    // ck_assert_uint_eq(*(uint8_t*)p->data, NO_ACCEPTABLE_METHODS);
+    request_parser_feed(p, input[2]);
 
-    // ck_assert(!hello_is_done(p->current_state, &errored));
+    ck_assert(p->currentState == REQUEST_ADD_TYPE);
 
-    // ck_assert(!errored);
+    request_parser_feed(p, input[3]);
 
-    // hello_parser_feed(p, hello_test_input_success[3]);
+    ck_assert(p->currentState == REQUEST_DOMAIN_LENGTH);
 
-    // ck_assert(p->current_state == HELLO_DONE);
+    ck_assert_uint_eq(REQUEST_ADD_TYPE_DOMAIN_NAME, p->addressType);
 
-    // ck_assert_uint_eq(p->methods_remaining, 0);
+    uint8_t domainNameLength = input[4];
 
-    // ck_assert_uint_eq(*(uint8_t*)p->data, NO_AUTHENTICATION);
+    request_parser_feed(p, domainNameLength);
 
-    // ck_assert(hello_is_done(p->current_state, &errored));
+    ck_assert(p->currentState == REQUEST_ADDRESS);
 
-    // ck_assert(!errored);
+    ck_assert_uint_eq(domainNameLength, p->addressLength);
+
+    ck_assert_uint_eq(domainNameLength, p->addressRemaining);
+
+    // Consuming Domain Name
+    for(int i = 1; i < domainNameLength; i++) {
+
+        uint8_t byte = input[4 + i];
+
+        request_parser_feed(p, byte);
+
+        ck_assert(p->currentState == REQUEST_ADDRESS);
+
+        ck_assert_uint_eq(domainNameLength, p->addressLength);
+
+        ck_assert_uint_eq(domainNameLength - i, p->addressRemaining);
+    }
+
+    // Last Domain Name Byte
+    request_parser_feed(p, input[4 + domainNameLength]);
+
+    ck_assert(p->currentState == REQUEST_PORT_HIGH);
+
+    ck_assert_uint_eq(domainNameLength, p->addressLength);
+
+    ck_assert_uint_eq(0, p->addressRemaining);
+
+    ck_assert_str_eq((char*)p->address, domainName);
+
+    ck_assert_int_eq(strlen(domainName), domainNameLength);
+
+    ck_assert_int_eq(domainNameLength, strlen((char*)p->address));
+
+    request_parser_feed(p, input[5 + domainNameLength]);
+
+    ck_assert(p->currentState == REQUEST_PORT_LOW);
+
+    ck_assert(!request_is_done(p->currentState, &errored));
+
+    ck_assert(!errored);
+
+    request_parser_feed(p, input[6 + domainNameLength]);
+
+    ck_assert(p->currentState == REQUEST_SUCCESS);
+
+    ck_assert_uint_eq(port, p->port);
+
+    ck_assert(request_is_done(p->currentState, &errored));
+
+    ck_assert(!errored);
 
 }
 END_TEST
 
 START_TEST (request_test_core_success_consume) {
 
-    // HelloParser parser;
-    // HelloParser *p = &parser;
+    uint8_t *input = request_test_input_domain_success;
+    uint8_t inputLen = N(request_test_input_domain_success);
+    uint16_t port = 592;
+    char domainName[] = "google.com";
 
-    // uint8_t method;
-    // bool errored;
+    Buffer buffer;
+    Buffer *b = &buffer;
 
-    // Buffer buffer;
-    // Buffer *b = &buffer;
+    buffer_init(b, inputLen, input);
+    buffer_write_adv(b, inputLen);
 
-    // buffer_init(b, N(hello_test_input_success), hello_test_input_success);
-    // buffer_write_adv(b, N(hello_test_input_success));
+    RequestParser parser;
+    RequestParser *p = &parser;
+    bool errored;
 
-    
-    // hello_test_init_parser(p, &method);
+    request_parser_init(p);
 
-    // enum HelloState state = hello_parser_consume(b, p, &errored);
+    ck_assert_uint_eq(p->addressLength, 0);
 
-    // ck_assert(!errored);
+    ck_assert(p->currentState == REQUEST_VERSION);
 
-    // ck_assert(p->current_state == HELLO_DONE);
-    // ck_assert(p->current_state == state);
+    enum RequestState state = request_parser_consume(b, p, &errored);
 
-    // ck_assert_uint_eq(p->methods_remaining, 0);
+    ck_assert(!errored);
 
-    // ck_assert_uint_eq(*(uint8_t*)p->data, NO_AUTHENTICATION);
+    // Final Parser Check
+    ck_assert(p->currentState == REQUEST_SUCCESS);
+    ck_assert(p->currentState == state);
 
-    // ck_assert(hello_is_done(p->current_state, &errored));
+    ck_assert_uint_eq(REQUEST_ADD_TYPE_DOMAIN_NAME, p->addressType);
 
-    // ck_assert(!errored);
+    ck_assert_uint_eq(strlen(domainName), p->addressLength);
+
+    ck_assert_uint_eq(0, p->addressRemaining);
+
+    ck_assert_str_eq((char*)p->address, domainName);
+
+    ck_assert_int_eq(strlen(domainName), strlen((char*)p->address));
+
+    ck_assert_uint_eq(port, p->port);
+
+
+    ck_assert(request_is_done(p->currentState, &errored));
+
+    ck_assert(!errored);
 
 }
 END_TEST

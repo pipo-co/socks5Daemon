@@ -1,5 +1,5 @@
-#ifndef HELLO_H_237cf11b918a97e16402b064e7e5af5cd7f70661
-#define HELLO_H_237cf11b918a97e16402b064e7e5af5cd7f70661
+#ifndef REQUEST_H_237cf11b918a97e16402b064e7e5af5cd7f70661
+#define REQUEST_H_237cf11b918a97e16402b064e7e5af5cd7f70661
 
 #include <stdint.h>
 #include <stdbool.h>
