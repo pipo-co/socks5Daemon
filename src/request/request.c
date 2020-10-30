@@ -124,7 +124,7 @@ enum RequestState request_parser_feed(RequestParser *p, uint8_t b) {
 
         case REQUEST_PORT_HIGH:
 
-            p->port = b << PORT_LENGTH/2 * 8;
+            p->port[0] = b;
 
             p->currentState = REQUEST_PORT_LOW;
 
@@ -132,7 +132,9 @@ enum RequestState request_parser_feed(RequestParser *p, uint8_t b) {
 
         case REQUEST_PORT_LOW:
 
-            p->port += b;
+            sprintf(p->port, "%05d", (p->port[0]<<8) + b);
+
+            p->port[PORT_LENGTH] = '\0';
 
             p->currentState = REQUEST_SUCCESS;
 

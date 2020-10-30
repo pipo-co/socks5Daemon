@@ -9,7 +9,7 @@
 #define DOMAIN_NAME_MAX_LENGTH 255
 #define IP4_LENGTH 15 // 3 * 4 + 3
 #define IP6_LENGTH 39 // 4 * 8 + 7
-#define PORT_LENGTH 2
+#define PORT_LENGTH 5
 
 #define REQUEST_ADDRESS_MAX_LENGTH (DOMAIN_NAME_MAX_LENGTH + 1)
 
@@ -48,7 +48,7 @@ typedef struct RequestParser {
 
     uint8_t address[REQUEST_ADDRESS_MAX_LENGTH];
 
-    uint16_t port;
+    uint8_t port[PORT_LENGTH + 1];
 
     // --- Private attributes ---
     enum RequestState currentState;
