@@ -97,11 +97,17 @@ void socks5_process_input(Socks5HandlerP socks5_p) {
             request_parser_consume(&socks5_p->input, &socks5_p->request_parser, &errored);
             if(request_is_done(socks5_p->request_parser.currentState, &errored)){
                 socks5_p->state = EXECUTE_COMMAND;
-                printf("hello is done\n");
+                printf("request is done\n");
             }
             break;
         case EXECUTE_COMMAND:
-            
+            connectHeaderInit(&socks5_p->connect_header, &socks5_p->request_parser.address,socks5_p->request_parser.addressLength, &socks5_p->request_parser.port);
+            if(socks5_p->request_parser.addressType == REQUEST_ADD_TYPE_IP4){
+                if(establishConnectionIp4(&socks5_p->connect_header) == -1)
+                    return;
+                printf("Established connection on %s port %s\n", socks5_p->connect_header.dst_addr, socks5_p->connect_header.port);
+                socks5_p->state = REPLY;
+            }      
         default:
             return;
         }
@@ -128,8 +134,10 @@ void socks5_process_output(Socks5HandlerP socks5_p) {
                 socks5_p->state = AUTHENTICATION;
                 return;
             }
-
             break;
+            case REPLY:
+                printf("REPLYING\n");
+                
             default:
                 return;
             break;

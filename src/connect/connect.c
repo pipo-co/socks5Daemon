@@ -2,14 +2,13 @@
 #include <stdlib.h>
 #include "connect.h"
 
-void establishConnectionIp4(Socks5HandlerP socks5_p){
+int establishConnectionIp4(ConnectHeader *connect_header){
     
-    int sock;
 	struct sockaddr_in servaddr; 
   
     // socket create and varification 
-    sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
-    if (sock == -1) { 
+    connect_header->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
+    if (connect_header->sock == -1) { 
         printf("socket creation failed...\n"); 
         exit(0); 
     } 
@@ -19,14 +18,14 @@ void establishConnectionIp4(Socks5HandlerP socks5_p){
 	bzero(&servaddr, sizeof(servaddr)); 
     // assign IP, PORT 
     servaddr.sin_family = PF_INET; 
-    servaddr.sin_addr.s_addr = inet_addr(socks5_p->request_parser.address); 
-    servaddr.sin_port = htons(socks5_p->request_parser.port);
+    servaddr.sin_addr.s_addr = inet_addr(connect_header->dst_addr); 
+    servaddr.sin_port = htons(connect_header->port);
 
-    if (connect(sock, (struct sockaddr*) &servaddr, sizeof(servaddr)) != 0) { 
-        printf("connection with the server failed...\n"); 
-        exit(0); 
-    } 
-    else
-        printf("connected to the server..\n"); 
-	
+    return connect(connect_header->sock, (struct sockaddr*) &servaddr, sizeof(servaddr));
+
+}
+
+void connectHeaderInit(ConnectHeader * connect_header, char * addr, size_t addr_lenght, char * port){
+    memcpy(connect_header->dst_addr, addr, addr_lenght);
+    memcpy(connect_header->port, port, PORT_SIZE);
 }

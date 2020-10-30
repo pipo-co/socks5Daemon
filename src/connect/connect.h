@@ -12,8 +12,15 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#define PORT_SIZE 2
+#define MAX_ADDR 255
 
-#include "socks5.h"
+typedef struct {
+    int sock;
+    char dst_addr[MAX_ADDR]; //TODO esto es bastante ineficiente en cuanto a memoria
+    char port[PORT_SIZE];
+}ConnectHeader;
 
+int establishConnectionIp4(ConnectHeader *connect_header);
 
 #endif
