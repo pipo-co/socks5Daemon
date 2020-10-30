@@ -7,7 +7,8 @@
 #include "../buffer/buffer.h"
 
 #define DOMAIN_NAME_MAX_LENGTH 255
-#define IP4_LENGTH 4
+#define IP4_LENGTH 15
+#define IP6_LENGTH 39
 #define PORT_LENGTH 2
 
 #define REQUEST_ADDRESS_MAX_LENGTH (DOMAIN_NAME_MAX_LENGTH + 1)
@@ -20,6 +21,7 @@
 // Valid Address Type
 #define REQUEST_ADD_TYPE_IP4 0x01
 #define REQUEST_ADD_TYPE_DOMAIN_NAME 0x03
+#define REQUEST_ADD_TYPE_IP6 0x04
 
 enum RequestState {
     REQUEST_VERSION,

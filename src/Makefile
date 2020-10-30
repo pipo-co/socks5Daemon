@@ -4,11 +4,10 @@ CC=gcc
 LIBRARIES=-lcheck -lrt -lpthread -lm -lsubunit
 CFLAGS= -pthread -D_POSIX_C_SOURCE=200112L -Wall -pedantic -std=c11 $(INCLUDE) 
 
-
 all: main 
 
-	$(CC) $(CFLAGS) client.c -o client 
-
+clean: 
+	rm -rf */*.o
 
 main: main.c ./selector/selector.o ./socks5/socks5.o ./buffer/buffer.o ./request/request.o ./hello/hello.o ./auth/auth.o
 	$(CC) $(CFLAGS) $^ -o $@ 

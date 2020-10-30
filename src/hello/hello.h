@@ -7,10 +7,7 @@
 #include "../buffer/buffer.h"
 
 #define SOCKS_VERSION 0x05
-
-// Default Methods
-#define NO_AUTHENTICATION 0x00
-#define NO_ACCEPTABLE_METHODS 0xFF
+#define INITIAL_RESPONSE_SIZE 2
 
 enum HelloState {
     HELLO_VERSION,
@@ -30,7 +27,7 @@ typedef struct HelloParser {
 
     uint8_t methods_remaining;
 
-} HelloParser;
+}HelloParser;
 
 
 // Assumes pre-allocation
@@ -41,6 +38,8 @@ enum HelloState hello_parser_feed(HelloParser *p, uint8_t byte);
 enum HelloState hello_parser_consume(Buffer *buffer, HelloParser *p, bool *errored);
 
 bool hello_is_done(enum HelloState state, bool *errored);
+
+int hello_marshall(Buffer * b, uint8_t method);
 
 // Reportar el problema
 

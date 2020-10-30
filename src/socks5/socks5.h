@@ -7,7 +7,7 @@
 #include "request.h"
 #include "auth.h"
 
-typedef enum {HELLO = 0, INITIAL_RESPONSE, AUTHENTICATION, RESPONSE, FINISHED} Socks5State;
+typedef enum {HELLO = 0, INITIAL_RESPONSE, AUTHENTICATION, REQUEST, FINISHED, EXECUTE_COMMAND} Socks5State;
 
 typedef struct
 {
@@ -19,7 +19,7 @@ typedef struct
     RequestParser request_parser;
     AuthHeader auth_header;
     struct fd_handler fd_handler;
-    int auth_method;
+    
 
 }Socks5Handler;
 
@@ -28,6 +28,8 @@ typedef Socks5Handler * Socks5HandlerP;
 void passive_accept(struct selector_key *key);
 
 void socks5_process_input(Socks5HandlerP socks5_p);
+
+void socks5_process_output(Socks5HandlerP socks5_p);
 
 Socks5Handler * get_socks5_handler();
 

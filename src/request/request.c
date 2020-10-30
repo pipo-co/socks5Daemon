@@ -49,8 +49,16 @@ enum RequestState request_parser_feed(RequestParser *p, uint8_t b) {
                 p->addressLength = IP4_LENGTH;
                 p->addressRemaining = IP4_LENGTH;
                 p->currentState = REQUEST_ADDRESS;
+                p->address[p->addressLength] = 0;
+                
             }
+            else if (b == REQUEST_ADD_TYPE_IP6) {
+                p->addressLength = IP6_LENGTH;
+                p->addressRemaining = IP6_LENGTH;
+                p->currentState = REQUEST_ADDRESS;
+                p->address[p->addressLength] = 0;
 
+            }
             else
                 p->currentState = REQUEST_ERROR_UNSUPPORTED_ADD_TYPE;
         break;

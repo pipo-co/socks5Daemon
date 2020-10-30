@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in servaddr; 
   
     // socket create and varification 
-    sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP); 
+    sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
     if (sock == -1) { 
         printf("socket creation failed...\n"); 
         exit(0); 

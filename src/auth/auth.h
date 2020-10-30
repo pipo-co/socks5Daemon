@@ -48,6 +48,8 @@ typedef struct {
     bool authenticated;
     uint8_t methods[METHOD_COUNT];
     size_t size;
+    int auth_method;
+   // void (*auth_parser)();
 }AuthHeader;
 
 void on_auth_method(HelloParser *p, uint8_t method);

@@ -1,5 +1,3 @@
-
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -109,3 +107,18 @@ bool hello_is_done(enum HelloState state, bool *errored) {
         break;
     }
 }
+
+int hello_marshall(Buffer *b, uint8_t method){
+        size_t n;
+        uint8_t *buffer = buffer_write_ptr(b, &n);
+
+        if(n < INITIAL_RESPONSE_SIZE)
+            return -1;
+        
+        buffer[0] = SOCKS_VERSION;
+        buffer[1] = method;
+
+        buffer_write_adv(b, INITIAL_RESPONSE_SIZE);
+        
+        return INITIAL_RESPONSE_SIZE;
+    }
