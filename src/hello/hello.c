@@ -36,9 +36,9 @@ enum HelloState hello_parser_feed(HelloParser *p, uint8_t b) {
         break;
 
         case HELLO_METHODS:
-
+           
             p->on_auth_method(p, b);
-
+            
             p->methods_remaining--;
 
             if(p->methods_remaining == 0)
@@ -67,7 +67,8 @@ enum HelloState hello_parser_consume(Buffer *buffer, HelloParser *p, bool *error
     uint8_t byte;
 
     while(!hello_is_done(p->current_state, errored) && buffer_can_read(buffer)) {
-
+        
+        printf("state: %d\n", p->current_state);
         byte = buffer_read(buffer);
         hello_parser_feed(p, byte); 
     }

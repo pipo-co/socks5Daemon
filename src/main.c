@@ -24,9 +24,10 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
-#include "socks5.h"
+//#include "socks5.h"
 #include "selector.h"
-#include "socks5nio.h"
+#include "socks5.h"
+//#include "socks5nio.h"
 
 static bool done = false;
 
@@ -35,6 +36,7 @@ sigterm_handler(const int signal) {
     printf("signal %d, cleaning up and exiting\n",signal);
     done = true;
 }
+
 
 int
 main(const int argc, const char **argv) {
@@ -115,14 +117,17 @@ main(const int argc, const char **argv) {
 
     selector = selector_new(1024);
     if(selector == NULL) {
+        
         err_msg = "unable to create selector";
         goto finally;
     }
+
     const struct fd_handler socksv5 = {
-        .handle_read       = socksv5_passive_accept,
+        .handle_read       = passive_accept,//socksv5_passive_accept,
         .handle_write      = NULL,
         .handle_close      = NULL, // nada que liberar
     };
+    
     ss = selector_register(selector, server, &socksv5,
                                               OP_READ, NULL);
     if(ss != SELECTOR_SUCCESS) {
@@ -158,10 +163,12 @@ finally:
     }
     selector_close();
 
-    socksv5_pool_destroy();
+    // socksv5_pool_destroy();
 
     if(server >= 0) {
         close(server);
     }
     return ret;
 }
+
+
