@@ -8,7 +8,7 @@
 #include "auth.h"
 #include "connect.h"
 
-typedef enum {HELLO = 0, INITIAL_RESPONSE, AUTHENTICATION, REQUEST, EXECUTE_COMMAND, REPLY} Socks5State;
+typedef enum {HELLO = 0, INITIAL_RESPONSE, AUTHENTICATION, REQUEST, EXECUTE_COMMAND, REPLY, FINISHED} Socks5State;
 
 typedef struct
 {

@@ -210,4 +210,3 @@ bool request_is_done(enum RequestState state, bool *errored) {
     }
 }
 
-int request_marshall()

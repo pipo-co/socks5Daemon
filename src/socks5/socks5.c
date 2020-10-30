@@ -101,13 +101,16 @@ void socks5_process_input(Socks5HandlerP socks5_p) {
             }
             break;
         case EXECUTE_COMMAND:
-            connectHeaderInit(&socks5_p->connect_header, &socks5_p->request_parser.address,socks5_p->request_parser.addressLength, &socks5_p->request_parser.port);
+            connectHeaderInit(&socks5_p->connect_header, socks5_p->request_parser.addressType, &socks5_p->request_parser.address,socks5_p->request_parser.addressLength, &socks5_p->request_parser.port);
             if(socks5_p->request_parser.addressType == REQUEST_ADD_TYPE_IP4){
                 if(establishConnectionIp4(&socks5_p->connect_header) == -1)
                     return;
                 printf("Established connection on %s port %s\n", socks5_p->connect_header.dst_addr, socks5_p->connect_header.port);
                 socks5_p->state = REPLY;
-            }      
+                return;
+            }
+        case FINISHED:
+            printf("connecting to socket\n");   
         default:
             return;
         }
@@ -137,7 +140,13 @@ void socks5_process_output(Socks5HandlerP socks5_p) {
             break;
             case REPLY:
                 printf("REPLYING\n");
-                
+                if(request_marshall(&socks5_p->output,&socks5_p->connect_header) == -1){
+                    ERROR("Reply: not enough space!\n");
+                }
+                else{
+                    socks5_p->state = FINISHED;
+                    return;
+                }
             default:
                 return;
             break;
