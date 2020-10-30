@@ -48,14 +48,14 @@ enum RequestState request_parser_feed(RequestParser *p, uint8_t b) {
             else if(b == REQUEST_ADD_TYPE_IP4) {
                 p->addressLength = IP4_LENGTH;
                 p->addressRemaining = IP4_LENGTH;
-                p->currentState = REQUEST_ADDRESS;
+                p->currentState = REQUEST_IPV4_ADDRESS;
                 p->address[p->addressLength] = 0;
                 
             }
             else if (b == REQUEST_ADD_TYPE_IP6) {
                 p->addressLength = IP6_LENGTH;
                 p->addressRemaining = IP6_LENGTH;
-                p->currentState = REQUEST_ADDRESS;
+                p->currentState = REQUEST_IPV6_ADDRESS;
                 p->address[p->addressLength] = 0;
 
             }
@@ -72,17 +72,50 @@ enum RequestState request_parser_feed(RequestParser *p, uint8_t b) {
             p->address[p->addressLength] = 0;
 
             if(b > 0) 
-                p->currentState = REQUEST_ADDRESS;
+                p->currentState = REQUEST_DOMAIN_ADDRESS;
 
             else
                 p->currentState = REQUEST_PORT_HIGH;
         break;
 
-        case REQUEST_ADDRESS:
+        case REQUEST_DOMAIN_ADDRESS:
 
             p->address[p->addressLength - p->addressRemaining] = b;
 
             p->addressRemaining--;
+
+            if(p->addressRemaining == 0)
+                p->currentState = REQUEST_PORT_HIGH;
+            
+        break;
+
+        case REQUEST_IPV4_ADDRESS:
+
+            sprintf(p->address + (p->addressLength - p->addressRemaining), "%03d", b);
+
+            p->addressRemaining -= 3;
+
+            if(p->addressRemaining != 0){
+                p->address[p->addressLength - p->addressRemaining] = '.';
+                p->addressRemaining--;
+            }
+
+            if(p->addressRemaining == 0)
+                p->currentState = REQUEST_PORT_HIGH;
+            
+        break;
+
+        case REQUEST_IPV6_ADDRESS:
+
+            sprintf(p->address + (p->addressLength - p->addressRemaining), "%02x", b);
+
+            p->addressRemaining -= 2;
+
+            if((p->addressLength - p->addressRemaining) % 5 == 4 && p->addressRemaining != 0){
+
+                p->address[p->addressLength - p->addressRemaining] = ':';
+                p->addressRemaining--;
+            }
 
             if(p->addressRemaining == 0)
                 p->currentState = REQUEST_PORT_HIGH;
@@ -161,7 +194,9 @@ bool request_is_done(enum RequestState state, bool *errored) {
         case REQUEST_RESERVED:
         case REQUEST_ADD_TYPE:
         case REQUEST_DOMAIN_LENGTH:
-        case REQUEST_ADDRESS:
+        case REQUEST_DOMAIN_ADDRESS:
+        case REQUEST_IPV4_ADDRESS:
+        case REQUEST_IPV6_ADDRESS:
         case REQUEST_PORT_HIGH:
         case REQUEST_PORT_LOW:
         
