@@ -18,7 +18,7 @@
 
 typedef enum { PORT_SIZE = 2, MAX_ADDR = 255, REPLY_SIZE = 22} ConnectSize;
 
-typedef enum { REQUEST_ADD_TYPE_IP4 = 0x01, REQUEST_ADD_TYPE_DOMAIN_NAME = 0x03 , REQUEST_ADD_TYPE_IP6 = 0x04
+typedef enum { TYPE_IP4 = 0x01, TYPE_DOMAIN_NAME = 0x03 , TYPE_IP6 = 0x04
 }ConnectIpEnum;
 typedef struct {
     int sock;
@@ -29,6 +29,10 @@ typedef struct {
 
 int establishConnectionIp4(ConnectHeader *connect_header);
 
+void connectHeaderInit(ConnectHeader * connect_header, uint8_t addr_type, uint8_t * addr, size_t addr_lenght, uint8_t * port);
+
 int request_marshall(Buffer * b, ConnectHeader * connect_header);
+
+
 
 #endif
