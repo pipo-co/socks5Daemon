@@ -5,7 +5,7 @@ INCLUDE = -I ./selector -I ./socks5 -I ./hello -I ./request -I ./buffer -I ./aut
 
 CC=gcc
 LIBRARIES=-lcheck -lrt -lpthread -lm -lsubunit
-CFLAGS= -pthread -D_POSIX_C_SOURCE=200112L -Wall -pedantic -std=c11 $(INCLUDE) 
+CFLAGS= -pthread -D_POSIX_C_SOURCE=200112L -ggdb -Wall -pedantic -std=c11 $(INCLUDE) 
 
 all: main 
 
