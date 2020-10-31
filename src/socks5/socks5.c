@@ -48,9 +48,13 @@ static void socks5_client_input(struct selector_key *key){
 }
 
 static void socks5_client_output(struct selector_key *key){
-
+    
+    
     Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
 
+    printf("buffer_can_read %d\n",!buffer_can_read(&socks5_p->output));
+
+    printf("state= %d \n", socks5_p->state);
     socks5_process_output(socks5_p);
 
    // printf("about to can read\n");
@@ -63,6 +67,7 @@ static void socks5_client_output(struct selector_key *key){
     printf("about to write\n");
     if((write_bytes = write(key->fd, outputBuffer, nbytes)) > 0){
         buffer_read_adv(&socks5_p->output, write_bytes);
+        printf("bytes:%d\n", nbytes);
     } else if (write_bytes == 0) {
         //Cerro la conexion
     }
@@ -72,7 +77,7 @@ static void socks5_client_output(struct selector_key *key){
 }
 
 void socks5_process_input(Socks5HandlerP socks5_p) {
-    printf("socks5_p->state %d buffer_can_read %d\n", socks5_p->state, buffer_can_read(&socks5_p->input));
+    // printf("socks5_p->state %d buffer_can_read %d\n", socks5_p->state, buffer_can_read(&socks5_p->input));
     bool errored;
     //TODO preguntar por condicion de salida del proccess input
     while(buffer_can_read(&socks5_p->input)){
@@ -82,6 +87,7 @@ void socks5_process_input(Socks5HandlerP socks5_p) {
             if(hello_is_done(socks5_p->hello_parser.current_state, &errored)){
                 socks5_p->state = INITIAL_RESPONSE;
                 printf("hello is done\n");
+                return;
             }
             break;
         case AUTHENTICATION:
@@ -94,14 +100,15 @@ void socks5_process_input(Socks5HandlerP socks5_p) {
             socks5_p->state = REQUEST;
             break;
         case REQUEST:
+            printf("request\n");
             request_parser_consume(&socks5_p->input, &socks5_p->request_parser, &errored);
             if(request_is_done(socks5_p->request_parser.currentState, &errored)){
                 socks5_p->state = EXECUTE_COMMAND;
-                printf("hello is done\n");
+                printf("request is done\n");
             }
             break;
-        case EXECUTE_COMMAND:
-            
+        case FINISHED:
+            printf("connecting to socket\n");   
         default:
             return;
         }
@@ -114,22 +121,42 @@ void socks5_process_output(Socks5HandlerP socks5_p) {
     while(buffer_can_write(&socks5_p->output)){
         switch (socks5_p->state){
             case INITIAL_RESPONSE:
-            printf("INITIAL RESPONSE\n");
-            socks5_p->auth_header.auth_method = chooseAuthMethod(&socks5_p->hello_parser);
-            printf("selected method: %d\n", socks5_p->auth_header.auth_method);
-            if(socks5_p->auth_header.auth_method < 0){
-                ERROR("Authentication method accept: invalid method!\n");
-                return;
-            }
-            if(hello_marshall(&socks5_p->output, socks5_p->auth_header.auth_method) == -1){
-                ERROR("initial response: not enough space!\n");
-            }
-            else{
-                socks5_p->state = AUTHENTICATION;
-                return;
-            }
-
+                printf("INITIAL RESPONSE\n");
+                socks5_p->auth_header.auth_method = chooseAuthMethod(&socks5_p->hello_parser);
+                printf("selected method: %d\n", socks5_p->auth_header.auth_method);
+                if(socks5_p->auth_header.auth_method < 0){
+                    ERROR("Authentication method accept: invalid method!\n");
+                    return;
+                }
+                if(hello_marshall(&socks5_p->output, socks5_p->auth_header.auth_method) == -1){
+                    ERROR("initial response: not enough space!\n");
+                }
+                else{
+                    socks5_p->state = AUTHENTICATION;
+                    return;
+                }
             break;
+            case EXECUTE_COMMAND:
+                connectHeaderInit(&socks5_p->connect_header, socks5_p->request_parser.addressType, socks5_p->request_parser.address, socks5_p->request_parser.addressLength, socks5_p->request_parser.port);
+                if(socks5_p->request_parser.addressType == REQUEST_ADD_TYPE_IP4){
+                    if(establishConnectionIp4(&socks5_p->connect_header) == -1)
+                        return;
+
+                    printf("Established connection on %s port %s\n", socks5_p->connect_header.dst_addr, socks5_p->connect_header.port);
+                    socks5_p->state = REPLY;
+                    return;
+                }
+            break;
+            case REPLY:
+                printf("REPLYING\n");
+                if(request_marshall(&socks5_p->output,&socks5_p->connect_header) == -1){
+                    ERROR("Reply: not enough space!\n");
+                }
+                else{
+                    printf("change state\n");
+                    socks5_p->state = FINISHED;
+                    return;
+                }
             default:
                 return;
             break;

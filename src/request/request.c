@@ -211,3 +211,4 @@ bool request_is_done(enum RequestState state, bool *errored) {
         break;
     }
 }
+

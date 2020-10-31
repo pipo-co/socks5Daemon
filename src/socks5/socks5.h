@@ -6,8 +6,9 @@
 #include "hello.h"
 #include "request.h"
 #include "auth.h"
+#include "connect.h"
 
-typedef enum {HELLO = 0, INITIAL_RESPONSE, AUTHENTICATION, REQUEST, FINISHED, EXECUTE_COMMAND} Socks5State;
+typedef enum {HELLO = 0, INITIAL_RESPONSE, AUTHENTICATION, REQUEST, EXECUTE_COMMAND, REPLY, FINISHED} Socks5State;
 
 typedef struct
 {
@@ -18,6 +19,7 @@ typedef struct
     HelloParser hello_parser;
     RequestParser request_parser;
     AuthHeader auth_header;
+    ConnectHeader connect_header;
     struct fd_handler fd_handler;
     
 
