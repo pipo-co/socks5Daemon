@@ -17,6 +17,56 @@ static void parseIp4Addr(uint8_t *buffer, size_t *j, uint8_t *addr)
     }
 }
 
+static int new_ipv4_socket(char *ip, uint16_t port) {
+	
+	int sock;
+	struct sockaddr_in addr; 
+  
+    // socket create and varification 
+    sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
+    if (sock == -1) { 
+        perror("new_ipv4_socket: socket creation failed."); 
+        exit(0); 
+    } 
+    
+	bzero(&addr, sizeof(addr)); 
+
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port); 
+	inet_pton(AF_INET, ip, &addr.sin_addr.s_addr);
+
+	if (connect(sock, (struct sockaddr*) &addr, sizeof(addr)) != 0) { 
+        printf("new_ipv4_socket: connection with the server failed."); 
+        exit(0); 
+    } 
+
+	return sock;
+}
+static int new_ipv6_socket(char *ip, uint16_t port) {
+	
+	int sock;
+	struct sockaddr_in6 addr; 
+  
+    // socket create and varification 
+    sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP); 
+    if (sock == -1) { 
+        perror("new_ipv6_socket: socket creation failed."); 
+        exit(0); 
+    } 
+    
+	bzero(&addr, sizeof(addr)); 
+
+    addr.sin6_family = AF_INET6;
+    addr.sin6_port = htons(port); 
+	inet_pton(AF_INET6, ip, &addr.sin6_addr);
+
+	if (connect(sock, (struct sockaddr*) &addr, sizeof(addr)) != 0) { 
+        perror("new_ipv6_socket: connection with the server failed."); 
+        exit(0); 
+    } 
+
+	return sock;
+}
 static uint16_t convertPort(uint8_t *port)
 {
     //printf("port: %s\n", port);
@@ -37,23 +87,7 @@ int establishConnectionIp4(ConnectHeader *connect_header)
     struct sockaddr_in servaddr;
 
     // socket create and varification
-    connect_header->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (connect_header->sock == -1)
-    {
-        printf("socket creation failed...\n");
-        while (1)
-            ;
-    }
-    bzero(&servaddr, sizeof(servaddr));
-    // assign IP, PORT
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(convertPort((uint8_t *)connect_header->port));
-
-    if (inet_pton(AF_INET, connect_header->dst_addr, &servaddr.sin_addr) <= 0)
-    {
-        printf("\nInvalid address/ Address not supported \n");
-        return -1;
-    }
+    connect_header->sock = new_ipv4_socket(connect_header->dst_addr, connect_header->port);
 
     // struct in_addr a;
 
