@@ -119,6 +119,6 @@ int hello_marshall(Buffer *b, uint8_t method){
         buffer[1] = method;
 
         buffer_write_adv(b, INITIAL_RESPONSE_SIZE);
-        
+
         return INITIAL_RESPONSE_SIZE;
     }
