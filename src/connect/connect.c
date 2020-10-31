@@ -17,7 +17,7 @@ static void parseIp4Addr(uint8_t *buffer, size_t *j, uint8_t *addr)
     }
 }
 
-static int new_ipv4_socket(char *ip, uint16_t port) {
+int new_ipv4_socket(char *ip, uint16_t port) {
 	
 	int sock;
 	struct sockaddr_in addr; 
@@ -81,33 +81,7 @@ static uint16_t convertPort(uint8_t *port)
     return aux;
 }
 
-int establishConnectionIp4(ConnectHeader *connect_header)
-{
-
-    struct sockaddr_in servaddr;
-
-    // socket create and varification
-    connect_header->sock = new_ipv4_socket(connect_header->dst_addr, connect_header->port);
-
-    // struct in_addr a;
-
-    // if(inet_pton(AF_INET, &a, &connect_header->dst_addr) == 1)
-
-    //printf("\nconnect_header->sock: %d, servaddr.sin_addr.s_addr: %u, servaddr.sin_port: %u, connect result: %d\n", connect_header->sock, connect_header->dst_addr, htons(convertPort(connect_header->port)), );
-    // printf("errno: %d\n", errno);
-    // perror("Error printed by perror\n");
-
-    return connect(connect_header->sock, (struct sockaddr *)&servaddr, sizeof(servaddr));
-}
-
-void connectHeaderInit(ConnectHeader *connect_header, uint8_t addr_type, uint8_t *addr, size_t addr_lenght, uint8_t *port)
-{
-    connect_header->addr_type = addr_type;
-    memcpy(connect_header->dst_addr, addr, addr_lenght);
-    memcpy(connect_header->port, port, 6);
-}
-
-int request_marshall(Buffer *b, ConnectHeader *connect_header)
+int request_marshall(Buffer *b, uint8_t addr_type)
 {
     size_t n, j = 0;
     uint8_t *buffer = buffer_write_ptr(b, &n);
@@ -116,22 +90,17 @@ int request_marshall(Buffer *b, ConnectHeader *connect_header)
     if (n < REPLY_SIZE)
         return -1;
 
+    //TODO: hay que hacer este metodo
     buffer[j++] = SOCKS_VERSION;
     buffer[j++] = 0; //cambiar a la que corresponda
     buffer[j++] = 0;
-    buffer[j++] = connect_header->addr_type;
+    buffer[j++] = addr_type;
     buffer[j++] = 0;
     buffer[j++] = 0;
     buffer[j++] = 0;
     buffer[j++] = 0;
     buffer[j++] = 0;
     buffer[j++] = 0;
-    // if(connect_header->addr_type == TYPE_IP4){
-    //     parseIp4Addr(buffer, &j, connect_header->dst_addr);
-    // }
-
-    // buffer[j++] = connect_header->port[1];
-    // buffer[j++] = connect_header->port[0];
 
     buffer_write_adv(b, j);
 

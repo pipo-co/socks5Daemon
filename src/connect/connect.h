@@ -20,18 +20,9 @@ typedef enum { PORT_SIZE = 2, MAX_ADDR = 255, REPLY_SIZE = 22} ConnectSize;
 
 typedef enum { TYPE_IP4 = 0x01, TYPE_DOMAIN_NAME = 0x03 , TYPE_IP6 = 0x04
 }ConnectIpEnum;
-typedef struct {
-    int sock;
-    uint8_t addr_type;
-    uint16_t protocol;
-    char dst_addr[MAX_ADDR]; //TODO esto es bastante ineficiente en cuanto a memoria
-    char port[PORT_SIZE];
-}ConnectHeader;
 
-int establishConnectionIp4(ConnectHeader *connect_header);
+int new_ipv4_socket(char *ip, uint16_t port);
 
-void connectHeaderInit(ConnectHeader * connect_header, uint8_t addr_type, uint8_t * addr, size_t addr_lenght, uint8_t * port);
-
-int request_marshall(Buffer * b, ConnectHeader * connect_header);
+int request_marshall(Buffer * b, uint8_t addr_type);
 
 #endif

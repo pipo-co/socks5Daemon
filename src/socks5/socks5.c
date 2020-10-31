@@ -75,7 +75,7 @@ static void forward_server_data_write(struct selector_key *key)
 static void register_server_socket(fd_selector s, Socks5HandlerP socks5_p){
     struct sockaddr_in cli_addr;
     socklen_t clilen = sizeof(cli_addr);
-    int newsockfd = accept(socks5_p->connect_header.sock ,(struct sockaddr *)&cli_addr, &clilen);
+    int newsockfd = accept(socks5_p->sock ,(struct sockaddr *)&cli_addr, &clilen);
     
     if (newsockfd < 0 )
        ERROR("Socks passive accept: bad file descriptor\n");
@@ -157,12 +157,10 @@ static void socks5_process_output(Socks5HandlerP socks5_p, fd_selector selector)
                 }
             break;
             case EXECUTE_COMMAND:
-                connectHeaderInit(&socks5_p->connect_header, socks5_p->request_parser.addressType, socks5_p->request_parser.address, socks5_p->request_parser.addressLength, socks5_p->request_parser.port);
                 if(socks5_p->request_parser.addressType == REQUEST_ADD_TYPE_IP4){
-                    if(establishConnectionIp4(&socks5_p->connect_header) == -1)
-                        return;
+                    socks5_p->sock = new_ipv4_socket(socks5_p->request_parser.address, socks5_p->request_parser.port);
 
-                    printf("Established connection on %s port %s\n", socks5_p->connect_header.dst_addr, socks5_p->connect_header.port);
+                    printf("Established connection on %s port %u\n", socks5_p->request_parser.address, socks5_p->request_parser.port);
                     register_server_socket(selector, socks5_p);
                     socks5_p->state = REPLY;
                     return;
@@ -170,7 +168,7 @@ static void socks5_process_output(Socks5HandlerP socks5_p, fd_selector selector)
             break;
             case REPLY:
                 printf("REPLYING\n");
-                if(request_marshall(&socks5_p->output,&socks5_p->connect_header) == -1){
+                if(request_marshall(&socks5_p->output,socks5_p->request_parser.addressType) == -1){
                     ERROR("Reply: not enough space!\n");
                 }
                 else{

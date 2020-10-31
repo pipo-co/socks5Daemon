@@ -15,11 +15,11 @@ typedef struct Socks5Handler
     Buffer input;
     Buffer output;
     int fd;
+    int sock;
     Socks5State state;
     HelloParser hello_parser;
     RequestParser request_parser;
     AuthHeader auth_header;
-    ConnectHeader connect_header;
     struct fd_handler fd_handler;
 }Socks5Handler;
 
