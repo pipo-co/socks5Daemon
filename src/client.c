@@ -14,38 +14,16 @@
 #define STDIN 0
 
 void handleStdIn(int sock);
-
 void handleSocket(int sock);
 
-int main(int argc, char *argv[]) {
+int new_ipv6_socket(char *ip, uint16_t port);
+int new_ipv4_socket(char *ip, uint16_t port);
 
-	int sock;
-	struct sockaddr_in servaddr; 
-  
-    // socket create and varification 
-    sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
-    if (sock == -1) { 
-        printf("socket creation failed...\n"); 
-        exit(0); 
-    } 
-    else
-        printf("Socket successfully created..\n"); 
-    
-	bzero(&servaddr, sizeof(servaddr)); 
-    // assign IP, PORT 
-    servaddr.sin_family = PF_INET; 
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
-    servaddr.sin_port = htons(1080); 
-	
-    // connect the client socket to server socket 
-    if (connect(sock, (struct sockaddr*) &servaddr, sizeof(servaddr)) != 0) { 
-        printf("connection with the server failed...\n"); 
-        exit(0); 
-    } 
-    else
-        printf("connected to the server..\n"); 
-  
+int main(int argc, char *argv[]) {
+		
+	// int sock = new_ipv6_socket("2800:3f0:4002:80d::200e", 80);
 	fd_set fds;
+	int sock = new_ipv4_socket("127.000.000.001", 80);
 
 	while (1) {
 		FD_SET(STDIN, &fds);
@@ -69,7 +47,7 @@ void handleStdIn(int sock) {
 	char buffer[BUFSIZE];
 	ssize_t readBytes = read(STDIN, buffer, BUFSIZE - 1);
 	for (size_t i = 0; i < readBytes; i++) {
-		buffer[i] -= '0';
+		// buffer[i] -= '0';
 	}
 	
 	ssize_t numBytes = send(sock, buffer, readBytes, 0);
@@ -92,4 +70,56 @@ void handleSocket(int sock) {
 		buffer[numBytes] = '\0';    // Terminate the string!
 	}
 	printf("Recieved: %s", buffer);
+}
+
+int new_ipv6_socket(char *ip, uint16_t port) {
+	
+	int sock;
+	struct sockaddr_in6 addr; 
+  
+    // socket create and varification 
+    sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP); 
+    if (sock == -1) { 
+        perror("new_ipv6_socket: socket creation failed."); 
+        exit(0); 
+    } 
+    
+	bzero(&addr, sizeof(addr)); 
+
+    addr.sin6_family = AF_INET6;
+    addr.sin6_port = htons(port); 
+	inet_pton(AF_INET6, ip, &addr.sin6_addr);
+
+	if (connect(sock, (struct sockaddr*) &addr, sizeof(addr)) != 0) { 
+        perror("new_ipv6_socket: connection with the server failed."); 
+        exit(0); 
+    } 
+
+	return sock;
+}
+
+int new_ipv4_socket(char *ip, uint16_t port) {
+	
+	int sock;
+	struct sockaddr_in addr; 
+  
+    // socket create and varification 
+    sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
+    if (sock == -1) { 
+        perror("new_ipv4_socket: socket creation failed."); 
+        exit(0); 
+    } 
+    
+	bzero(&addr, sizeof(addr)); 
+
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port); 
+	inet_pton(AF_INET, ip, &addr.sin_addr.s_addr);
+
+	if (connect(sock, (struct sockaddr*) &addr, sizeof(addr)) != 0) { 
+        printf("new_ipv4_socket: connection with the server failed."); 
+        exit(0); 
+    } 
+
+	return sock;
 }

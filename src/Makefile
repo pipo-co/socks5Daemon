@@ -1,3 +1,6 @@
+
+#CC=clang scan-build -disable-checker deadcode.DeadStores -o /tmp/out  make
+#complexity   --histogram --score  `find -name '*.c'` 2> /dev/null
 INCLUDE = -I ./selector -I ./socks5 -I ./hello -I ./request -I ./buffer -I ./auth -I ./connect
 
 CC=gcc
