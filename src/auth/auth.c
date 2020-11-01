@@ -1,19 +1,6 @@
 #include "auth.h"
 
-void on_auth_method(HelloParser *p, uint8_t method){
-    
-    AuthHeader *auth_header = (AuthHeader *) p->data;
 
-    switch (method)
-    {
-    case NO_AUTH:
-    case USER_PASSWORD:
-        loadIfNotExist(auth_header, method);
-        break;
-    default:
-        break;
-    }
-}
 
 void loadIfNotExist(AuthHeader *auth_header, uint8_t method){
     

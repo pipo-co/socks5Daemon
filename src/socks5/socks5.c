@@ -252,10 +252,7 @@ void passive_accept(struct selector_key *key){
     socks5_p->fd = newsockfd;
     buffer_init(&socks5_p->input, BUFSIZ, malloc(BUFSIZ));
     buffer_init(&socks5_p->output, BUFSIZ, malloc(BUFSIZ));
-    hello_parser_init(&socks5_p->hello_parser);
-    socks5_p->hello_parser.data = &socks5_p->auth_header;
-    ((AuthHeader*)socks5_p->hello_parser.data)->size = 0;
-    socks5_p->hello_parser.on_auth_method = on_auth_method;
+    
     request_parser_init(&socks5_p->request_parser);
     socks5_p->fd_handler.handle_read = socks5_client_input;
     socks5_p->fd_handler.handle_write = socks5_client_output;

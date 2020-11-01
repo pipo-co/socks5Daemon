@@ -106,8 +106,7 @@ int new_ipv4_socket(char *ip, uint16_t port) {
     // socket create and varification 
     sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
     if (sock == -1) { 
-        perror("new_ipv4_socket: socket creation failed."); 
-        exit(0); 
+        return -1;
     } 
     
 	bzero(&addr, sizeof(addr)); 
@@ -116,9 +115,8 @@ int new_ipv4_socket(char *ip, uint16_t port) {
     addr.sin_port = htons(port); 
 	inet_pton(AF_INET, ip, &addr.sin_addr.s_addr);
 
-	if (connect(sock, (struct sockaddr*) &addr, sizeof(addr)) != 0) { 
-        printf("new_ipv4_socket: connection with the server failed."); 
-        exit(0); 
+	if (connect(sock, (struct sockaddr*) &addr, sizeof(addr)) != 0) {  
+        return -1;
     } 
 
 	return sock;

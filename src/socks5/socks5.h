@@ -7,20 +7,40 @@
 #include "request.h"
 #include "auth.h"
 #include "connect.h"
+#include "stm.h"
+#include "authRequest.h"
 
-typedef enum Socks5State {HELLO = 0, INITIAL_RESPONSE, AUTHENTICATION, REQUEST, EXECUTE_COMMAND, REPLY, FORWARDING} Socks5State;
+typedef enum Socks5State {
+    HELLO = 0, HELLO_ERROR, 
+    AUTH_METHOD_ANNOUNCEMENT, AUTH_REQUEST, AUTH_ERROR, AUTH_SUCCESSFUL,
+    REQUEST, REQUEST_ERROR,
+    IP_CONNECT,
+    GENERATE_DNS_QUERY,
+    FORWARDING} Socks5State;
 
 typedef struct Socks5Handler
 {
     Buffer input;
     Buffer output;
-    int fd;
-    int sock;
+
     Socks5State state;
-    HelloParser hello_parser;
-    RequestParser request_parser;
-    AuthHeader auth_header;
+
+    struct state_machine stm;
+
+    int fd;
+    
     struct fd_handler fd_handler;
+    
+    HelloParser hello_parser;
+    uint8_t authMethod;
+    uint8_t bytesSent;
+    AuthRequestParser authRequestParser;
+    uint8_t bytesSentAuth;
+    RequestParser request_parser;
+    int sock;
+    uint8_t rep;
+    uint8_t bytesSentReq;
+    
 }Socks5Handler;
 
 typedef struct ServerHandler
