@@ -10,25 +10,56 @@
 
 #include "socks5.h"
 
+#include "stateMachineBuilder.h"
+
+#define DEFAULT_INPUT_BUFFER_SIZE 512
+#define DEFAULT_OUTPUT_BUFFER_SIZE 512
+#define DEFAULT_DNS_BUFFER_SIZE 512
+
 #define ERROR(msg) perror(msg);
 
-enum SocksSizeConstants {
-  MAX_CONNECTIONS = 1024,
-  BUFSIZE = 512,
-  MAX_METHODS = 255
-};
+static FdHandler clientHandler;
+static FdHandler serverHandler;
+static FdHandler DNSHandler;
 
-typedef struct{
-    Socks5Handler   handler;
-    uint8_t         asigned;
-} Socks5HandlerHeader;
+static int sessionInputBufferSize;
+static int sessionOutputBufferSize;
+static int dnsBufferSize;
 
-Socks5HandlerHeader connections[MAX_CONNECTIONS];
+static char *dnsServerIp; 
 
 
-static void socks5_server_read(struct selector_key *key){
+static SessionHandlerP socks5_session_init(void);
+static void socks5_session_destroy(SessionHandlerP session);
 
-    Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
+void socks5_init(char *dnsServerIp) {
+    sessionInputBufferSize = DEFAULT_INPUT_BUFFER_SIZE;
+    sessionOutputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
+    dnsBufferSize = dnsBufferSize;
+
+    dnsServerIp = dnsServerIp;
+
+    clientHandler.handle_read = socks5_client_read;
+    clientHandler.handle_write = socks5_client_write;
+    clientHandler.handle_close = NULL;
+    clientHandler.handle_block = NULL;
+
+    serverHandler.handle_read = socks5_server_read;
+    serverHandler.handle_write = socks5_server_write;
+    serverHandler.handle_close = NULL;
+    serverHandler.handle_block = NULL;
+
+    // serverHandler.handle_read = socks5_dns_read;
+    // serverHandler.handle_write = socks5_dns_write;
+    // serverHandler.handle_close = NULL;
+    // serverHandler.handle_block = NULL;
+
+    socks5_session_state_machine_builder_init();
+}
+
+static void socks5_server_read(struct SelectorEvent *key){
+
+    SessionHandlerP socks5_p = (SessionHandlerP) key->data;
     Buffer * buffer = &socks5_p->output;
     
     //pre_read(socks5_p->stm, key)
@@ -42,7 +73,7 @@ static void socks5_server_read(struct selector_key *key){
 
     if((readBytes = read(key->fd, writePtr, nbytes) > 0)){
         buffer_write_adv(buffer, readBytes);
-        state_machine_proccess_post_read(&socks5_p->stm, key);
+        state_machine_proccess_post_read(&socks5_p->sessionStateMachine, key);
     }
     else if (readBytes == 0){
         //server cerro conexion
@@ -55,11 +86,11 @@ static void socks5_server_read(struct selector_key *key){
       
 }
 
-static void socks5_server_write(struct selector_key *key){
+static void socks5_server_write(struct SelectorEvent *key){
 
-    Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
+    SessionHandlerP socks5_p = (SessionHandlerP) key->data;
 
-    state_machine_proccess_pre_write(&socks5_p->stm, key);
+    state_machine_proccess_pre_write(&socks5_p->sessionStateMachine, key);
 
     Buffer * buffer = &socks5_p->input;
 
@@ -72,7 +103,7 @@ static void socks5_server_write(struct selector_key *key){
     
     if( (writeBytes = write(key->fd, readPtr, nbytes)) > 0){
         buffer_read_adv(buffer, writeBytes);
-        state_machine_proccess_post_write(&socks5_p->stm, key);
+        state_machine_proccess_post_write(&socks5_p->sessionStateMachine, key);
     }
     else if (writeBytes == 0){
         
@@ -85,9 +116,9 @@ static void socks5_server_write(struct selector_key *key){
     
 }
 
-void socks5_register_server(fd_selector s, Socks5HandlerP socks5_p){
+void socks5_register_server(FdSelector s, SessionHandlerP socks5_p){
     
-    fd_handler handler;
+    FdHandler handler;
     handler.handle_read = socks5_server_read;
     handler.handle_write = socks5_server_write;
 
@@ -95,9 +126,9 @@ void socks5_register_server(fd_selector s, Socks5HandlerP socks5_p){
     
 }
 
-static void socks5_client_read(struct selector_key *key){
+static void socks5_client_read(struct SelectorEvent *key){
 
-    Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
+    SessionHandlerP socks5_p = (SessionHandlerP) key->data;
     Buffer * buffer = &socks5_p->input;
     
     //pre_read(socks5_p->stm, key)
@@ -111,7 +142,7 @@ static void socks5_client_read(struct selector_key *key){
 
     if((readBytes = read(key->fd, writePtr, nbytes) > 0)){
         buffer_write_adv(buffer, readBytes);
-        state_machine_proccess_post_read(&socks5_p->stm, key);
+        state_machine_proccess_post_read(&socks5_p->sessionStateMachine, key);
     }
     else if (readBytes == 0){
         //cliente cerro conexion
@@ -124,12 +155,12 @@ static void socks5_client_read(struct selector_key *key){
    
 }
 
-static void socks5_client_write(struct selector_key *key){
+static void socks5_client_write(struct SelectorEvent *key){
     
     
-    Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
+    SessionHandlerP socks5_p = (SessionHandlerP) key->data;
 
-    state_machine_proccess_pre_write(&socks5_p->stm, key);
+    state_machine_proccess_pre_write(&socks5_p->sessionStateMachine, key);
 
     Buffer * buffer = &socks5_p->output;
 
@@ -142,7 +173,7 @@ static void socks5_client_write(struct selector_key *key){
     
     if( (writeBytes = write(key->fd, readPtr, nbytes)) > 0){
         buffer_read_adv(buffer, writeBytes);
-        state_machine_proccess_post_write(&socks5_p->stm, key);
+        state_machine_proccess_post_write(&socks5_p->sessionStateMachine, key);
     }
     else if (writeBytes == 0){
 
@@ -155,38 +186,56 @@ static void socks5_client_write(struct selector_key *key){
 }
 
 //tendria que haber otro passive accept para ipv6
-void socks5_passive_accept(struct selector_key *key){
+void socks5_passive_accept(SelectorEvent *event){
     
     struct sockaddr_in cli_addr;
     socklen_t clilen = sizeof(cli_addr);
-    int fd = accept(key->fd,(struct sockaddr *)&cli_addr, &clilen);
+
+    int fd = accept(event->fd,(struct sockaddr *)&cli_addr, &clilen);
     
     if (fd < 0 ){}
        //logger stderr(errno)
 
-    Socks5HandlerP socks5_p = malloc(sizeof(*socks5_p));
-    
+    SessionHandlerP session = socks5_session_init();
 
+    session->clientConnection.fd = fd;
 
-    buffer_init(&socks5_p->input, sizeof(socks5_p->rawBufferInput), socks5_p->rawBufferInput);
-    buffer_init(&socks5_p->output, sizeof(socks5_p->rawBufferOutput), socks5_p->rawBufferOutput);
+    memcpy(&session->clientConnection.addr, (struct sockaddr *)&cli_addr, clilen);
 
-    socks5_p->fd_handler.handle_read = socks5_client_read;
-    socks5_p->fd_handler.handle_write = socks5_client_write;
-    
-    state_machine_init(&socks5_p->stm);
+    selector_register(event->s, session->clientConnection.fd, &clientHandler, OP_READ, session);
+}
 
-    socks5_p->clientConnection.fd = fd;
-    memcpy(&socks5_p->clientConnection.addr, (struct sockaddr *)&cli_addr, clilen);
+static SessionHandlerP socks5_session_init(void) {
 
+    SessionHandlerP session = calloc(1, sizeof(*session));
+    if(session == NULL)
+        return NULL;
 
-    bzero(&socks5_p->serverConnection, sizeof(socks5_p->serverConnection));
+    uint8_t *inputBuffer = malloc(sessionInputBufferSize*sizeof(*inputBuffer));
+    if(inputBuffer == NULL)
+        return NULL;
+        
+    uint8_t *outputBuffer = malloc(sessionOutputBufferSize*sizeof(*outputBuffer));
+    if(outputBuffer == NULL)
+        return NULL;
 
-    bzero(&socks5_p->clientInfo, sizeof(socks5_p->clientInfo));
+    buffer_init(&session->input, sessionInputBufferSize, inputBuffer);
+    buffer_init(&session->output, sessionOutputBufferSize, outputBuffer);
 
-    bzero(&socks5_p->socksHeader, sizeof(socks5_p->socksHeader));
+    build_socks_session_state_machine(&session->sessionStateMachine);
 
-    selector_register(key->s, socks5_p->clientConnection.fd, &socks5_p->fd_handler, OP_READ, socks5_p);
+    // session->sessionStateMachine.states[FINISH].on_departure = socks5_session_destroy;
+
+    session->clientConnection.closed = false;
+
+    return session;
+}
+
+static void socks5_session_destroy(SessionHandlerP session) {
+
+    free(session->input.data);
+    free(session->output.data);
+    free(session);
 }
 
 

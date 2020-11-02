@@ -10,6 +10,7 @@
  * DNS utilizando getaddrinfo), pero toda esa complejidad está oculta en
  * el selector.
  */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -24,22 +25,22 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
-//#include "socks5.h"
 #include "selector.h"
 #include "socks5.h"
 //#include "socks5nio.h"
+
+#define SERVER_BACKLOG 20
 
 static bool done = false;
 
 static void
 sigterm_handler(const int signal) {
-    printf("signal %d, cleaning up and exiting\n",signal);
+    printf("signal %d, cleaning up and exiting\n", signal);
     done = true;
 }
 
 
-int
-main(const int argc, const char **argv) {
+int main(const int argc, const char **argv) {
     unsigned port = 1080;
 
     if(argc == 1) {
@@ -61,11 +62,11 @@ main(const int argc, const char **argv) {
     }
 
     // no tenemos nada que leer de stdin
-    close(0);
+    close(stdin);
 
     const char       *err_msg = NULL;
-    selector_status   ss      = SELECTOR_SUCCESS;
-    fd_selector selector      = NULL;
+    SelectorStatus   ss      = SELECTOR_SUCCESS;
+    FdSelector selector      = NULL;
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -89,7 +90,7 @@ main(const int argc, const char **argv) {
         goto finally;
     }
 
-    if (listen(server, 20) < 0) {
+    if (listen(server, SERVER_BACKLOG) < 0) {
         err_msg = "unable to listen";
         goto finally;
     }
@@ -103,6 +104,7 @@ main(const int argc, const char **argv) {
         err_msg = "getting server socket flags";
         goto finally;
     }
+
     const struct selector_init conf = {
         .signal = SIGALRM,
         .select_timeout = {
@@ -110,7 +112,8 @@ main(const int argc, const char **argv) {
             .tv_nsec = 0,
         },
     };
-    if(0 != selector_init(&conf)) {
+
+    if(selector_init(&conf) != 0) {
         err_msg = "initializing selector";
         goto finally;
     }
@@ -122,7 +125,7 @@ main(const int argc, const char **argv) {
         goto finally;
     }
 
-    const struct fd_handler socksv5 = {
+    const struct FdHandler socksv5 = {
         .handle_read       = socks5_passive_accept,//socksv5_passive_accept,
         .handle_write      = NULL,
         .handle_close      = NULL, // nada que liberar
@@ -134,7 +137,7 @@ main(const int argc, const char **argv) {
         err_msg = "registering fd";
         goto finally;
     }
-    for(;!done;) {
+    while(!done) {
         err_msg = NULL;
         ss = selector_select(selector);
         if(ss != SELECTOR_SUCCESS) {

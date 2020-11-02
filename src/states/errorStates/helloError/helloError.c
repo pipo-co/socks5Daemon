@@ -1,6 +1,13 @@
 #include "helloError.h"
 
-static int hello_error_marshall(Buffer *b, uint8_t *bytes){
+#define HELLO_ERROR_RESPONSE_SIZE 2
+
+static int hello_error_marshall(Buffer *b, uint8_t *bytes);
+static unsigned hello_error_on_pre_write(SelectorEvent *event);
+static unsigned hello_error_on_post_write(SelectorEvent *event);
+static void hello_error_on_departure(SelectorEvent *event);
+
+static int hello_error_marshall(Buffer *b, uint8_t *bytes) {
 
         while(*bytes < HELLO_ERROR_RESPONSE_SIZE && buffer_can_write(b)){
             if(*bytes == 0){
@@ -13,25 +20,45 @@ static int hello_error_marshall(Buffer *b, uint8_t *bytes){
         }
     }
 
-unsigned hello_error_on_pre_write(struct selector_key *key){
+static unsigned hello_error_on_pre_write(SelectorEvent *event) {
     
-    Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
+    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
     hello_error_marshall(&socks5_p->output, socks5_p->socksHeader.helloHeader.bytes);  
     
-    return socks5_p->stm.current; 
+    return socks5_p->sessionStateMachine.current; 
 
 }
 
-unsigned auth_successful_on_post_write(struct selector_key *key){
+static unsigned hello_error_on_post_write(SelectorEvent *event) {
 
-    Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
+    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
     if (socks5_p->socksHeader.helloHeader.bytes == HELLO_ERROR_RESPONSE_SIZE && buffer_can_read(&socks5_p->output))
     {
-        selector_unregister_fd(key->s, key->fd);
-        return FINNISH;
+        selector_unregister_fd(event->s, event->fd);
+        return FINISH;
     }
-    return socks5_p->stm.current;
+    return socks5_p->sessionStateMachine.current;
 
+}
+
+static void hello_error_on_departure(SelectorEvent *event) {
+
+}
+
+SelectorStateDefinition hello_error_state_definition_supplier(void) {
+
+    SelectorStateDefinition stateDefinition = {
+
+        .state = HELLO_ERROR,
+        .on_arrival = NULL,
+        .on_post_read = NULL,
+        .on_pre_write = hello_error_on_pre_write,
+        .on_post_write = hello_error_on_post_write,
+        .on_block_ready = NULL,
+        .on_departure = NULL,
+    };
+
+    return stateDefinition;
 }

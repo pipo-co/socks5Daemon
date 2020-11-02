@@ -1,8 +1,14 @@
 #include "requestError.h"
 
-static int request_error_marshall(Buffer *b, uint8_t *bytes, uint8_t rep){
+#define REQUEST_ERROR_SIZE 10
 
-        while(*bytes < REPLY_SIZE && buffer_can_write(b)){
+static int request_error_marshall(Buffer *b, uint8_t *bytes, uint8_t rep);
+static unsigned request_error_on_pre_write(SelectorEvent *event);
+static unsigned request_error_on_post_write(SelectorEvent *event);
+
+static int request_error_marshall(Buffer *b, uint8_t *bytes, uint8_t rep) {
+
+        while(*bytes < REQUEST_ERROR_SIZE && buffer_can_write(b)) {
             if(*bytes == 0){
                 buffer_write(b, SOCKS_VERSION);
             }
@@ -22,25 +28,41 @@ static int request_error_marshall(Buffer *b, uint8_t *bytes, uint8_t rep){
         }
     }
 
-unsigned request_error_on_pre_write(struct selector_key *key){
+static unsigned request_error_on_pre_write(SelectorEvent *event) {
     
-    Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
+    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
     request_error_marshall(&socks5_p->output, socks5_p->socksHeader.requestHeader.bytes, socks5_p->socksHeader.requestHeader.rep);  
     
-    return socks5_p->stm.current; 
+    return socks5_p->sessionStateMachine.current; 
 
 }
 
-unsigned request_error_on_post_write(struct selector_key *key){
+static unsigned request_error_on_post_write(SelectorEvent *event) {
 
-    Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
+    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
     if (socks5_p->socksHeader.requestHeader.bytes == REQUEST_ERROR_SIZE && buffer_can_read(&socks5_p->output))
     {
-        selector_unregister_fd(key->s, key->fd);
-        return FINNISH;
+        selector_unregister_fd(event->s, event->fd);
+        return FINISH;
     }
-    return socks5_p->stm.current;
+    return socks5_p->sessionStateMachine.current;
 
+}
+
+SelectorStateDefinition request_error_state_definition_supplier(void) {
+
+    SelectorStateDefinition stateDefinition = {
+
+        .state = REQUEST_ERROR,
+        .on_arrival = NULL,
+        .on_post_read = NULL,
+        .on_pre_write = request_error_on_pre_write,
+        .on_post_write = request_error_on_post_write,
+        .on_block_ready = NULL,
+        .on_departure = NULL,
+    };
+
+    return stateDefinition;
 }

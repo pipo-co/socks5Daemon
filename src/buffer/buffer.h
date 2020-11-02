@@ -81,8 +81,7 @@
  * ↑                       ↑
  * W=0                     limit=6
  */
-typedef struct Buffer Buffer;
-struct Buffer {
+typedef struct Buffer {
     uint8_t *data;
 
     /** límite superior del buffer. inmutable */
@@ -93,7 +92,7 @@ struct Buffer {
 
     /** puntero de escritura */
     uint8_t *write;
-};
+} Buffer;
 
 /**
  * inicializa el buffer sin utilizar el heap

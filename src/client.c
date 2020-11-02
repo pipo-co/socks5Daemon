@@ -1,3 +1,6 @@
+
+#define _POSIX_C_SOURCE 200112L
+
 #include <arpa/inet.h>
 #include <netinet/in.h> 
 #include <netdb.h> 

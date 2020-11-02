@@ -3,66 +3,14 @@
 
 #include "selector.h"
 #include "buffer.h"
-#include "../states/hello/hello.h"
-#include "../states/authRequest/authRequest.h"
-#include "../states/request/request.h"
-#include "auth.h"
-#include "connect.h"
-#include "stateMachine.h"
-#define BUFFSIZE 512
+#include "selectorStateMachine.h"
+#include "socks5SessionDefinition.h"
 
-typedef enum Socks5State {
-    HELLO = 0, HELLO_ERROR, 
-    AUTH_METHOD_ANNOUNCEMENT, AUTH_REQUEST, AUTH_ERROR, AUTH_SUCCESSFUL,
-    REQUEST, REQUEST_ERROR,
-    IP_CONNECT,
-    GENERATE_DNS_QUERY,
-    FORWARDING,
-    FINNISH} Socks5State;
 
-typedef struct ConnectionInfo{
-    int fd;
-    struct sockaddr addr;
-}ConnectionInfo;
+void socks5_init(char *dnsServerIp);
 
-// Esto seguramente no vaya aca
-typedef struct ClientInfo{
-  uint8_t authMethod;
-  uint32_t identifier;
-}ClientInfo;
+void socks5_passive_accept(SelectorEvent *event);
 
-union SocksHeaders{
-    struct HelloHeader helloHeader;    
-    struct AuthRequestHeader authRequestHeader;
-    struct RequestHeader requestHeader;   
-};
-typedef struct Socks5Handler
-{
-    Buffer input;
-    Buffer output;
-
-    uint8_t rawBufferInput[BUFFSIZE];
-    uint8_t rawBufferOutput[BUFFSIZE];
-
-    struct fd_handler fd_handler;
-
-    struct StateMachine stm;
-
-    struct ConnectionInfo clientConnection;
-    struct ConnectionInfo serverConnection;
-
-    struct ClientInfo clientInfo;
-    
-    union SocksHeaders socksHeader;
-    
-}Socks5Handler;
-
-typedef Socks5Handler * Socks5HandlerP;
-
-void socks5_passive_accept(struct selector_key *key);
-
-void socks5_register_server(fd_selector s, Socks5HandlerP socks5_p);
-
-Socks5Handler * get_socks5_handler();
+void socks5_register_server(FdSelector s, SessionHandlerP socks5_p);
 
 #endif

@@ -7,7 +7,7 @@
 #include "selector.c"
 
 START_TEST (test_selector_error) {
-    const selector_status data[] = {
+    const SelectorStatus data[] = {
         SELECTOR_SUCCESS,
         SELECTOR_ENOMEM,
         SELECTOR_MAXFD,
@@ -43,7 +43,7 @@ START_TEST (test_next_capacity) {
 END_TEST
 
 START_TEST (test_ensure_capacity) {
-    fd_selector s = selector_new(0);
+    FdSelector s = selector_new(0);
     for(size_t i = 0; i < s->fd_size; i++) {
         ck_assert_int_eq(FD_UNUSED, s->fds[i].fd);
     }
@@ -75,7 +75,7 @@ END_TEST
 static void *data_mark = (void *)0x0FF1CE;
 static unsigned destroy_count = 0;
 static void
-destroy_callback(struct selector_key *key) {
+destroy_callback(struct SelectorEvent *key) {
     ck_assert_ptr_nonnull(key->s);
     ck_assert_int_ge(key->fd, 0);
     ck_assert_int_lt(key->fd, ITEMS_MAX_SIZE);
@@ -86,12 +86,12 @@ destroy_callback(struct selector_key *key) {
 
 START_TEST (test_selector_register_fd) {
     destroy_count = 0;
-    fd_selector s = selector_new(INITIAL_SIZE);
+    FdSelector s = selector_new(INITIAL_SIZE);
     ck_assert_ptr_nonnull(s);
 
     ck_assert_uint_eq(SELECTOR_IARGS,   selector_register(0, -1, 0, 0, data_mark));
 
-    const struct fd_handler h = {
+    const struct FdHandler h = {
         .handle_read   = NULL,
         .handle_write  = NULL,
         .handle_close  = destroy_callback,
@@ -99,7 +99,7 @@ START_TEST (test_selector_register_fd) {
     int fd = ITEMS_MAX_SIZE - 1;
     ck_assert_uint_eq(SELECTOR_SUCCESS,
                       selector_register(s, fd, &h, 0, data_mark));
-    const struct item *item = s->fds + fd;
+    const struct Item *item = s->fds + fd;
     ck_assert_int_eq (fd,         s->max_fd);
     ck_assert_int_eq (fd,         item->fd);
     ck_assert_ptr_eq (&h,         item->handler);
@@ -115,10 +115,10 @@ END_TEST
 
 START_TEST (test_selector_register_unregister_register) {
     destroy_count = 0;
-    fd_selector s = selector_new(INITIAL_SIZE);
+    FdSelector s = selector_new(INITIAL_SIZE);
     ck_assert_ptr_nonnull(s);
 
-    const struct fd_handler h = {
+    const struct FdHandler h = {
         .handle_read   = NULL,
         .handle_write  = NULL,
         .handle_close  = destroy_callback,
@@ -129,7 +129,7 @@ START_TEST (test_selector_register_unregister_register) {
     ck_assert_uint_eq(SELECTOR_SUCCESS,
                       selector_unregister_fd(s, fd));
 
-    const struct item *item = s->fds + fd;
+    const struct Item *item = s->fds + fd;
     ck_assert_int_eq (0,          s->max_fd);
     ck_assert_int_eq (FD_UNUSED,  item->fd);
     ck_assert_ptr_eq (0x00,       item->handler);
