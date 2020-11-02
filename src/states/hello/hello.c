@@ -28,31 +28,37 @@ static void on_auth_method(HelloParser *p, uint8_t currentMethod){
 void hello_on_arrival (const unsigned state, struct selector_key *key){
     Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
 
-    hello_parser_init(&socks5_p->hello_parser, on_auth_method, &socks5_p->authMethod);
+    hello_parser_init(&socks5_p->socksHeader.helloHeader.parser, on_auth_method, &socks5_p->clientInfo.authMethod);
+    socks5_p->socksHeader.helloHeader.bytes = 0;
 }
 
 unsigned hello_on_post_read(struct selector_key *key){
     
     Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
     bool errored;
+    HelloHeader * h = &socks5_p->socksHeader.helloHeader;
 
-    if(!hello_parser_consume(&socks5_p->input, &socks5_p->hello_parser, &errored)){
+    if(!hello_parser_consume(&socks5_p->input, &h->parser, &errored)){
         return socks5_p->stm.current;
     }
     if (errored == true){
         //loggear ( hello_parser_error_message(socks5_p->hello_parser.current_state);)
+        selector_set_interest_key(key, OP_WRITE);
         return HELLO_ERROR;
     }
 
-    if (socks5_p->hello_parser.version != SOCKS_VERSION){
+    if (h->parser.version != SOCKS_VERSION){
         //loggear ("Hello: Invalid version!")
+        selector_set_interest_key(key, OP_WRITE);
         return HELLO_ERROR;
     }
     
-    if (socks5_p->authMethod == NO_ACCEPTABLE_METHODS){
+    if (socks5_p->clientInfo.authMethod == NO_ACCEPTABLE_METHODS){
         //loggear ("Hello: No acceptable methods!")
+        selector_set_interest_key(key, OP_WRITE);
         return HELLO_ERROR;
     }
-
+    
+    selector_set_interest_key(key, OP_WRITE);
     return AUTH_METHOD_ANNOUNCEMENT;
 }

@@ -4,7 +4,13 @@
 #include "socks5.h"
 #include "authRequestParser.h"
 
+typedef struct AuthRequestHeader{
+    AuthRequestParser parser;
+    size_t bytes;
+}AuthRequestHeader;
+
 void auth_request_on_arrival (const unsigned state, struct selector_key *key);
+
 unsigned auth_request_on_post_read(struct selector_key *key);
 
 #endif

@@ -14,6 +14,13 @@ enum AuthMethods {
     USER_PASSWORD = 0x02
     };
 
+typedef struct HelloHeader{
+
+    HelloParser parser;
+    size_t bytes;
+    
+}HelloHeader;
+
 void hello_on_arrival (const unsigned state, struct selector_key *key);
 
 unsigned hello_on_read_ready(struct selector_key *key);

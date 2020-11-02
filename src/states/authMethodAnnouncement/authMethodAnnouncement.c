@@ -17,7 +17,7 @@ unsigned method_announcement_on_pre_write(struct selector_key *key){
 
     Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
 
-    hello_marshall(&socks5_p->output, socks5_p->authMethod, socks5_p->bytesSent);  
+    hello_marshall(&socks5_p->output, socks5_p->clientInfo.authMethod, socks5_p->socksHeader.helloHeader.bytes);  
 
     return socks5_p->stm.current;  
 }
@@ -26,9 +26,10 @@ unsigned method_announcement_on_post_write(struct selector_key *key){
 
     Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
 
-    if (socks5_p->bytesSent == INITIAL_RESPONSE_SIZE && buffer_can_read(&socks5_p->output))
+    if (socks5_p->socksHeader.helloHeader.bytes == INITIAL_RESPONSE_SIZE && buffer_can_read(&socks5_p->output))
     {
-        if(socks5_p->authMethod == NO_AUTHENTICATION){
+        selector_set_interest_key(key, OP_READ);
+        if(socks5_p->clientInfo.authMethod == NO_AUTHENTICATION){
             //cargar credenciales del usuario anonimo
             return REQUEST;
         }

@@ -9,7 +9,14 @@
 #include "requestParser.h"
 #include "socks5.h"
 
-enum RepplyValues {GENERAL_SOCKS_SERVER_FAILURE = 0x01, NETWORK_UNREACHABLE = 0x03, HOST_UNREACHABLE = 0x04, CONNECTION_REFUSED = 0x05};
+enum RepplyValues {SUCCESFUL = 0x00, GENERAL_SOCKS_SERVER_FAILURE = 0x01, NETWORK_UNREACHABLE = 0x03, HOST_UNREACHABLE = 0x04, CONNECTION_REFUSED = 0x05};
+
+typedef struct RequestHeader{
+    RequestParser parser;
+    uint8_t bytes;
+    uint8_t rep;
+
+}RequestHeader;
 
 void request_on_arrival (const unsigned state, struct selector_key *key);
 

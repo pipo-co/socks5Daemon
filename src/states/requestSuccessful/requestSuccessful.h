@@ -10,9 +10,9 @@
 #define ATYP 0x01
 
 
-void request_successful_on_pre_write(struct selector_key *key);
+unsigned request_successful_on_pre_write(struct selector_key *key);
 
-void request_successful_on_post_write(struct selector_key *key);
+unsigned request_successful_on_post_write(struct selector_key *key);
 
 void request_successful_on_departure(const unsigned state, struct selector_key *key);
 

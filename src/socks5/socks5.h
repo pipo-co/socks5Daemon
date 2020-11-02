@@ -3,12 +3,13 @@
 
 #include "selector.h"
 #include "buffer.h"
-#include "hello.h"
-#include "request.h"
+#include "../states/hello/hello.h"
+#include "../states/authRequest/authRequest.h"
+#include "../states/request/request.h"
 #include "auth.h"
 #include "connect.h"
-#include "stm.h"
-#include "authRequest.h"
+#include "stateMachine.h"
+#define BUFFSIZE 512
 
 typedef enum Socks5State {
     HELLO = 0, HELLO_ERROR, 
@@ -16,57 +17,51 @@ typedef enum Socks5State {
     REQUEST, REQUEST_ERROR,
     IP_CONNECT,
     GENERATE_DNS_QUERY,
-    FORWARDING} Socks5State;
+    FORWARDING,
+    FINNISH} Socks5State;
 
+typedef struct ConnectionInfo{
+    int fd;
+    struct sockaddr addr;
+}ConnectionInfo;
+
+// Esto seguramente no vaya aca
+typedef struct ClientInfo{
+  uint8_t authMethod;
+  uint32_t identifier;
+}ClientInfo;
+
+union SocksHeaders{
+    struct HelloHeader helloHeader;    
+    struct AuthRequestHeader authRequestHeader;
+    struct RequestHeader requestHeader;   
+};
 typedef struct Socks5Handler
 {
     Buffer input;
     Buffer output;
 
-    Socks5State state;
+    uint8_t rawBufferInput[BUFFSIZE];
+    uint8_t rawBufferOutput[BUFFSIZE];
 
-    struct state_machine stm;
-
-    int fd;
-    
     struct fd_handler fd_handler;
+
+    struct StateMachine stm;
+
+    struct ConnectionInfo clientConnection;
+    struct ConnectionInfo serverConnection;
+
+    struct ClientInfo clientInfo;
     
-    HelloParser hello_parser;
-    uint8_t authMethod;
-    uint8_t bytesSent;
-    AuthRequestParser authRequestParser;
-    uint8_t bytesSentAuth;
-    RequestParser request_parser;
-    int sock;
-    uint8_t rep;
-    uint8_t bytesSentReq;
+    union SocksHeaders socksHeader;
     
 }Socks5Handler;
 
-typedef struct ServerHandler
-{
-    Buffer input;
-    Buffer output;
-    int fd;
-    struct fd_handler fd_handler;
-    void (*process_information)(struct ServerHandler * s, uint8_t * buffer, size_t size);
-    void *data;
-
-}ServerHandler;
-
-
 typedef Socks5Handler * Socks5HandlerP;
-typedef ServerHandler * ServerHandlerP;
 
-void passive_accept(struct selector_key *key);
+void socks5_passive_accept(struct selector_key *key);
 
-// void socks5_process_input(Socks5HandlerP socks5_p, fd_selector selector);
-
-// void socks5_process_output(Socks5HandlerP socks5_p, fd_selector selector);
-
-// void forward_server_data_read(struct selector_key *key);
-
-// void forward_server_data_write(struct selector_key *key);
+void socks5_register_server(fd_selector s, Socks5HandlerP socks5_p);
 
 Socks5Handler * get_socks5_handler();
 

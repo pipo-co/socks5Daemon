@@ -22,22 +22,24 @@ static int request_marshall(Buffer *b, uint8_t *bytes){
         }
     }
 
-void request_successful_on_pre_write(struct selector_key *key){
+unsigned request_successful_on_pre_write(struct selector_key *key){
     
     Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
 
-    request_marshall(&socks5_p->output, socks5_p->bytesSentAuth);  
+    request_marshall(&socks5_p->output, socks5_p->socksHeader.requestHeader.bytes);  
 
     return socks5_p->stm.current; 
 
 }
 
-void request_successful_on_post_write(struct selector_key *key){
+unsigned request_successful_on_post_write(struct selector_key *key){
 
     Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
 
-    if (socks5_p->bytesSentAuth == REPLY_SIZE && buffer_can_read(&socks5_p->output))
+    if (socks5_p->socksHeader.requestHeader.bytes == REPLY_SIZE && buffer_can_read(&socks5_p->output))
     {
+        selector_set_interest(key->s, socks5_p->serverConnection.fd, OP_READ|OP_WRITE);
+        selector_set_interest_key(key, OP_READ|OP_WRITE);
         return FORWARDING;
     }
     return socks5_p->stm.current;

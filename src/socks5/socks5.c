@@ -25,248 +25,168 @@ typedef struct{
 
 Socks5HandlerHeader connections[MAX_CONNECTIONS];
 
-static void process_information(ServerHandlerP p, uint8_t * buffer, size_t size){
-    return;
-}
 
-static void forward_server_data_read(struct selector_key *key)
-{
-    ServerHandlerP server_p = (ServerHandlerP) key->data;
+static void socks5_server_read(struct selector_key *key){
 
-    if(!buffer_can_write(&server_p->input))
+    Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
+    Buffer * buffer = &socks5_p->output;
+    
+    //pre_read(socks5_p->stm, key)
+
+    if(!buffer_can_write(buffer))
         return;
-    
-    
-    size_t nbytes;
-    ssize_t read_bytes;
-    uint8_t * inputBuffer = buffer_write_ptr(&server_p->input, &nbytes);
 
-     if((read_bytes = read(key->fd, inputBuffer, nbytes)) > 0){
-        server_p->process_information(server_p, inputBuffer, nbytes);
-        buffer_write_adv(&server_p->input, read_bytes);
-    } else if (read_bytes == 0) {
-        //Cerro la conexion
+    ssize_t readBytes;
+    size_t nbytes;
+    uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
+
+    if((readBytes = read(key->fd, writePtr, nbytes) > 0)){
+        buffer_write_adv(buffer, readBytes);
+        state_machine_proccess_post_read(&socks5_p->stm, key);
+    }
+    else if (readBytes == 0){
+        //server cerro conexion
     }
     else
-        ERROR("Socks client input: error reading")
-
-}
-
-static void forward_server_data_write(struct selector_key *key)
-{
-
-    ServerHandlerP server_p = (ServerHandlerP) key->data;
-
-    if(!buffer_can_read(&server_p->output))
-        return;
-
-    size_t nbytes;
-    ssize_t write_bytes;
-    uint8_t * outputBuffer = buffer_read_ptr(&server_p->output, &nbytes);
-
-    if ((write_bytes = write(key->fd, outputBuffer, nbytes)) > 0)
     {
-        server_p->process_information(server_p, outputBuffer, nbytes);
-        buffer_read_adv(&server_p->output, write_bytes);
-        printf("bytes:%d\n", nbytes);
+        //cerrar conexion
+        //logger stderr(errno)
     }
+      
 }
 
-static void register_server_socket(fd_selector s, Socks5HandlerP socks5_p){
-    struct sockaddr_in cli_addr;
-    socklen_t clilen = sizeof(cli_addr);
-    int newsockfd = accept(socks5_p->sock ,(struct sockaddr *)&cli_addr, &clilen);
-    
-    if (newsockfd < 0 )
-       ERROR("Socks passive accept: bad file descriptor\n");
-
-    ServerHandlerP server_p = (ServerHandler *) malloc(sizeof(ServerHandler));
-
-    server_p->fd = newsockfd;
-    server_p->input = socks5_p->output;
-    server_p->output = socks5_p->input;
-    server_p->fd_handler.handle_read = forward_server_data_read;
-    server_p->fd_handler.handle_write = forward_server_data_write;
-    server_p->process_information = process_information;
-    server_p->data = NULL;
-
-    selector_register(s, server_p->fd, &server_p->fd_handler, OP_READ|OP_WRITE, server_p);
-
-}
-
-static void socks5_process_input(Socks5HandlerP socks5_p, fd_selector selector) {
-    // printf("socks5_p->state %d buffer_can_read %d\n", socks5_p->state, buffer_can_read(&socks5_p->input));
-    bool errored;
-    //TODO preguntar por condicion de salida del proccess input
-    while(buffer_can_read(&socks5_p->input)){
-        switch (socks5_p->state){
-        case HELLO:
-            hello_parser_consume(&socks5_p->input, &socks5_p->hello_parser, &errored);
-            if(hello_is_done(socks5_p->hello_parser.current_state, &errored)){
-                socks5_p->state = INITIAL_RESPONSE;
-                printf("hello is done\n");
-                return;
-            }
-            break;
-        case AUTHENTICATION:
-            printf("authenticating\n");
-            // auth_parser_consume(&socks5_p->input, &socks5_p->hello_parser, &errored);
-            // if(auth_is_done(socks5_p->hello_parser.current_state, &errored)){
-            //     socks5_p->state = AUTHENTICATION;
-            //     printf("hello is done\n");
-            // }
-            socks5_p->state = REQUEST;
-            break;
-        case REQUEST:
-            printf("request\n");
-            request_parser_consume(&socks5_p->input, &socks5_p->request_parser, &errored);
-            if(request_is_done(socks5_p->request_parser.currentState, &errored)){
-                socks5_p->state = EXECUTE_COMMAND;
-                printf("request is done\n");
-            }
-            break;
-        case FORWARDING:
-            printf("processing server info\n");
-            break;
-
-        default:
-            return;
-        }
-    }
-}
-static void socks5_process_output(Socks5HandlerP socks5_p, fd_selector selector) {
-    //printf("socks5_p->state %d \n", socks5_p->state);
-
-    //TODO preguntar por condicion de salida del proccess input
-    while(buffer_can_write(&socks5_p->output)){
-        switch (socks5_p->state){
-            case INITIAL_RESPONSE:
-                printf("INITIAL RESPONSE\n");
-                socks5_p->auth_header.auth_method = chooseAuthMethod(&socks5_p->hello_parser);
-                printf("selected method: %d\n", socks5_p->auth_header.auth_method);
-                if(socks5_p->auth_header.auth_method < 0){
-                    ERROR("Authentication method accept: invalid method!\n");
-                    return;
-                }
-                if(hello_marshall(&socks5_p->output, socks5_p->auth_header.auth_method) == -1){
-                    ERROR("initial response: not enough space!\n");
-                }
-                else{
-                    socks5_p->state = AUTHENTICATION;
-                    return;
-                }
-            break;
-            case EXECUTE_COMMAND:
-                if(socks5_p->request_parser.addressType == REQUEST_ADD_TYPE_IP4){
-                    socks5_p->sock = new_ipv4_socket(socks5_p->request_parser.address, socks5_p->request_parser.port);
-
-                    printf("Established connection on %s port %u\n", socks5_p->request_parser.address, socks5_p->request_parser.port);
-                    register_server_socket(selector, socks5_p);
-                    socks5_p->state = REPLY;
-                    return;
-                }
-            break;
-            case REPLY:
-                printf("REPLYING\n");
-                if(request_marshall(&socks5_p->output,socks5_p->request_parser.addressType) == -1){
-                    ERROR("Reply: not enough space!\n");
-                }
-                else{
-                    socks5_p->state = FORWARDING;
-                    return;
-                }
-            default:
-                return;
-            break;
-        }
-    }
-
-}
-
-static void socks5_client_input(struct selector_key *key){
+static void socks5_server_write(struct selector_key *key){
 
     Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
 
-    printf("Client input :buffer_can_write %d\n",!buffer_can_write(&socks5_p->input));
-    if(!buffer_can_write(&socks5_p->input))
+    state_machine_proccess_pre_write(&socks5_p->stm, key);
+
+    Buffer * buffer = &socks5_p->input;
+
+    if(!buffer_can_read(buffer))
         return;
     
-    ssize_t read_bytes;
+    ssize_t writeBytes;
     size_t nbytes;
-    uint8_t * inputBuffer = buffer_write_ptr(&socks5_p->input, &nbytes);
-
-    if((read_bytes = read(key->fd, inputBuffer, nbytes)) > 0){
-        buffer_write_adv(&socks5_p->input, read_bytes);
-        socks5_process_input(socks5_p, key->s);
-    } else if (read_bytes == 0) {
-        //Cerro la conexion
+    uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
+    
+    if( (writeBytes = write(key->fd, readPtr, nbytes)) > 0){
+        buffer_read_adv(buffer, writeBytes);
+        state_machine_proccess_post_write(&socks5_p->stm, key);
+    }
+    else if (writeBytes == 0){
+        
     }
     else
-        ERROR("Socks client input: error reading")
+    {
+        //cerrar conexion
+        //logger stderr(errno)
+    }
+    
 }
 
-static void socks5_client_output(struct selector_key *key){
+void socks5_register_server(fd_selector s, Socks5HandlerP socks5_p){
+    
+    fd_handler handler;
+    handler.handle_read = socks5_server_read;
+    handler.handle_write = socks5_server_write;
+
+    selector_register(s, socks5_p->serverConnection.fd, &handler, OP_WRITE, &socks5_p);
+    
+}
+
+static void socks5_client_read(struct selector_key *key){
+
+    Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
+    Buffer * buffer = &socks5_p->input;
+    
+    //pre_read(socks5_p->stm, key)
+
+    if(!buffer_can_write(buffer))
+        return;
+
+    ssize_t readBytes;
+    size_t nbytes;
+    uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
+
+    if((readBytes = read(key->fd, writePtr, nbytes) > 0)){
+        buffer_write_adv(buffer, readBytes);
+        state_machine_proccess_post_read(&socks5_p->stm, key);
+    }
+    else if (readBytes == 0){
+        //cliente cerro conexion
+    }
+    else
+    {
+        //cerrar conexion
+        //logger stderr(errno)
+    }
+   
+}
+
+static void socks5_client_write(struct selector_key *key){
     
     
     Socks5HandlerP socks5_p = (Socks5HandlerP) key->data;
 
-    // printf("Client output: buffer_can_read %d\n",!buffer_can_read(&socks5_p->output));
+    state_machine_proccess_pre_write(&socks5_p->stm, key);
 
-    // printf("state = %d \n", socks5_p->state);
-    socks5_process_output(socks5_p, key->s);
+    Buffer * buffer = &socks5_p->output;
 
-   // printf("about to can read\n");
-    if(!buffer_can_read(&socks5_p->output))
+    if(!buffer_can_read(buffer))
         return;
-
-    ssize_t write_bytes;
-    size_t nbytes;
-    uint8_t * outputBuffer = buffer_read_ptr(&socks5_p->output, &nbytes);
     
-    if((write_bytes = write(key->fd, outputBuffer, nbytes)) > 0){
-        buffer_read_adv(&socks5_p->output, write_bytes);
-        printf("bytes:%d\n", nbytes);
-    } else if (write_bytes == 0) {
-        //Cerro la conexion
+    ssize_t writeBytes;
+    size_t nbytes;
+    uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
+    
+    if( (writeBytes = write(key->fd, readPtr, nbytes)) > 0){
+        buffer_read_adv(buffer, writeBytes);
+        state_machine_proccess_post_write(&socks5_p->stm, key);
+    }
+    else if (writeBytes == 0){
+
     }
     else
-        ERROR("Socks client input: error reading")
-    
+    {
+        //cerrar conexion
+        //logger stderr(errno)
+    }
 }
 
-void passive_accept(struct selector_key *key){
+//tendria que haber otro passive accept para ipv6
+void socks5_passive_accept(struct selector_key *key){
     
     struct sockaddr_in cli_addr;
     socklen_t clilen = sizeof(cli_addr);
-    int newsockfd = accept(key->fd,(struct sockaddr *)&cli_addr, &clilen);
+    int fd = accept(key->fd,(struct sockaddr *)&cli_addr, &clilen);
     
-    if (newsockfd < 0 )
-       ERROR("Socks passive accept: bad file descriptor\n");
+    if (fd < 0 ){}
+       //logger stderr(errno)
 
-    Socks5HandlerP socks5_p = get_socks5_handler();
-    if(socks5_p == NULL)
-        ERROR("Socks passive accept: no space for new connection\n");
-
-
-    socks5_p->state = HELLO;
-    socks5_p->fd = newsockfd;
-    buffer_init(&socks5_p->input, BUFSIZ, malloc(BUFSIZ));
-    buffer_init(&socks5_p->output, BUFSIZ, malloc(BUFSIZ));
+    Socks5HandlerP socks5_p = malloc(sizeof(*socks5_p));
     
-    request_parser_init(&socks5_p->request_parser);
-    socks5_p->fd_handler.handle_read = socks5_client_input;
-    socks5_p->fd_handler.handle_write = socks5_client_output;
 
-    selector_register(key->s, socks5_p->fd, &socks5_p->fd_handler, OP_READ|OP_WRITE, socks5_p);
+
+    buffer_init(&socks5_p->input, sizeof(socks5_p->rawBufferInput), socks5_p->rawBufferInput);
+    buffer_init(&socks5_p->output, sizeof(socks5_p->rawBufferOutput), socks5_p->rawBufferOutput);
+
+    socks5_p->fd_handler.handle_read = socks5_client_read;
+    socks5_p->fd_handler.handle_write = socks5_client_write;
+    
+    state_machine_init(&socks5_p->stm);
+
+    socks5_p->clientConnection.fd = fd;
+    memcpy(&socks5_p->clientConnection.addr, (struct sockaddr *)&cli_addr, clilen);
+
+
+    bzero(&socks5_p->serverConnection, sizeof(socks5_p->serverConnection));
+
+    bzero(&socks5_p->clientInfo, sizeof(socks5_p->clientInfo));
+
+    bzero(&socks5_p->socksHeader, sizeof(socks5_p->socksHeader));
+
+    selector_register(key->s, socks5_p->clientConnection.fd, &socks5_p->fd_handler, OP_READ, socks5_p);
 }
 
-Socks5Handler * get_socks5_handler() {
-    for (size_t i = 0; i < MAX_CONNECTIONS; i++) {
-        if(connections[i].asigned == 0){
-            connections[i].asigned = 1;
-            return &connections[i].handler;
-        }
-    }
-    return NULL;
-}
 
