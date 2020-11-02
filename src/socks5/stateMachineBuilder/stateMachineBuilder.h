@@ -1,7 +1,7 @@
 #ifndef STATE_MACHINE_BUILDER_H_4c15ee567b21770d544e6d974044806fbc6ab94d
 #define STATE_MACHINE_BUILDER_H_4c15ee567b21770d544e6d974044806fbc6ab94d
 
-#include "selectorStateMachine.h"
+#include "stateMachine/selectorStateMachine.h"
 
 void socks5_session_state_machine_builder_init(void);
 

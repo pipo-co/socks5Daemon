@@ -11,7 +11,7 @@
 
 #include "socks5.h"
 
-#include "stateMachineBuilder.h"
+#include "stateMachineBuilder/stateMachineBuilder.h"
 
 #define DEFAULT_INPUT_BUFFER_SIZE 512
 #define DEFAULT_OUTPUT_BUFFER_SIZE 512
@@ -30,7 +30,11 @@ static int dnsBufferSize;
 
 static char *dnsServerIp; 
 
-
+static void socks5_server_read(struct SelectorEvent *key);
+static void socks5_server_write(struct SelectorEvent *key);
+void socks5_register_server(FdSelector s, SessionHandlerP socks5_p);
+static void socks5_client_read(struct SelectorEvent *key);
+static void socks5_client_write(struct SelectorEvent *key);
 static SessionHandlerP socks5_session_init(void);
 static void socks5_session_destroy(SessionHandlerP session);
 
@@ -75,7 +79,7 @@ static void socks5_server_read(struct SelectorEvent *key){
 
     if((readBytes = read(key->fd, writePtr, nbytes) > 0)){
         buffer_write_adv(buffer, readBytes);
-        state_machine_proccess_post_read(&socks5_p->sessionStateMachine, key);
+        selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, key);
     }
     else if (readBytes == 0){
         //server cerro conexion
@@ -92,7 +96,7 @@ static void socks5_server_write(struct SelectorEvent *key){
 
     SessionHandlerP socks5_p = (SessionHandlerP) key->data;
 
-    state_machine_proccess_pre_write(&socks5_p->sessionStateMachine, key);
+    selector_state_machine_proccess_pre_write(&socks5_p->sessionStateMachine, key);
 
     Buffer * buffer = &socks5_p->input;
 
@@ -105,7 +109,7 @@ static void socks5_server_write(struct SelectorEvent *key){
     
     if( (writeBytes = write(key->fd, readPtr, nbytes)) > 0){
         buffer_read_adv(buffer, writeBytes);
-        state_machine_proccess_post_write(&socks5_p->sessionStateMachine, key);
+        selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, key);
     }
     else if (writeBytes == 0){
         
@@ -144,7 +148,7 @@ static void socks5_client_read(struct SelectorEvent *key){
 
     if((readBytes = read(key->fd, writePtr, nbytes) > 0)){
         buffer_write_adv(buffer, readBytes);
-        state_machine_proccess_post_read(&socks5_p->sessionStateMachine, key);
+        selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, key);
     }
     else if (readBytes == 0){
         //cliente cerro conexion
@@ -162,7 +166,7 @@ static void socks5_client_write(struct SelectorEvent *key){
     
     SessionHandlerP socks5_p = (SessionHandlerP) key->data;
 
-    state_machine_proccess_pre_write(&socks5_p->sessionStateMachine, key);
+    selector_state_machine_proccess_pre_write(&socks5_p->sessionStateMachine, key);
 
     Buffer * buffer = &socks5_p->output;
 
@@ -175,7 +179,7 @@ static void socks5_client_write(struct SelectorEvent *key){
     
     if( (writeBytes = write(key->fd, readPtr, nbytes)) > 0){
         buffer_read_adv(buffer, writeBytes);
-        state_machine_proccess_post_write(&socks5_p->sessionStateMachine, key);
+        selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, key);
     }
     else if (writeBytes == 0){
 

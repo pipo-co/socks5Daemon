@@ -1,7 +1,7 @@
 #ifndef STM_H_wL7YxN65ZHqKGvCPrNbPtMJgL8B
 #define STM_H_wL7YxN65ZHqKGvCPrNbPtMJgL8B
 
-#include "../selector/selector.h"
+#include "selector/selector.h"
 #include <stdbool.h>
 
 /**

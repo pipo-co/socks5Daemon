@@ -15,13 +15,12 @@ START_TEST (request_test_parsing_error) {
 
     struct selector_key * key = malloc(sizeof(*key));
     Socks5Handler * socks_p = malloc(sizeof(*socks_p));
-    Buffer buff;
+    socks_p->input;
 
-    buffer_init(&buff, N(request_parser_test_input_unsupported_address_type), request_parser_test_input_unsupported_address_type);
-    buffer_write_adv(&buff, N(request_parser_test_input_unsupported_address_type));
+    buffer_init(&socks_p->input, N(request_parser_test_input_unsupported_address_type), request_parser_test_input_unsupported_address_type);
+    buffer_write_adv(&socks_p->input, N(request_parser_test_input_unsupported_address_type));
 
     key->data = socks_p;
-    socks_p->input = buff;
 
     unsigned state = request_on_post_read(key);
 

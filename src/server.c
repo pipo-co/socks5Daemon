@@ -25,8 +25,8 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
-#include "selector.h"
-#include "socks5.h"
+#include "selector/selector.h"
+#include "socks5/socks5.h"
 //#include "socks5nio.h"
 
 #define SERVER_BACKLOG 20
@@ -62,7 +62,7 @@ int main(const int argc, const char **argv) {
     }
 
     // no tenemos nada que leer de stdin
-    close(stdin);
+    close(STDIN_FILENO);
 
     const char       *err_msg = NULL;
     SelectorStatus   ss      = SELECTOR_SUCCESS;
