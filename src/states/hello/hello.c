@@ -1,5 +1,6 @@
 #include "states/hello/hello.h"
 
+#define N(x) (sizeof(x)/sizeof((x)[0]))
 
 static void on_auth_method(HelloParser *p, uint8_t currentMethod){
     
@@ -10,7 +11,7 @@ static void on_auth_method(HelloParser *p, uint8_t currentMethod){
     size_t prev = 0;
     size_t curr = 0;
 
-    for (size_t i = 0; i < sizeof(methodPriorityList); i++){
+    for (size_t i = 0; i < N(methodPriorityList); i++){
         if(*previousMethod == methodPriorityList[i]){
             prev = i;
         }

@@ -1,5 +1,7 @@
 #include "authMethodAnnouncement.h"
 
+#define N(x) (sizeof(x)/sizeof((x)[0]))
+
 static int hello_marshall(Buffer *b, uint8_t method, uint8_t *bytes){
 
         while(*bytes < INITIAL_RESPONSE_SIZE && buffer_can_write(b)){
