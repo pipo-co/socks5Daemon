@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "../buffer/buffer.h"
+#include "buffer/buffer.h"
 #include "helloParser.h"
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))

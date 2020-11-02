@@ -110,7 +110,7 @@ int new_ipv4_socket(char *ip, uint16_t port) {
         return -1;
     } 
     
-	bzero(&addr, sizeof(addr)); 
+	memset(&addr, '\0',sizeof(addr)); 
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port); 
@@ -136,7 +136,7 @@ int new_ipv6_socket(char *ip, uint16_t port) {
         return -1;
     } 
     
-	bzero(&addr, sizeof(addr)); 
+	memset(&addr, '\0',sizeof(addr));
 
     addr.sin6_family = AF_INET6;
     addr.sin6_port = htons(port); 

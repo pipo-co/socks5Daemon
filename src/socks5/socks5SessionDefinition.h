@@ -2,14 +2,14 @@
 #include <stdint.h>
 #include <arpa/inet.h>
 
-#include "selector.h"
-#include "buffer.h"
-#include "selectorStateMachine.h"
+#include "selector/selector.h"
+#include "buffer/buffer.h"
+#include "stateMachine/selectorStateMachine.h"
 
 // TODO: move parser files to parsers/
-#include "../states/hello/helloParser.h"
-#include "../states/authRequest/authRequestParser.h"
-#include "../states/request/requestParser.h"
+#include "states/hello/helloParser.h"
+#include "states/authRequest/authRequestParser.h"
+#include "states/request/requestParser.h"
 
 typedef enum SessionState {
     HELLO = 0, 

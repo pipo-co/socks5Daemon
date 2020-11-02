@@ -1,10 +1,10 @@
 #ifndef SOCKS5_H_wL7YxN65ZHqKGvCPrNbPtMJgL8B
 #define SOCKS5_H_wL7YxN65ZHqKGvCPrNbPtMJgL8B
 
-#include "selector.h"
-#include "buffer.h"
-#include "selectorStateMachine.h"
-#include "socks5SessionDefinition.h"
+#include "selector/selector.h"
+#include "buffer/buffer.h"
+#include "stateMachine/selectorStateMachine.h"
+#include "socks5/socks5SessionDefinition.h"
 
 
 void socks5_init(char *dnsServerIp);

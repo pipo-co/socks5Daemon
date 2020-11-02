@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <errno.h>
 
-#include "../buffer/buffer.h"
+#include "buffer/buffer.h"
 #include "requestParser.h"
 
 static void request_on_arrival (SelectorEvent *event);
