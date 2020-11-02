@@ -4,10 +4,10 @@
 INCLUDE = -I ./selector -I ./socks5 -I ./hello -I ./request -I ./buffer -I ./auth -I ./connect
 
 CC=gcc
-LIBRARIES=-lcheck -lrt -lpthread -lm -lsubunit
-CFLAGS= -pthread -D_POSIX_C_SOURCE=200112L -ggdb -Wall -pedantic -std=c11 $(INCLUDE) 
+CFLAGS= -pthread -D_POSIX_C_SOURCE=200112L -ggdb -Wall -Wextra -pedantic -std=c11 -fsanitize=address -fno-omit-frame-pointer $(INCLUDE) 
 
 all: main 
+	$(CC) $(CFLAGS) client.c -o client
 
 clean: 
 	rm -rf */*.o

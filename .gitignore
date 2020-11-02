@@ -48,7 +48,15 @@ Thumbs.db
 *.mov
 *.wmv
 
+# Compiled files
+*.o
+
 # VSCode
 .vscode/
+
+# Files
+main
+client
+
 
 src/request/request_test.c
