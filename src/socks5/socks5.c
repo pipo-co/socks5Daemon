@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #include <unistd.h>
 #include <sys/types.h>   // socket
@@ -16,6 +17,7 @@
 #define DEFAULT_OUTPUT_BUFFER_SIZE 512
 #define DEFAULT_DNS_BUFFER_SIZE 512
 
+#define N(x) (sizeof(x)/sizeof((x)[0]))
 #define ERROR(msg) perror(msg);
 
 static FdHandler clientHandler;

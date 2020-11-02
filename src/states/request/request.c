@@ -1,4 +1,5 @@
 #include "request.h"
+#include <errno.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -53,10 +54,10 @@ static unsigned request_on_post_read(SelectorEvent *event) {
     else{
 
         if(socks5_p->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP4){
-            socks5_p->serverConnection.fd = new_ipv4_socket(socks5_p->socksHeader.requestHeader.parser.address, socks5_p->socksHeader.requestHeader.parser.port);    
+            // socks5_p->serverConnection.fd = new_ipv4_socket(socks5_p->socksHeader.requestHeader.parser.address, socks5_p->socksHeader.requestHeader.parser.port);    
         }
         else if(socks5_p->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP6){
-        socks5_p->serverConnection.fd = new_ipv6_socket(socks5_p->socksHeader.requestHeader.parser.address, socks5_p->socksHeader.requestHeader.parser.port);
+            // socks5_p->serverConnection.fd = new_ipv6_socket(socks5_p->socksHeader.requestHeader.parser.address, socks5_p->socksHeader.requestHeader.parser.port);
         }
         if (socks5_p->serverConnection.fd  == -1){
             if(errno == ENETUNREACH){

@@ -4,7 +4,7 @@
 #define INITIAL_SIZE ((size_t) 1024)
 
 // para poder testear las funciones estaticas
-#include "selector.c"
+#include "selector/selector.c"
 
 START_TEST (test_selector_error) {
     const SelectorStatus data[] = {
@@ -152,7 +152,7 @@ START_TEST (test_selector_register_unregister_register) {
 END_TEST
 
 Suite * 
-suite(void) {
+selector_test_suite(void) {
     Suite *s  = suite_create("nio");
     TCase *tc = tcase_create("nio");
 
@@ -164,15 +164,4 @@ suite(void) {
     suite_add_tcase(s, tc);
 
     return s;
-}
-
-int 
-main(void) {
-    int number_failed;
-    SRunner *sr = srunner_create(suite());
-
-    srunner_run_all(sr, CK_NORMAL);
-    number_failed = srunner_ntests_failed(sr);
-    srunner_free(sr);
-    return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

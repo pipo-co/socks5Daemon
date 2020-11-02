@@ -64,13 +64,13 @@ bool hello_parser_consume(Buffer *buffer, HelloParser *p, bool *errored) {
 
     uint8_t byte;
 
-    while(!hello_is_done(p->current_state, errored) && buffer_can_read(buffer)) {
+    while(!hello_parser_is_done(p->current_state, errored) && buffer_can_read(buffer)) {
         
         byte = buffer_read(buffer);
         hello_parser_feed(p, byte); 
     }
 
-    return hello_is_done(p->current_state, errored);
+    return hello_parser_is_done(p->current_state, errored);
 }
 
 bool hello_parser_is_done(enum HelloParserState state, bool *errored) {

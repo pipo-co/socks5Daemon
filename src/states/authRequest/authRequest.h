@@ -3,7 +3,6 @@
 
 #include "socksDefs.h"
 #include "socks5SessionDefinition.h"
-#include "authRequestParser.h"
 
 SelectorStateDefinition auth_request_state_definition_supplier(void);
 

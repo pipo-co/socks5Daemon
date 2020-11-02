@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "../buffer/buffer.h"
+#include "buffer/buffer.h"
 
 
 enum HelloParserState {

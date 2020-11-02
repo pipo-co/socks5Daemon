@@ -3,10 +3,10 @@
 
 #include "requestParser.h"
 
-void REQUEST_PARSER_parser_init(RequestParser *p) {
+void request_parser_init(RequestParser *p) {
 
+    memset(p, '\0', sizeof(*p));
     p->currentState = REQUEST_PARSER_VERSION;
-    p->addressLength = 0;
 }
 
 enum RequestParserState request_parser_feed(RequestParser *p, uint8_t b) {
@@ -28,7 +28,7 @@ enum RequestParserState request_parser_feed(RequestParser *p, uint8_t b) {
         break;
 
         case REQUEST_PARSER_RESERVED:
-
+            //TODO se hace algo si esta no reserved
             p->currentState = REQUEST_PARSER_ADD_TYPE;
         break;
 
@@ -36,22 +36,16 @@ enum RequestParserState request_parser_feed(RequestParser *p, uint8_t b) {
 
             p->addressType = b;
 
-            if(b == REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME)
+            if(b == REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME){
                 p->currentState = REQUEST_PARSER_DOMAIN_LENGTH;
-            
+            } 
             else if(b == REQUEST_PARSER_ADD_TYPE_IP4) {
-                p->addressLength = IP4_LENGTH;
                 p->addressRemaining = IP4_LENGTH;
                 p->currentState = REQUEST_PARSER_IPV4_ADDRESS;
-                p->address[p->addressLength] = 0;
-                
-            }
+            } 
             else if (b == REQUEST_PARSER_ADD_TYPE_IP6) {
-                p->addressLength = IP6_LENGTH;
-                p->addressRemaining = IP6_LENGTH;
+                p->addressRemaining = p->addressLength = IP6_LENGTH;
                 p->currentState = REQUEST_PARSER_IPV6_ADDRESS;
-                p->address[p->addressLength] = 0;
-
             }
             else
                 p->currentState = REQUEST_PARSER_ERROR_UNSUPPORTED_ADD_TYPE;
@@ -59,11 +53,10 @@ enum RequestParserState request_parser_feed(RequestParser *p, uint8_t b) {
 
         case REQUEST_PARSER_DOMAIN_LENGTH:
 
-            p->addressLength = b;
-            p->addressRemaining = b;
+            p->addressRemaining = p->addressLength = b;
 
             // Domain Name Null Terminated
-            p->address[p->addressLength] = 0;
+            p->address.domainName[p->addressRemaining] = 0;
 
             if(b > 0) 
                 p->currentState = REQUEST_PARSER_DOMAIN_ADDRESS;
@@ -74,7 +67,7 @@ enum RequestParserState request_parser_feed(RequestParser *p, uint8_t b) {
 
         case REQUEST_PARSER_DOMAIN_ADDRESS:
 
-            p->address[p->addressLength - p->addressRemaining] = b;
+            p->address.domainName[p->addressLength - p->addressRemaining] = b;
 
             p->addressRemaining--;
 
@@ -85,34 +78,26 @@ enum RequestParserState request_parser_feed(RequestParser *p, uint8_t b) {
 
         case REQUEST_PARSER_IPV4_ADDRESS:
 
-            sprintf(p->address + (p->addressLength - p->addressRemaining), "%03d", b);
+            p->address.ipv4.s_addr = (p->address.ipv4.s_addr << 8) + b;
 
-            p->addressRemaining -= 3;
+            p->addressRemaining--;
 
-            if(p->addressRemaining != 0){
-                p->address[p->addressLength - p->addressRemaining] = '.';
-                p->addressRemaining--;
+            if(p->addressRemaining == 0){
+                p->address.ipv4.s_addr = htonl(p->address.ipv4.s_addr);
+               p->currentState = REQUEST_PARSER_PORT_HIGH;
             }
-
-            if(p->addressRemaining == 0)
-                p->currentState = REQUEST_PARSER_PORT_HIGH;
             
         break;
 
         case REQUEST_PARSER_IPV6_ADDRESS:
 
-            sprintf(p->address + (p->addressLength - p->addressRemaining), "%02x", b);
+            p->address.ipv6.s6_addr[p->addressLength - p->addressRemaining] = b;
 
-            p->addressRemaining -= 2;
+            p->addressRemaining--;
 
-            if((p->addressLength - p->addressRemaining) % 5 == 4 && p->addressRemaining != 0){
-
-                p->address[p->addressLength - p->addressRemaining] = ':';
-                p->addressRemaining--;
+            if(p->addressRemaining == 0){
+               p->currentState = REQUEST_PARSER_PORT_HIGH;
             }
-
-            if(p->addressRemaining == 0)
-                p->currentState = REQUEST_PARSER_PORT_HIGH;
             
         break;
 
@@ -127,36 +112,36 @@ enum RequestParserState request_parser_feed(RequestParser *p, uint8_t b) {
         case REQUEST_PARSER_PORT_LOW:
 
             p->port += b;
-
-            p->currentState = REQUEST_PARSER_SUCCESS;
+            p->port = htons(p->port);
+            p->currentState = REQUEST_PARSER_DONE;
 
         break;
 
-        case REQUEST_PARSER_SUCCESS:
+        case REQUEST_PARSER_DONE:
         case REQUEST_PARSER_ERROR_UNSUPPORTED_ADD_TYPE:
-        case REQUEST_PARSER_INVALID_STATE:
+        case REQUEST_PARSER_ERROR_INVALID_STATE:
             // Nada que hacer
         break;
 
         default:
-            p->currentState = REQUEST_PARSER_INVALID_STATE;
+            p->currentState = REQUEST_PARSER_ERROR_INVALID_STATE;
         break;
     }
 
     return p->currentState;
 }
 
-bool request_parser_parser_consume(Buffer *buffer, RequestParser *p, bool *errored) {
+bool request_parser_consume(Buffer *buffer, RequestParser *p, bool *errored) {
 
     uint8_t byte;
 
     while(!request_parser_is_done(p->currentState, errored) && buffer_can_read(buffer)) {
 
         byte = buffer_read(buffer);
-        request_parser_parser_feed(p, byte); 
+        request_parser_feed(p, byte); 
     }
 
-    return hello_is_done(p->currentState, errored);
+    return request_parser_is_done(p->currentState, errored);
 }
 
 bool request_parser_is_done(enum RequestParserState state, bool *errored) {
@@ -166,7 +151,7 @@ bool request_parser_is_done(enum RequestParserState state, bool *errored) {
 
     switch(state) {
 
-        case REQUEST_PARSER_SUCCESS:
+        case REQUEST_PARSER_DONE:
 
             return true;
         break;
@@ -186,7 +171,7 @@ bool request_parser_is_done(enum RequestParserState state, bool *errored) {
         break;
 
         case REQUEST_PARSER_ERROR_UNSUPPORTED_ADD_TYPE:
-        case REQUEST_PARSER_INVALID_STATE:
+        case REQUEST_PARSER_ERROR_INVALID_STATE:
         default:
 
             if(errored != NULL)
@@ -200,7 +185,7 @@ bool request_parser_is_done(enum RequestParserState state, bool *errored) {
 char * request_parser_error_message(enum RequestParserState state){
     switch(state) {
 
-        case REQUEST_PARSER_SUCCESS:
+        case REQUEST_PARSER_DONE:
         case REQUEST_PARSER_VERSION:
         case REQUEST_PARSER_COMMAND:
         case REQUEST_PARSER_RESERVED:
@@ -221,7 +206,7 @@ char * request_parser_error_message(enum RequestParserState state){
 
         break;
 
-        case REQUEST_PARSER_INVALID_STATE:
+        case REQUEST_PARSER_ERROR_INVALID_STATE:
         default:
 
             return "Request: Invalid state";

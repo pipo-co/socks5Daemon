@@ -9,18 +9,26 @@ typedef Suite *(*suiteSupplier)(void);
 
 // Test files being exercised
 #include "tests/buffer_test.c"
+#include "tests/socks5Test.c"
 #include "tests/parser_test.c"
+#include "tests/selector_test.c"
 #include "tests/parser_utils_test.c"
-#include "tests/hello_test.c"
-#include "tests/request_test.c"
+// #include "tests/helloTest.c"
+#include "tests/helloParserTest.c"
+#include "tests/requestParserTest.c"
+#include "tests/stateMachineTest.c"
+#include "tests/requestTest.c"
 
 // Tests being exercised
 static const suiteSupplier suiteSuppliers[] = {
-    buffer_test_suite,
-    parser_test_suite,
-    parser_utils_test_suite,
-    hello_test_suite,
-    request_test_suite,
+    // buffer_test_suite,
+    // parser_test_suite,
+    // parser_utils_test_suite,
+    // hello_test_suite,
+    hello_parser_test_suite,
+    // selector_test_suite,
+    request_parser_test_suite,
+    request_test_suite
 };
 
 SRunner * test_srunner_init(void) {
@@ -35,7 +43,6 @@ SRunner * test_srunner_init(void) {
 }
 
 int main(void) {
-
     SRunner *sr  = test_srunner_init();
 
     srunner_run_all(sr, CK_NORMAL);

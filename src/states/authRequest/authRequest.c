@@ -1,5 +1,7 @@
 #include "authRequest.h"
 
+#include "authRequestParser.h"
+
 static void auth_request_on_arrival(SelectorEvent *event);
 static unsigned auth_request_on_post_read(SelectorEvent *event);
 
