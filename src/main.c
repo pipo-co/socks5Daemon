@@ -123,7 +123,7 @@ main(const int argc, const char **argv) {
     }
 
     const struct fd_handler socksv5 = {
-        .handle_read       = passive_accept,//socksv5_passive_accept,
+        .handle_read       = socks5_passive_accept,//socksv5_passive_accept,
         .handle_write      = NULL,
         .handle_close      = NULL, // nada que liberar
     };
