@@ -1,14 +1,12 @@
 #ifndef SOCKS5_H_wL7YxN65ZHqKGvCPrNbPtMJgL8B
 #define SOCKS5_H_wL7YxN65ZHqKGvCPrNbPtMJgL8B
 
-#include "selector.h"
-#include "buffer.h"
-#include "../states/hello/hello.h"
-#include "../states/authRequest/authRequest.h"
-#include "../states/request/request.h"
-#include "auth.h"
-#include "connect.h"
-#include "stateMachine.h"
+#include "selector/selector.h"
+#include "buffer/buffer.h"
+#include "states/hello/hello.h"
+#include "states/authRequest/authRequest.h"
+#include "states/request/request.h"
+#include "stateMachine/stateMachine.h"
 #define BUFFSIZE 512
 
 typedef enum Socks5State {

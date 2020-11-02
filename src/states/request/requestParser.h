@@ -3,12 +3,13 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <netinet/in.h>
 
-#include "../buffer/buffer.h"
+#include "buffer/buffer.h"
 
 #define DOMAIN_NAME_MAX_LENGTH 255
-#define IP4_LENGTH 15 // 3 * 4 + 3
-#define IP6_LENGTH 39 // 4 * 8 + 7
+#define IP4_LENGTH 4
+#define IP6_LENGTH 16 // 4 * 8 + 7
 
 #define REQUEST_ADDRESS_MAX_LENGTH (DOMAIN_NAME_MAX_LENGTH + 1)
 
@@ -18,9 +19,11 @@
 #define REQUEST_PARSER_COMMAND_CONNECT 0x01
 
 // Valid Address Type
-typedef enum { REQUEST_PARSER_ADD_TYPE_IP4 = 0x01, REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME = 0x03 , REQUEST_PARSER_ADD_TYPE_IP6 = 0x04
+typedef enum { 
+    REQUEST_PARSER_ADD_TYPE_IP4 = 0x01, 
+    REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME = 0x03 , 
+    REQUEST_PARSER_ADD_TYPE_IP6 = 0x04
 }RequestIpEnum;
-
 
 enum RequestParserState {
     REQUEST_PARSER_VERSION,
@@ -33,10 +36,17 @@ enum RequestParserState {
     REQUEST_PARSER_IPV6_ADDRESS,
     REQUEST_PARSER_PORT_HIGH,
     REQUEST_PARSER_PORT_LOW,
-    REQUEST_PARSER_SUCCESS,
+    REQUEST_PARSER_DONE, //DONE=???
     REQUEST_PARSER_ERROR_UNSUPPORTED_ADD_TYPE,
-    REQUEST_PARSER_INVALID_STATE,
+    REQUEST_PARSER_ERROR_INVALID_STATE,
 };
+
+typedef union RequestParserAddress {
+
+    uint8_t domainName[REQUEST_ADDRESS_MAX_LENGTH];
+    struct in_addr ipv4; 
+    struct in6_addr ipv6; 
+} RequestParserAddress;
 
 // Not an ADT to avoid unnecessary usages of malloc
 typedef struct RequestParser {
@@ -47,16 +57,16 @@ typedef struct RequestParser {
 
     uint8_t addressType;
 
-    uint8_t addressLength;
+    union RequestParserAddress address;
 
-    uint8_t address[REQUEST_ADDRESS_MAX_LENGTH];
-
-    uint16_t port;
+    in_port_t port;
 
     // --- Private attributes ---
     enum RequestParserState currentState;
 
     uint8_t addressRemaining;
+
+    uint8_t addressLength;
 
 } RequestParser;
 
@@ -68,7 +78,7 @@ enum RequestParserState request_parser_feed(RequestParser *p, uint8_t byte);
 
 bool request_parser_consume(Buffer *buffer, RequestParser *p, bool *errored);
 
-bool request_is_done(enum RequestParserState state, bool *errored);
+bool request_parser_is_done(enum RequestParserState state, bool *errored);
 
 char * request_parser_error_message(enum RequestParserState state);
 // Reportar el problema

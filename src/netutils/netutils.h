@@ -3,7 +3,7 @@
 
 #include <netinet/in.h>
 
-#include "buffer.h"
+#include "buffer/buffer.h"
 
 #define SOCKADDR_TO_HUMAN_MIN (INET6_ADDRSTRLEN + 5 + 1)
 /**

@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "../buffer/buffer.h"
+#include "buffer/buffer.h"
 #include "helloParser.h"
-#include "socks5.h"
+#include "socks5/socks5.h"
 
 enum AuthMethods {
     NO_ACCEPTABLE_METHODS = 0xff, 
