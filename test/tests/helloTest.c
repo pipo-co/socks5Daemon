@@ -27,19 +27,20 @@ uint8_t hello_test_input_no_acceptable_methods[] = {
 START_TEST (hello_test_core_on_auth_method) {
    
     HelloParser * p = malloc(sizeof(*p));
-    p->data = NO_ACCEPTABLE_METHODS;
+    unsigned state = NO_ACCEPTABLE_METHODS;
+    p->data = &state;
 
     on_auth_method(p, NO_AUTHENTICATION);
 
-    ck_assert_uint_eq(p->data, NO_AUTHENTICATION);
+    ck_assert_uint_eq(*p->data, NO_AUTHENTICATION);
 
     on_auth_method(p, USER_PASSWORD);
 
-    ck_assert_uint_eq(p->data, USER_PASSWORD);
+    ck_assert_uint_eq(*p->data, USER_PASSWORD);
 
     on_auth_method(p, NO_AUTHENTICATION);
 
-    ck_assert_uint_eq(p->data, USER_PASSWORD);
+    ck_assert_uint_eq(*p->data, USER_PASSWORD);
     
     free(p);
 }
@@ -53,7 +54,7 @@ START_TEST (hello_test_core_on_arrival) {
 
     HelloHeader helloHeader;
     
-    socks5_p->helloHeader = helloHeader;
+    socks5_p.socksHeader.helloHeader = helloHeader;
 
     ClientInfo clientInfo;
     clientInfo.authMethod = NO_AUTHENTICATION;
@@ -88,7 +89,12 @@ START_TEST (hello_test_core_on_post_read_same_state) {
     buffer_write(&socks5_p->input, 0x05);
 
     HelloHeader helloHeader;
-    socks5_p.helloHeader = helloHeader;
+    socks5_p.helloHeader.parser.current_state = HELLO_PARSER_VERSION;
+    socks5_p.helloHeader.parser.on_auth_method = on_auth_method;
+    socks5_p.helloHeader.parser.data = NO_ACCEPTABLE_METHODS;
+    socks5_p.helloHeader.parser.methods_remaining = 0;
+
+    socks5_p.socksHeader.helloHeader = helloHeader;
     socks5_p.clientInfo = clientInfo;
 
     key->data = socks5_p;
@@ -116,7 +122,7 @@ START_TEST (hello_test_core_on_post_read_success) {
     buffer_write_adv(&buff, N(hello_test_input_success));
 
     HelloHeader helloHeader;
-    socks5_p.helloHeader = helloHeader;
+    socks5_p.socksHeader.helloHeader = helloHeader;
 
     socks5_p.helloHeader.parser.current_state = HELLO_PARSER_VERSION;
     socks5_p.helloHeader.parser.on_auth_method = on_auth_method;
@@ -149,7 +155,7 @@ START_TEST (hello_test_core_on_post_read_errored) {
 
     HelloHeader helloHeader;
     helloHeader.parser.currentState = HELLO_PARSER_INVALID_STATE;
-    socks5_p.helloHeader = helloHeader;
+    socks5_p.socksHeader.helloHeader = helloHeader;
 
     socks5_p.clientInfo = clientInfo;
     
@@ -184,7 +190,7 @@ START_TEST (hello_test_core_on_post_read_unsupported_version) {
     socks5_p.helloHeader.parser.data = NO_ACCEPTABLE_METHODS;
     socks5_p.helloHeader.parser.methods_remaining = 0;
 
-    socks5_p.helloHeader = helloHeader;
+    socks5_p.socksHeader.helloHeader = helloHeader;
     socks5_p.clientInfo = clientInfo;
 
     key->data = socks5_p;
@@ -218,7 +224,7 @@ START_TEST (hello_test_core_on_post_read_errored_no_acceptable_methods) {
     socks5_p.helloHeader.parser.data = NO_ACCEPTABLE_METHODS;
     socks5_p.helloHeader.parser.methods_remaining = 0;
     
-    socks5_p.helloHeader = helloHeader;
+    socks5_p.socksHeader.helloHeader = helloHeader;
     socks5_p.clientInfo = clientInfo;
 
     key->data = socks5_p;
