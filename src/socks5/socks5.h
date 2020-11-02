@@ -6,6 +6,7 @@
 #include "../states/hello/hello.h"
 #include "../states/authRequest/authRequest.h"
 #include "../states/request/request.h"
+#include "../netutils/netutils.h"
 #include "auth.h"
 #include "connect.h"
 #include "stateMachine.h"

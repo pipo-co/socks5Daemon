@@ -10,6 +10,7 @@
 
 #include "socks5.h"
 
+#define N(x) (sizeof(x)/sizeof((x)[0]))
 #define ERROR(msg) perror(msg);
 
 enum SocksSizeConstants {
@@ -168,8 +169,8 @@ void socks5_passive_accept(struct selector_key *key){
     
 
 
-    buffer_init(&socks5_p->input, sizeof(socks5_p->rawBufferInput), socks5_p->rawBufferInput);
-    buffer_init(&socks5_p->output, sizeof(socks5_p->rawBufferOutput), socks5_p->rawBufferOutput);
+    buffer_init(&socks5_p->input, N(socks5_p->rawBufferInput), socks5_p->rawBufferInput);
+    buffer_init(&socks5_p->output, N(socks5_p->rawBufferOutput), socks5_p->rawBufferOutput);
 
     socks5_p->fd_handler.handle_read = socks5_client_read;
     socks5_p->fd_handler.handle_write = socks5_client_write;
