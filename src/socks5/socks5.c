@@ -62,7 +62,7 @@ void socks5_init(char *dnsServerIp) {
     socks5_session_state_machine_builder_init();
 }
 
-//tendria que haber otro passive accept para ipv6
+//tendría que haber otro passive accept para ipv6
 void socks5_passive_accept(SelectorEvent *event){
     
     struct sockaddr_in cli_addr;
@@ -112,7 +112,7 @@ static void socks5_server_read(SelectorEvent *event){
             socks5_p->serverConnection.state = CLOSING;
 
         if(selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, event) == FINISH)
-            closeSession(socks5_p);
+            closeSession(socks5_p, event->s);
     }
 
     else {
@@ -142,7 +142,7 @@ static void socks5_server_write(SelectorEvent *event){
         buffer_read_adv(buffer, writeBytes);
 
         if(selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, event) == FINISH)
-            closeSession(socks5_p);
+            closeSession(socks5_p, event->s);
     }
     else if (writeBytes == 0){
         fprintf(stderr, "%d wrote 0 bytes", socks5_p->serverConnection.fd);
@@ -176,7 +176,7 @@ static void socks5_client_read(SelectorEvent *event){
             socks5_p->clientConnection.state = CLOSING;
 
         if(selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, event) == FINISH)
-            closeSession(socks5_p);
+            closeSession(socks5_p, event->s);
     }
 
     else {
@@ -205,7 +205,7 @@ static void socks5_client_write(SelectorEvent *event){
         buffer_read_adv(buffer, writeBytes);
 
         if(selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, event) == FINISH)
-            closeSession(socks5_p);
+            closeSession(socks5_p, event->s);
     }
     else if (writeBytes == 0){
         fprintf(stderr, "%d wrote 0 bytes", socks5_p->clientConnection.fd);
@@ -236,15 +236,20 @@ static SessionHandlerP socks5_session_init(void) {
 
     build_socks_session_state_machine(&session->sessionStateMachine);
 
-    // session->sessionStateMachine.states[FINISH].on_departure = socks5_session_destroy;
-
     session->clientConnection.state = OPEN;
 
     return session;
 }
 
-static void closeSession(SessionHandlerP session) {
+static void closeSession(SessionHandlerP session, FdSelector s) {
 
+    selector_unregister_fd(s, session->clientConnection.fd);
+    selector_unregister_fd(s, session->serverConnection.fd);
+
+    close(session->clientConnection.fd);
+    close(session->serverConnection.fd);
+
+    socks5_session_destroy(session);
 }
 
 static void socks5_session_destroy(SessionHandlerP session) {
