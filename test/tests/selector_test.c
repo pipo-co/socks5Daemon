@@ -67,7 +67,7 @@ START_TEST (test_ensure_capacity) {
 
     selector_destroy(s);
 
-    ck_assert_ptr_null(selector_new(ITEMS_MAX_SIZE + 1));
+    ck_assert_ptr_eq(selector_new(ITEMS_MAX_SIZE + 1), NULL);
 }
 END_TEST
 
@@ -76,7 +76,7 @@ static void *data_mark = (void *)0x0FF1CE;
 static unsigned destroy_count = 0;
 static void
 destroy_callback(struct SelectorEvent *key) {
-    ck_assert_ptr_nonnull(key->s);
+    ck_assert_ptr_ne(key->s, NULL);
     ck_assert_int_ge(key->fd, 0);
     ck_assert_int_lt(key->fd, ITEMS_MAX_SIZE);
 
@@ -87,7 +87,7 @@ destroy_callback(struct SelectorEvent *key) {
 START_TEST (test_selector_register_fd) {
     destroy_count = 0;
     FdSelector s = selector_new(INITIAL_SIZE);
-    ck_assert_ptr_nonnull(s);
+    ck_assert_ptr_ne(s, NULL);
 
     ck_assert_uint_eq(SELECTOR_IARGS,   selector_register(0, -1, 0, 0, data_mark));
 
@@ -116,7 +116,7 @@ END_TEST
 START_TEST (test_selector_register_unregister_register) {
     destroy_count = 0;
     FdSelector s = selector_new(INITIAL_SIZE);
-    ck_assert_ptr_nonnull(s);
+    ck_assert_ptr_ne(s, NULL);
 
     const struct FdHandler h = {
         .handle_read   = NULL,
