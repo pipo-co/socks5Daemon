@@ -25,13 +25,21 @@ typedef enum SessionState {
     // GENERATE_DNS_QUERY,
     REQUEST_SUCCESSFUL,
     // FORWARDING,
+    FLUSH_CLOSER,
+    FLUSH_CLOSY,
     FINISH,
 } SessionState;
+
+typedef enum SocketState {
+    OPEN,
+    CLOSING,
+    CLOSED,
+} SocketState;
 
 typedef struct Connection {
     int fd;
     struct sockaddr addr;
-    bool closed;
+    SocketState state;
 } Connection;
 
 // Esto seguramente no vaya aca

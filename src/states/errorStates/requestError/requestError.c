@@ -20,13 +20,12 @@ static unsigned request_error_on_post_write(SelectorEvent *event) {
 
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
-    if (socks5_p->socksHeader.requestHeader.bytes == REQUEST_ERROR_SIZE && buffer_can_read(&socks5_p->output))
-    {
+    if (socks5_p->socksHeader.requestHeader.bytes == REQUEST_ERROR_SIZE && !buffer_can_read(&socks5_p->output)) {
         selector_unregister_fd(event->s, event->fd);
         return FINISH;
     }
-    return socks5_p->sessionStateMachine.current;
 
+    return socks5_p->sessionStateMachine.current;
 }
 
 static void request_error_marshall(Buffer *b, size_t *bytes, uint8_t rep) {

@@ -12,21 +12,19 @@ static unsigned hello_error_on_pre_write(SelectorEvent *event) {
 
     hello_error_marshall(&socks5_p->output, &socks5_p->socksHeader.helloHeader.bytes);  
     
-    return socks5_p->sessionStateMachine.current; 
-
+    return socks5_p->sessionStateMachine.current;
 }
 
 static unsigned hello_error_on_post_write(SelectorEvent *event) {
 
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
-    if (socks5_p->socksHeader.helloHeader.bytes == HELLO_ERROR_RESPONSE_SIZE && !buffer_can_read(&socks5_p->output))
-    {
+    if (socks5_p->socksHeader.helloHeader.bytes == HELLO_ERROR_RESPONSE_SIZE && !buffer_can_read(&socks5_p->output)) {
         selector_unregister_fd(event->s, event->fd);
         return FINISH;
     }
-    return socks5_p->sessionStateMachine.current;
 
+    return socks5_p->sessionStateMachine.current;
 }
 
 static void hello_error_marshall(Buffer *b, size_t *bytes) {

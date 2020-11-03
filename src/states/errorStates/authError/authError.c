@@ -12,21 +12,19 @@ static unsigned auth_error_on_pre_write(SelectorEvent *event) {
 
     auth_error_marshall(&socks5_p->output, &socks5_p->socksHeader.authRequestHeader.bytes);  
     
-    return socks5_p->sessionStateMachine.current; 
-
+    return socks5_p->sessionStateMachine.current;
 }
 
 static unsigned auth_error_on_post_write(SelectorEvent *event) {
 
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
-    if (socks5_p->socksHeader.authRequestHeader.bytes == AUTH_ERROR_RESPONSE_SIZE && !buffer_can_read(&socks5_p->output))
-    {
+    if (socks5_p->socksHeader.authRequestHeader.bytes == AUTH_ERROR_RESPONSE_SIZE && !buffer_can_read(&socks5_p->output)) {
         selector_unregister_fd(event->s, event->fd);
         return FINISH;
     }
+    
     return socks5_p->sessionStateMachine.current;
-
 }
 
 static void auth_error_marshall(Buffer *b, size_t *bytes) {

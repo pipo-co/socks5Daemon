@@ -82,6 +82,13 @@ void socks5_passive_accept(SelectorEvent *event){
     selector_register(event->s, session->clientConnection.fd, &clientHandler, OP_READ, session);
 }
 
+void socks5_register_server(FdSelector s, SessionHandlerP socks5_p){
+
+    socks5_p->serverConnection.state = OPEN;
+
+    selector_register(s, socks5_p->serverConnection.fd, &serverHandler, OP_WRITE, socks5_p);
+}
+
 static void socks5_server_read(SelectorEvent *event){
 
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
@@ -98,15 +105,17 @@ static void socks5_server_read(SelectorEvent *event){
     size_t nbytes;
     uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
 
-    if(readBytes = read(event->fd, writePtr, nbytes), readBytes > 0){
+    if(readBytes = read(event->fd, writePtr, nbytes), readBytes >= 0){
         buffer_write_adv(buffer, readBytes);
-        selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, event);
+
+        if(readBytes == 0)
+            socks5_p->serverConnection.state = CLOSING;
+
+        if(selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, event) == FINISH)
+            closeSession(socks5_p);
     }
-    else if (readBytes == 0){
-        //server cerro conexion
-    }
-    else
-    {
+
+    else {
         //cerrar conexion
         //logger stderr(errno)
     }
@@ -131,10 +140,12 @@ static void socks5_server_write(SelectorEvent *event){
     
     if((writeBytes = write(event->fd, readPtr, nbytes)) > 0){
         buffer_read_adv(buffer, writeBytes);
-        selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, event);
+
+        if(selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, event) == FINISH)
+            closeSession(socks5_p);
     }
     else if (writeBytes == 0){
-        
+        fprintf(stderr, "%d wrote 0 bytes", socks5_p->serverConnection.fd);
     }
     else
     {
@@ -142,11 +153,6 @@ static void socks5_server_write(SelectorEvent *event){
         //logger stderr(errno)
     }
     
-}
-
-void socks5_register_server(FdSelector s, SessionHandlerP socks5_p){
-    
-    selector_register(s, socks5_p->serverConnection.fd, &serverHandler, OP_WRITE, socks5_p);
 }
 
 static void socks5_client_read(SelectorEvent *event){
@@ -163,15 +169,17 @@ static void socks5_client_read(SelectorEvent *event){
     size_t nbytes;
     uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
 
-    if(readBytes = read(event->fd, writePtr, nbytes), readBytes > 0){
+    if(readBytes = read(event->fd, writePtr, nbytes), readBytes >= 0) {
         buffer_write_adv(buffer, readBytes);
-        selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, event);
+
+        if(readBytes == 0)
+            socks5_p->clientConnection.state = CLOSING;
+
+        if(selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, event) == FINISH)
+            closeSession(socks5_p);
     }
-    else if (readBytes == 0){
-        //cliente cerro conexion
-    }
-    else
-    {
+
+    else {
         //cerrar conexion
         //logger stderr(errno)
     }
@@ -195,10 +203,12 @@ static void socks5_client_write(SelectorEvent *event){
     
     if( (writeBytes = write(event->fd, readPtr, nbytes)) > 0){
         buffer_read_adv(buffer, writeBytes);
-        selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, event);
+
+        if(selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, event) == FINISH)
+            closeSession(socks5_p);
     }
     else if (writeBytes == 0){
-
+        fprintf(stderr, "%d wrote 0 bytes", socks5_p->clientConnection.fd);
     }
     else
     {
@@ -228,9 +238,13 @@ static SessionHandlerP socks5_session_init(void) {
 
     // session->sessionStateMachine.states[FINISH].on_departure = socks5_session_destroy;
 
-    session->clientConnection.closed = false;
+    session->clientConnection.state = OPEN;
 
     return session;
+}
+
+static void closeSession(SessionHandlerP session) {
+
 }
 
 static void socks5_session_destroy(SessionHandlerP session) {
