@@ -30,10 +30,10 @@ static int dnsBufferSize;
 
 static char *dnsServerIp; 
 
-static void socks5_server_read(struct SelectorEvent *key);
-static void socks5_server_write(struct SelectorEvent *key);
-static void socks5_client_read(struct SelectorEvent *key);
-static void socks5_client_write(struct SelectorEvent *key);
+static void socks5_server_read(SelectorEvent *event);
+static void socks5_server_write(SelectorEvent *event);
+static void socks5_client_read(SelectorEvent *event);
+static void socks5_client_write(SelectorEvent *event);
 static SessionHandlerP socks5_session_init(void);
 static void socks5_session_destroy(SessionHandlerP session);
 
@@ -60,6 +60,26 @@ void socks5_init(char *dnsServerIp) {
     // serverHandler.handle_block = NULL;
 
     socks5_session_state_machine_builder_init();
+}
+
+//tendria que haber otro passive accept para ipv6
+void socks5_passive_accept(SelectorEvent *event){
+    
+    struct sockaddr_in cli_addr;
+    socklen_t clilen = sizeof(cli_addr);
+
+    int fd = accept(event->fd,(struct sockaddr *)&cli_addr, &clilen);
+    
+    if (fd < 0 ){}
+       //logger stderr(errno)
+
+    SessionHandlerP session = socks5_session_init();
+
+    session->clientConnection.fd = fd;
+
+    memcpy(&session->clientConnection.addr, (struct sockaddr *)&cli_addr, clilen);
+
+    selector_register(event->s, session->clientConnection.fd, &clientHandler, OP_READ, session);
 }
 
 static void socks5_server_read(SelectorEvent *event){
@@ -93,11 +113,11 @@ static void socks5_server_read(SelectorEvent *event){
       
 }
 
-static void socks5_server_write(struct SelectorEvent *key){
+static void socks5_server_write(SelectorEvent *event){
 
-    SessionHandlerP socks5_p = (SessionHandlerP) key->data;
+    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
-    selector_state_machine_proccess_pre_write(&socks5_p->sessionStateMachine, key);
+    selector_state_machine_proccess_pre_write(&socks5_p->sessionStateMachine, event);
 
     Buffer * buffer = &socks5_p->input;
 
@@ -109,9 +129,9 @@ static void socks5_server_write(struct SelectorEvent *key){
     size_t nbytes;
     uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
     
-    if((writeBytes = write(key->fd, readPtr, nbytes)) > 0){
+    if((writeBytes = write(event->fd, readPtr, nbytes)) > 0){
         buffer_read_adv(buffer, writeBytes);
-        selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, key);
+        selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, event);
     }
     else if (writeBytes == 0){
         
@@ -127,12 +147,11 @@ static void socks5_server_write(struct SelectorEvent *key){
 void socks5_register_server(FdSelector s, SessionHandlerP socks5_p){
     
     selector_register(s, socks5_p->serverConnection.fd, &serverHandler, OP_WRITE, socks5_p);
-    
 }
 
-static void socks5_client_read(struct SelectorEvent *key){
+static void socks5_client_read(SelectorEvent *event){
 
-    SessionHandlerP socks5_p = (SessionHandlerP) key->data;
+    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
     Buffer * buffer = &socks5_p->input;
     
     //pre_read(socks5_p->stm, key)
@@ -144,9 +163,9 @@ static void socks5_client_read(struct SelectorEvent *key){
     size_t nbytes;
     uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
 
-    if(readBytes = read(key->fd, writePtr, nbytes), readBytes > 0){
+    if(readBytes = read(event->fd, writePtr, nbytes), readBytes > 0){
         buffer_write_adv(buffer, readBytes);
-        selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, key);
+        selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, event);
     }
     else if (readBytes == 0){
         //cliente cerro conexion
@@ -159,11 +178,11 @@ static void socks5_client_read(struct SelectorEvent *key){
    
 }
 
-static void socks5_client_write(struct SelectorEvent *key){
+static void socks5_client_write(SelectorEvent *event){
     
-    SessionHandlerP socks5_p = (SessionHandlerP) key->data;
+    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
-    selector_state_machine_proccess_pre_write(&socks5_p->sessionStateMachine, key);
+    selector_state_machine_proccess_pre_write(&socks5_p->sessionStateMachine, event);
 
     Buffer * buffer = &socks5_p->output;
 
@@ -174,9 +193,9 @@ static void socks5_client_write(struct SelectorEvent *key){
     size_t nbytes;
     uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
     
-    if( (writeBytes = write(key->fd, readPtr, nbytes)) > 0){
+    if( (writeBytes = write(event->fd, readPtr, nbytes)) > 0){
         buffer_read_adv(buffer, writeBytes);
-        selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, key);
+        selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, event);
     }
     else if (writeBytes == 0){
 
@@ -186,26 +205,6 @@ static void socks5_client_write(struct SelectorEvent *key){
         //cerrar conexion
         //logger stderr(errno)
     }
-}
-
-//tendria que haber otro passive accept para ipv6
-void socks5_passive_accept(SelectorEvent *event){
-    
-    struct sockaddr_in cli_addr;
-    socklen_t clilen = sizeof(cli_addr);
-
-    int fd = accept(event->fd,(struct sockaddr *)&cli_addr, &clilen);
-    
-    if (fd < 0 ){}
-       //logger stderr(errno)
-
-    SessionHandlerP session = socks5_session_init();
-
-    session->clientConnection.fd = fd;
-
-    memcpy(&session->clientConnection.addr, (struct sockaddr *)&cli_addr, clilen);
-
-    selector_register(event->s, session->clientConnection.fd, &clientHandler, OP_READ, session);
 }
 
 static SessionHandlerP socks5_session_init(void) {
