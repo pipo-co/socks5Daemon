@@ -18,7 +18,6 @@ static unsigned auth_request_on_post_read(SelectorEvent *event) {
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
     AuthRequestHeader * h = &socks5_p->socksHeader.authRequestHeader;
     bool errored;
-    uint8_t loginError;
 
     if(!auth_request_parser_consume(&socks5_p->input, &h->parser, &errored)){
         return socks5_p->sessionStateMachine.current;
@@ -33,8 +32,10 @@ static unsigned auth_request_on_post_read(SelectorEvent *event) {
         selector_set_interest_event(event, OP_WRITE);
         return AUTH_ERROR;
     }
-
-    if (login(h->parser.ulen, h->parser.username, h->parser.plen, h->parser.password, &loginError)){
+    int loginAns = 0; 
+    //TODO falta login
+    // loginAns = login(h->parser.ulen, h->parser.username, h->parser.plen, h->parser.password, &loginError);
+    if (loginAns){
         
         selector_set_interest_event(event, OP_WRITE);
         return AUTH_SUCCESSFUL;

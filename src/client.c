@@ -26,7 +26,15 @@ int main(int argc, char *argv[]) {
 		
 	// int sock = new_ipv6_socket("2800:3f0:4002:80d::200e", 80);
 	fd_set fds;
-	int sock = new_ipv4_socket("127.000.000.001", 80);
+	char * ip = "127.0.0.1";
+	uint16_t port;
+
+	if(argc == 3) {
+		ip = argv[2];
+		port = atoi(argv[3]);
+	}
+
+	int sock = new_ipv4_socket(ip, port);
 
 	while (1) {
 		FD_SET(STDIN, &fds);
@@ -49,8 +57,8 @@ void handleStdIn(int sock) {
 
 	char buffer[BUFSIZE];
 	ssize_t readBytes = read(STDIN, buffer, BUFSIZE - 1);
-	for (size_t i = 0; i < readBytes; i++) {
-		// buffer[i] -= '0';
+	for (ssize_t i = 0; i < readBytes; i++) {
+		buffer[i] -= '0';
 	}
 	
 	ssize_t numBytes = send(sock, buffer, readBytes, 0);
@@ -87,7 +95,7 @@ int new_ipv6_socket(char *ip, uint16_t port) {
         exit(0); 
     } 
     
-	bzero(&addr, sizeof(addr)); 
+	memset(&addr, '\0', sizeof(addr)); 
 
     addr.sin6_family = AF_INET6;
     addr.sin6_port = htons(port); 
@@ -112,7 +120,7 @@ int new_ipv4_socket(char *ip, uint16_t port) {
         return -1;
     } 
     
-	bzero(&addr, sizeof(addr)); 
+	memset(&addr, '\0', sizeof(addr)); 
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port); 

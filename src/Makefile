@@ -1,18 +1,24 @@
+include sourcePaths.inc
+include Makefile.inc
 
-#CC=clang scan-build -disable-checker deadcode.DeadStores -o /tmp/out  make
-#complexity   --histogram --score  `find -name '*.c'` 2> /dev/null
-INCLUDE = -I ./selector -I ./socks5 -I ./hello -I ./request -I ./buffer -I ./auth -I ./connect -I ./stateMachine
+INCLUDE= -I$(PWD)
 
-CC=gcc
-CFLAGS= -pthread -D_POSIX_C_SOURCE=200112L -ggdb -Wall -Wextra -pedantic -std=c11 -fsanitize=address -fno-omit-frame-pointer $(INCLUDE) 
+SERVER=server
+CLIENT=client
 
-all: main 
-	$(CC) $(CFLAGS) client.c -o client
+# SOURCE_FILES = $(wildcard $(SOURCE_PATHS)/*.c)
+SOURCE_FILES = $(foreach dir, $(SOURCE_PATHS), $(wildcard $(dir)/*.c))
+OBJECTS = $(patsubst %.c, %.o, $(SOURCE_FILES))
+
+all: $(SERVER) $(CLIENT) 
 
 clean: 
-	rm -rf */*.o
-	rm main
-	rm client
+	rm -rf $(OBJECTS) $(SERVER) $(CLIENT)
 
-main: main.c ./selector/selector.o ./socks5/socks5.o ./buffer/buffer.o
+$(SERVER): server.c $(OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@ 
+
+$(CLIENT): client.c
+	$(CC) $(CFLAGS) $^ -o $@ 
+
+.PHONY: all clean

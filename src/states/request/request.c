@@ -6,6 +6,7 @@
 #include <errno.h>
 
 #include "buffer/buffer.h"
+#include "socks5/socks5.h"
 #include "requestParser.h"
 
 static void request_on_arrival (SelectorEvent *event);
@@ -54,9 +55,11 @@ static unsigned request_on_post_read(SelectorEvent *event) {
     else{
 
         if(socks5_p->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP4){
+            //TODO add connect
             // socks5_p->serverConnection.fd = new_ipv4_socket(socks5_p->socksHeader.requestHeader.parser.address, socks5_p->socksHeader.requestHeader.parser.port);    
         }
         else if(socks5_p->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP6){
+            //TODO add connect
             // socks5_p->serverConnection.fd = new_ipv6_socket(socks5_p->socksHeader.requestHeader.parser.address, socks5_p->socksHeader.requestHeader.parser.port);
         }
         if (socks5_p->serverConnection.fd  == -1){
@@ -78,9 +81,9 @@ static unsigned request_on_post_read(SelectorEvent *event) {
             selector_set_interest_event(event, OP_WRITE);
             return REQUEST_ERROR;      
         }
-            register_server(event->s, socks5_p->serverConnection.fd);
-            selector_set_interest_event(event, OP_NOOP);
-            return IP_CONNECT;
+        socks5_register_server(event->s, socks5_p);
+        selector_set_interest_event(event, OP_NOOP);
+        return IP_CONNECT;
     }
 }
 

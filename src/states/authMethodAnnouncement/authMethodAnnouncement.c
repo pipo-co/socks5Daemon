@@ -2,29 +2,15 @@
 
 #define INITIAL_RESPONSE_SIZE 2
 
-static int hello_marshall(Buffer *b, uint8_t method, uint8_t *bytes);
+static void hello_marshall(Buffer *b, uint8_t method, size_t *bytes);
 static unsigned method_announcement_on_pre_write(struct SelectorEvent *key);
 static unsigned method_announcement_on_post_write(struct SelectorEvent *key);
-static void method_announcement_on_departure(struct SelectorEvent *key);
-
-static int hello_marshall(Buffer *b, uint8_t method, uint8_t *bytes) {
-
-    while(*bytes < INITIAL_RESPONSE_SIZE && buffer_can_write(b)){
-        if(*bytes == 0){
-            buffer_write(b, SOCKS_VERSION);
-        }
-        if(*bytes == 1){
-            buffer_write(b, method);
-        }
-        *bytes++;
-    }
-}
 
 static unsigned method_announcement_on_pre_write(struct SelectorEvent *key) {
 
     SessionHandlerP socks5_p = (SessionHandlerP) key->data;
 
-    hello_marshall(&socks5_p->output, socks5_p->clientInfo.authMethod, socks5_p->socksHeader.helloHeader.bytes);  
+    hello_marshall(&socks5_p->output, socks5_p->clientInfo.authMethod, &socks5_p->socksHeader.helloHeader.bytes);  
 
     return socks5_p->sessionStateMachine.current;  
 }
@@ -48,12 +34,17 @@ static unsigned method_announcement_on_post_write(struct SelectorEvent *key) {
     return socks5_p->sessionStateMachine.current;
 }
 
-static void method_announcement_on_departure(SelectorEvent *event) {
+static void hello_marshall(Buffer *b, uint8_t method, size_t * bytes) {
 
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
-
-    //TODO: depende de como manejemos la memoria capaz tendriamos que liberar la estructura
-
+    while(*bytes < INITIAL_RESPONSE_SIZE && buffer_can_write(b)){
+        if(*bytes == 0){
+            buffer_write(b, SOCKS_VERSION);
+        }
+        if(*bytes == 1){
+            buffer_write(b, method);
+        }
+        (*bytes)++;
+    }
 }
 
 SelectorStateDefinition auth_method_announcement_state_definition_supplier(void) {
