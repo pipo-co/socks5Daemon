@@ -12,11 +12,26 @@ typedef Suite *(*suiteSupplier)(void);
 #include "tests/parser_test.c"
 #include "tests/selector_test.c"
 #include "tests/parser_utils_test.c"
-#include "tests/helloTest.c"
+#include "tests/netutils_test.c"
 #include "tests/helloParserTest.c"
+#include "tests/helloTest.c"
+#include "tests/helloErrorTest.c"
+#include "tests/authMethodAnnouncementTest.c"
+#include "tests/authRequestTest.c"
+#include "tests/authRequestParserTest.c"
+#include "tests/authErrorTest.c"
+#include "tests/authSuccessfulTest.c"
 #include "tests/requestParserTest.c"
-// #include "tests/requestTest.c"
-//#include "tests/socks5Test.c"
+#include "tests/requestTest.c"
+#include "tests/requestErrorTest.c"
+#include "tests/ipConnectTest.c"
+#include "tests/requestSuccessfulTest.c"
+#include "tests/forwardingTest.c"
+#include "tests/flushCloserTest.c"
+#include "tests/flushClosyTest.c"
+#include "tests/socks5Test.c"
+#include "tests/stateMachineTest.c"
+#include "tests/stateMachineBuilderTest.c"
 //#include "tests/stateMachineTest.c"
 
 
@@ -29,7 +44,7 @@ static const suiteSupplier suiteSuppliers[] = {
     hello_parser_test_suite,
     selector_test_suite,
     request_parser_test_suite,
-    // request_test_suite TODO: Broken
+    request_test_suite,
 };
 
 SRunner * test_srunner_init(void) {

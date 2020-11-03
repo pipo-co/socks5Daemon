@@ -128,7 +128,7 @@ int new_ipv4_socket(struct in_addr ip, in_port_t port) {
 	return sock;
 }
 
-int new_ipv6_socket(char *ip, uint16_t port) {
+int new_ipv6_socket(struct in6_addr ip, in_port_t port) {
 	
 	int sock;
 	struct sockaddr_in6 addr; 
@@ -142,8 +142,8 @@ int new_ipv6_socket(char *ip, uint16_t port) {
 	memset(&addr, '\0',sizeof(addr));
 
     addr.sin6_family = AF_INET6;
-    addr.sin6_port = htons(port); 
-	inet_pton(AF_INET6, ip, &addr.sin6_addr);
+    addr.sin6_port = port; 
+	addr.sin6_addr = ip;
 
 	if (connect(sock, (struct sockaddr*) &addr, sizeof(addr)) != 0) { 
         if(errno == EINPROGRESS)

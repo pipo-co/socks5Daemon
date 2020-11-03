@@ -1,0 +1,1 @@
+#include "parsers/authRequest/authRequestParser.c"
