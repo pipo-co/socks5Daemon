@@ -11,7 +11,7 @@
 //     }AuthMethodsTest;
 
 
-uint8_t hello_parser_test_input_success[] = { 0x05, 0x02, 0x01, 0x00 };
+uint8_t hello_parser_test_input_success[] = { 0x05, 0x02, 0x01, 0x02 };
 
 uint8_t hello_parser_test_input_no_method[] = { 0x05, 0x00, 0x00 };
 
@@ -76,11 +76,11 @@ START_TEST (hello_parser_test_core_success_feed) {
 
     ck_assert(!errored);
 
-    hello_parser_feed(p, hello_test_input_success[3]);
+    hello_parser_feed(p, hello_parser_test_input_success[3]);
 
     ck_assert_uint_eq(((struct HelloParserTestMethods *)p->data)->count, 2);
 
-    ck_assert_uint_eq(((struct HelloParserTestMethods *)p->data)->methodsReceived[1], 0x00);
+    ck_assert_uint_eq(((struct HelloParserTestMethods *)p->data)->methodsReceived[1], 0x02);
 
     ck_assert(p->current_state == HELLO_PARSER_DONE);
 
