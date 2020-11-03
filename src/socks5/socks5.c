@@ -91,8 +91,8 @@ void socks5_register_server(FdSelector s, SessionHandlerP socks5_p){
 
 static void socks5_server_read(SelectorEvent *event){
 
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
-    Buffer * buffer = &socks5_p->output;
+    SessionHandlerP session = (SessionHandlerP) event->data;
+    Buffer * buffer = &session->output;
     
     //pre_read(socks5_p->stm, key)
 
@@ -109,10 +109,10 @@ static void socks5_server_read(SelectorEvent *event){
         buffer_write_adv(buffer, readBytes);
 
         if(readBytes == 0)
-            socks5_p->serverConnection.state = CLOSING;
+            session->serverConnection.state = CLOSING;
 
-        if(selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, event) == FINISH)
-            closeSession(socks5_p, event->s);
+        if(selector_state_machine_proccess_post_read(&session->sessionStateMachine, event) == FINISH)
+            closeSession(session, event);
     }
 
     else {
@@ -124,11 +124,11 @@ static void socks5_server_read(SelectorEvent *event){
 
 static void socks5_server_write(SelectorEvent *event){
 
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
-    selector_state_machine_proccess_pre_write(&socks5_p->sessionStateMachine, event);
+    selector_state_machine_proccess_pre_write(&session->sessionStateMachine, event);
 
-    Buffer * buffer = &socks5_p->input;
+    Buffer * buffer = &session->input;
 
     if(!buffer_can_read(buffer)) {
         return;
@@ -141,11 +141,11 @@ static void socks5_server_write(SelectorEvent *event){
     if((writeBytes = write(event->fd, readPtr, nbytes)) > 0){
         buffer_read_adv(buffer, writeBytes);
 
-        if(selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, event) == FINISH)
-            closeSession(socks5_p, event->s);
+        if(selector_state_machine_proccess_post_write(&session->sessionStateMachine, event) == FINISH)
+            closeSession(session, event);
     }
     else if (writeBytes == 0){
-        fprintf(stderr, "%d wrote 0 bytes", socks5_p->serverConnection.fd);
+        fprintf(stderr, "%d wrote 0 bytes", session->serverConnection.fd);
     }
     else
     {
@@ -157,8 +157,8 @@ static void socks5_server_write(SelectorEvent *event){
 
 static void socks5_client_read(SelectorEvent *event){
 
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
-    Buffer * buffer = &socks5_p->input;
+    SessionHandlerP session = (SessionHandlerP) event->data;
+    Buffer * buffer = &session->input;
     
     //pre_read(socks5_p->stm, key)
 
@@ -173,10 +173,10 @@ static void socks5_client_read(SelectorEvent *event){
         buffer_write_adv(buffer, readBytes);
 
         if(readBytes == 0)
-            socks5_p->clientConnection.state = CLOSING;
+            session->clientConnection.state = CLOSING;
 
-        if(selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, event) == FINISH)
-            closeSession(socks5_p, event->s);
+        if(selector_state_machine_proccess_post_read(&session->sessionStateMachine, event) == FINISH)
+            closeSession(session, event);
     }
 
     else {
@@ -188,11 +188,11 @@ static void socks5_client_read(SelectorEvent *event){
 
 static void socks5_client_write(SelectorEvent *event){
     
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
-    selector_state_machine_proccess_pre_write(&socks5_p->sessionStateMachine, event);
+    selector_state_machine_proccess_pre_write(&session->sessionStateMachine, event);
 
-    Buffer * buffer = &socks5_p->output;
+    Buffer * buffer = &session->output;
 
     if(!buffer_can_read(buffer))
         return;
@@ -204,11 +204,11 @@ static void socks5_client_write(SelectorEvent *event){
     if( (writeBytes = write(event->fd, readPtr, nbytes)) > 0){
         buffer_read_adv(buffer, writeBytes);
 
-        if(selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, event) == FINISH)
-            closeSession(socks5_p, event->s);
+        if(selector_state_machine_proccess_post_write(&session->sessionStateMachine, event) == FINISH)
+            closeSession(session, event);
     }
     else if (writeBytes == 0){
-        fprintf(stderr, "%d wrote 0 bytes", socks5_p->clientConnection.fd);
+        fprintf(stderr, "%d wrote 0 bytes", session->clientConnection.fd);
     }
     else
     {
@@ -241,10 +241,12 @@ static SessionHandlerP socks5_session_init(void) {
     return session;
 }
 
-static void closeSession(SessionHandlerP session, FdSelector s) {
+static void closeSession(SessionHandlerP session, SelectorEvent *event) {
 
-    selector_unregister_fd(s, session->clientConnection.fd);
-    selector_unregister_fd(s, session->serverConnection.fd);
+    selector_state_machine_close(&session->sessionStateMachine, event);
+
+    selector_unregister_fd(event->s, session->clientConnection.fd);
+    selector_unregister_fd(event->s, session->serverConnection.fd);
 
     close(session->clientConnection.fd);
     close(session->serverConnection.fd);

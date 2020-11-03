@@ -82,4 +82,8 @@ unsigned selector_state_machine_proccess_pre_write(SSM ssm, SelectorEvent *event
 
 unsigned selector_state_machine_proccess_post_write(SSM ssm, SelectorEvent *event);
 
+void selector_state_machine_close(SSM ssm, SelectorEvent *event);
+
+unsigned selector_state_machine_state(SSM ssm);
+
 #endif

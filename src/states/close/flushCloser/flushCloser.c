@@ -37,7 +37,7 @@ static unsigned flush_closer_on_post_read(SelectorEvent *event) {
     }
 
     if(buffer_can_write(&closyBuffer)) {
-        selector_set_interest_event(event, OP_READ + lo que habia antes);
+        selector_add_interest_event(event, OP_READ);
     }
 
     if(buffer_can_read(&closyBuffer)) {
