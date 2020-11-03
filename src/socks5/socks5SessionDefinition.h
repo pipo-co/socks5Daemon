@@ -24,7 +24,7 @@ typedef enum SessionState {
     IP_CONNECT,
     // GENERATE_DNS_QUERY,
     REQUEST_SUCCESSFUL,
-    // FORWARDING,
+    FORWARDING,
     FINISH,
 } SessionState;
 
