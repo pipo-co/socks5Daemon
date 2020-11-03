@@ -452,6 +452,70 @@ selector_set_interest_event(struct SelectorEvent *event, FdInterest i) {
     return ret;
 }
 
+SelectorStatus
+selector_add_interest(FdSelector s, int fd, FdInterest i) {
+    SelectorStatus ret = SELECTOR_SUCCESS;
+
+    if(NULL == s || INVALID_FD(fd)) {
+        ret = SELECTOR_IARGS;
+        goto finally;
+    }
+    struct Item *item = s->fds + fd;
+    if(!ITEM_USED(item)) {
+        ret = SELECTOR_IARGS;
+        goto finally;
+    }
+    item->interest |= i;
+    items_update_fdset_for_fd(s, item);
+finally:
+    return ret;
+}
+
+SelectorStatus
+selector_add_interest_event(struct SelectorEvent *event, FdInterest i) {
+    SelectorStatus ret;
+
+    if(NULL == event || NULL == event->s || INVALID_FD(event->fd)) {
+        ret = SELECTOR_IARGS;
+    } else {
+        ret = selector_add_interest(event->s, event->fd, i);
+    }
+
+    return ret;
+}
+
+SelectorStatus
+selector_remove_interest(FdSelector s, int fd, FdInterest i) {
+    SelectorStatus ret = SELECTOR_SUCCESS;
+
+    if(NULL == s || INVALID_FD(fd)) {
+        ret = SELECTOR_IARGS;
+        goto finally;
+    }
+    struct Item *item = s->fds + fd;
+    if(!ITEM_USED(item)) {
+        ret = SELECTOR_IARGS;
+        goto finally;
+    }
+    item->interest &= ~i;
+    items_update_fdset_for_fd(s, item);
+finally:
+    return ret;
+}
+
+SelectorStatus
+selector_remove_interest_event(struct SelectorEvent *event, FdInterest i) {
+    SelectorStatus ret;
+
+    if(NULL == event || NULL == event->s || INVALID_FD(event->fd)) {
+        ret = SELECTOR_IARGS;
+    } else {
+        ret = selector_remove_interest(event->s, event->fd, i);
+    }
+
+    return ret;
+}
+
 /**
  * se encarga de manejar los resultados del select.
  * se encuentra separado para facilitar el testing
@@ -513,10 +577,8 @@ handle_block_notifications(FdSelector s) {
     pthread_mutex_unlock(&s->resolution_mutex);
 }
 
-
 SelectorStatus
-selector_notify_block(FdSelector  s,
-                 const int    fd) {
+selector_notify_block(FdSelector  s, const int fd) {
     SelectorStatus ret = SELECTOR_SUCCESS;
 
     // TODO(juan): usar un pool

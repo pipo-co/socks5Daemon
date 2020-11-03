@@ -172,6 +172,18 @@ selector_set_interest(FdSelector s, int fd, FdInterest i);
 SelectorStatus
 selector_set_interest_event(SelectorEvent *event, FdInterest i);
 
+SelectorStatus
+selector_add_interest(FdSelector s, int fd, FdInterest i);
+
+SelectorStatus
+selector_add_interest_event(struct SelectorEvent *event, FdInterest i);
+
+SelectorStatus
+selector_remove_interest(FdSelector s, int fd, FdInterest i);
+
+SelectorStatus
+selector_remove_interest_event(struct SelectorEvent *event, FdInterest i);
+
 /**
  * se bloquea hasta que hay eventos disponible y los despacha.
  * Retorna luego de cada iteración, o al llegar al timeout.
