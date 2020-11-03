@@ -11,6 +11,9 @@
 //     HELLO_PARSER_DONE,
 //     HELLO_PARSER_INVALID_STATE,
 // };
+uint8_t hello_test_state_not_changing[] = {
+    0x05, 0x01
+};
 
 uint8_t hello_test_input_success[] = {
     0x05, 0x01, 0x02
@@ -26,21 +29,23 @@ uint8_t hello_test_input_no_acceptable_methods[] = {
 
 START_TEST (hello_test_core_on_auth_method) {
    
-    HelloParser * p = malloc(sizeof(*p));
-    unsigned state = NO_ACCEPTABLE_METHODS;
-    p->data = &state;
+    HelloParser * p = calloc(sizeof(*p),1);
 
+    uint8_t method = NO_ACCEPTABLE_METHODS;
+
+    p->data = &method;
+    
     on_auth_method(p, NO_AUTHENTICATION);
 
-    ck_assert_uint_eq(p->data, NO_AUTHENTICATION);
+    ck_assert_uint_eq(*(uint8_t *)p->data, NO_AUTHENTICATION);
 
     on_auth_method(p, USER_PASSWORD);
 
-    ck_assert_uint_eq(p->data, USER_PASSWORD);
+    ck_assert_uint_eq(*(uint8_t *)p->data, USER_PASSWORD);
 
     on_auth_method(p, NO_AUTHENTICATION);
 
-    ck_assert_uint_eq(p->data, USER_PASSWORD);
+    ck_assert_uint_eq(*(uint8_t *)p->data, USER_PASSWORD);
     
     free(p);
 }
@@ -53,7 +58,7 @@ START_TEST (hello_test_core_on_arrival) {
     SessionHandlerP socks5_p =  malloc(sizeof(*socks5_p));
 
     HelloHeader helloHeader;
-    
+
     socks5_p->socksHeader.helloHeader = helloHeader;
 
     ClientInfo clientInfo;
@@ -81,17 +86,17 @@ START_TEST (hello_test_core_on_post_read_same_state) {
     SessionHandlerP socks5_p = malloc(sizeof(*socks5_p));
 
     SelectorStateMachine stm;
-    stm.current = AUTH_METHOD_ANNOUNCEMENT;
+    stm.current = HELLO;
     socks5_p->sessionStateMachine = stm;
 
-    buffer_init(&socks5_p->input, 1, 0);
-    buffer_write(&socks5_p->input, 0x05);
+    buffer_init(&socks5_p->input, N(hello_test_state_not_changing), hello_test_state_not_changing);
+    buffer_write_adv(&socks5_p->input, N(hello_test_state_not_changing));
 
     HelloHeader helloHeader;
-    socks5_p->socksHeader.helloHeader.parser.current_state = HELLO_PARSER_VERSION;
-    socks5_p->socksHeader.helloHeader.parser.on_auth_method = on_auth_method;
-    socks5_p->socksHeader.helloHeader.parser.data = NO_ACCEPTABLE_METHODS;
-    socks5_p->socksHeader.helloHeader.parser.methods_remaining = 0;
+    helloHeader.parser.current_state = HELLO_PARSER_VERSION;
+    helloHeader.parser.on_auth_method = on_auth_method;
+    helloHeader.parser.data = (uint8_t *) NO_ACCEPTABLE_METHODS;
+    helloHeader.parser.methods_remaining = 0;
 
     socks5_p->socksHeader.helloHeader = helloHeader;
 
@@ -102,7 +107,7 @@ START_TEST (hello_test_core_on_post_read_same_state) {
     free(key);
     free(socks5_p);
 
-    ck_assert_uint_eq(state, AUTH_METHOD_ANNOUNCEMENT);
+    ck_assert_uint_eq(state, HELLO);
 }
 END_TEST
 
@@ -120,10 +125,13 @@ START_TEST (hello_test_core_on_post_read_success) {
     buffer_write_adv(&socks5_p->input, N(hello_test_input_success));
 
     HelloHeader helloHeader;
-    socks5_p->socksHeader.helloHeader.parser.current_state = HELLO_PARSER_VERSION;
-    socks5_p->socksHeader.helloHeader.parser.on_auth_method = on_auth_method;
-    socks5_p->socksHeader.helloHeader.parser.data = NO_ACCEPTABLE_METHODS;
-    socks5_p->socksHeader.helloHeader.parser.methods_remaining = 0;
+    helloHeader.parser.current_state = HELLO_PARSER_VERSION;
+    helloHeader.parser.on_auth_method = on_auth_method;
+    
+    uint8_t method = NO_ACCEPTABLE_METHODS;
+    helloHeader.parser.data = &method;
+    helloHeader.parser.methods_remaining = 0;
+
 
     socks5_p->socksHeader.helloHeader = helloHeader;
 
@@ -131,7 +139,7 @@ START_TEST (hello_test_core_on_post_read_success) {
 
     unsigned state = hello_on_post_read(key);
 
-    ck_assert_uint_eq(state, HELLO_ERROR);
+    ck_assert_uint_eq(state, AUTH_METHOD_ANNOUNCEMENT);
 
     free(key);
     free(socks5_p);
@@ -146,14 +154,17 @@ START_TEST (hello_test_core_on_post_read_errored) {
     SessionHandlerP socks5_p = malloc(sizeof(*socks5_p));
 
     SelectorStateMachine stm;
-    stm.current = AUTH_METHOD_ANNOUNCEMENT;
+    stm.current = HELLO;
     socks5_p->sessionStateMachine = stm;
 
     HelloHeader helloHeader;
-    socks5_p->socksHeader.helloHeader.parser.current_state = HELLO_PARSER_INVALID_STATE;
-    socks5_p->socksHeader.helloHeader.parser.on_auth_method = on_auth_method;
-    socks5_p->socksHeader.helloHeader.parser.data = NO_ACCEPTABLE_METHODS;
-    socks5_p->socksHeader.helloHeader.parser.methods_remaining = 0;
+    helloHeader.parser.current_state = HELLO_PARSER_INVALID_STATE;
+    helloHeader.parser.on_auth_method = on_auth_method;
+    
+    uint8_t method = NO_ACCEPTABLE_METHODS;
+    helloHeader.parser.data = &method;
+    helloHeader.parser.methods_remaining = 0;
+
 
     socks5_p->socksHeader.helloHeader = helloHeader;
 
@@ -176,17 +187,20 @@ START_TEST (hello_test_core_on_post_read_unsupported_version) {
     SessionHandlerP socks5_p = malloc(sizeof(*socks5_p));
     
     SelectorStateMachine stm;
-    stm.current = AUTH_METHOD_ANNOUNCEMENT;
+    stm.current = HELLO;
     socks5_p->sessionStateMachine = stm;
 
     buffer_init(&socks5_p->input, N(hello_test_input_unsupported_version), hello_test_input_unsupported_version);
     buffer_write_adv(&socks5_p->input, N(hello_test_input_unsupported_version));
 
     HelloHeader helloHeader;
-    socks5_p->socksHeader.helloHeader.parser.current_state = HELLO_PARSER_VERSION;
-    socks5_p->socksHeader.helloHeader.parser.on_auth_method = on_auth_method;
-    socks5_p->socksHeader.helloHeader.parser.data = NO_ACCEPTABLE_METHODS;
-    socks5_p->socksHeader.helloHeader.parser.methods_remaining = 0;
+    helloHeader.parser.current_state = HELLO_PARSER_VERSION;
+    helloHeader.parser.on_auth_method = on_auth_method;
+    
+    uint8_t method = NO_ACCEPTABLE_METHODS;
+    helloHeader.parser.data = &method;
+    helloHeader.parser.methods_remaining = 0;
+
 
     socks5_p->socksHeader.helloHeader = helloHeader;
 
@@ -209,17 +223,20 @@ START_TEST (hello_test_core_on_post_read_errored_no_acceptable_methods) {
     SessionHandlerP socks5_p = malloc(sizeof(*socks5_p));
     
     SelectorStateMachine stm;
-    stm.current = AUTH_METHOD_ANNOUNCEMENT;
+    stm.current = HELLO;
     socks5_p->sessionStateMachine = stm;
 
     buffer_init(&socks5_p->input, N(hello_test_input_no_acceptable_methods), hello_test_input_no_acceptable_methods);
     buffer_write_adv(&socks5_p->input, N(hello_test_input_no_acceptable_methods));
 
     HelloHeader helloHeader;
-    socks5_p->socksHeader.helloHeader.parser.current_state = HELLO_PARSER_VERSION;
-    socks5_p->socksHeader.helloHeader.parser.on_auth_method = on_auth_method;
-    socks5_p->socksHeader.helloHeader.parser.data = NO_ACCEPTABLE_METHODS;
-    socks5_p->socksHeader.helloHeader.parser.methods_remaining = 0;
+    helloHeader.parser.current_state = HELLO_PARSER_VERSION;
+    helloHeader.parser.on_auth_method = on_auth_method;
+
+    uint8_t method = NO_ACCEPTABLE_METHODS;
+    helloHeader.parser.data = &method;
+    helloHeader.parser.methods_remaining = 0;
+
 
     socks5_p->socksHeader.helloHeader = helloHeader;
 

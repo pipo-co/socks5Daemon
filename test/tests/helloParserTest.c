@@ -11,19 +11,20 @@
 //     }AuthMethodsTest;
 
 
-uint8_t hello_test_input_success[] = { 0x05, 0x02, 0x01, 0x00 };
+uint8_t hello_parser_test_input_success[] = { 0x05, 0x02, 0x01, 0x00 };
 
-// TODO: testear caso
-uint8_t hello_test_input_no_method[] = { 0x05, 0x00, 0x00 };
+uint8_t hello_parser_test_input_no_method[] = { 0x05, 0x00, 0x00 };
 
 struct HelloParserTestMethods{
     uint8_t methodsReceived[2];
     uint8_t count;
 };
 
-void hello_test_on_auth_method(HelloParser *p, uint8_t method) {
+bool hello_test_on_auth_method(HelloParser *p, uint8_t method) {
     struct HelloParserTestMethods *m = (struct HelloParserTestMethods *) p->data;
     m->methodsReceived[m->count++] = method;
+    
+    return true;
 }  
 
 void hello_test_init_parser(HelloParser *p, uint8_t *method) {
@@ -51,17 +52,17 @@ START_TEST (hello_parser_test_core_success_feed) {
      
     hello_test_init_parser(p, &method);
 
-    hello_parser_feed(p, hello_test_input_success[0]);
+    hello_parser_feed(p, hello_parser_test_input_success[0]);
 
     ck_assert(p->current_state == HELLO_PARSER_NMETHODS);
 
-    hello_parser_feed(p, hello_test_input_success[1]);
+    hello_parser_feed(p, hello_parser_test_input_success[1]);
 
     ck_assert(p->current_state == HELLO_PARSER_METHODS);
 
     ck_assert_uint_eq(p->methods_remaining, 2);
 
-    hello_parser_feed(p, hello_test_input_success[2]);
+    hello_parser_feed(p, hello_parser_test_input_success[2]);
 
     ck_assert(p->current_state == HELLO_PARSER_METHODS);
 
@@ -105,8 +106,8 @@ START_TEST (hello_parser_test_core_success_consume) {
     Buffer buffer;
     Buffer *b = &buffer;
 
-    buffer_init(b, N(hello_test_input_success), hello_test_input_success);
-    buffer_write_adv(b, N(hello_test_input_success));
+    buffer_init(b, N(hello_parser_test_input_success), hello_parser_test_input_success);
+    buffer_write_adv(b, N(hello_parser_test_input_success));
     
     hello_test_init_parser(p, &method);
 
@@ -136,11 +137,11 @@ START_TEST (hello_parser_test_core_no_method_feed) {
 
     hello_test_init_parser(p, &method);
 
-    hello_parser_feed(p, hello_test_input_no_method[0]);
+    hello_parser_feed(p, hello_parser_test_input_no_method[0]);
 
     ck_assert(p->current_state == HELLO_PARSER_NMETHODS);
 
-    hello_parser_feed(p, hello_test_input_no_method[1]);
+    hello_parser_feed(p, hello_parser_test_input_no_method[1]);
 
     ck_assert_uint_eq(p->methods_remaining, 0);
     
@@ -167,8 +168,8 @@ START_TEST (hello_parser_test_core_no_method_consume) {
     Buffer buffer;
     Buffer *b = &buffer;
 
-    buffer_init(b, N(hello_test_input_no_method), hello_test_input_no_method);
-    buffer_write_adv(b, N(hello_test_input_no_method));
+    buffer_init(b, N(hello_parser_test_input_no_method), hello_parser_test_input_no_method);
+    buffer_write_adv(b, N(hello_parser_test_input_no_method));
 
     
     hello_test_init_parser(p, &method);

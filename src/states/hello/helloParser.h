@@ -13,11 +13,12 @@ enum HelloParserState {
     HELLO_PARSER_METHODS,
     HELLO_PARSER_DONE,
     HELLO_PARSER_INVALID_STATE,
+    HELLO_PARSER_INVALID_AUTH_METHOD_STATE,
 };
 
 // Not an ADT to avoid unnecessary usages of malloc
 typedef struct HelloParser {
-    void (*on_auth_method)(struct HelloParser *parser, uint8_t method);
+    bool (*on_auth_method)(struct HelloParser *parser, uint8_t method);
 
     void *data;
 
@@ -31,7 +32,7 @@ typedef struct HelloParser {
 
 
 // Assumes pre-allocation
-void hello_parser_init(HelloParser *p, void (*on_auth_method)(HelloParser *p, uint8_t currentMethod), void * data);
+void hello_parser_init(HelloParser *p, bool (*on_auth_method)(HelloParser *p, uint8_t currentMethod), void * data);
 
 enum HelloParserState hello_parser_feed(HelloParser *p, uint8_t byte);
 

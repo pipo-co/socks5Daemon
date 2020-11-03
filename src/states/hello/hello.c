@@ -8,12 +8,16 @@
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 
-static void on_auth_method(HelloParser *p, uint8_t currentMethod);
+static bool on_auth_method(HelloParser *p, uint8_t currentMethod);
 static void hello_on_arrival (SelectorEvent *event);
 static unsigned hello_on_post_read(SelectorEvent *event);
 
-static void on_auth_method(HelloParser *p, uint8_t currentMethod) {
+static bool on_auth_method(HelloParser *p, uint8_t currentMethod) {
     
+    if(p->data == NULL){
+        return false;
+    }
+
     uint8_t *previousMethod = (uint8_t *) p->data;
 
     uint8_t methodPriorityList[] = {0xFF, 0x00, 0x02};
@@ -33,12 +37,16 @@ static void on_auth_method(HelloParser *p, uint8_t currentMethod) {
     if(prev < curr){
         *previousMethod = currentMethod;
     }
+
+    return true;
 }
 
 
 static void hello_on_arrival (SelectorEvent *event) {
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
+    socks5_p->clientInfo.authMethod = NO_ACCEPTABLE_METHODS;
+    
     hello_parser_init(&socks5_p->socksHeader.helloHeader.parser, on_auth_method, &socks5_p->clientInfo.authMethod);
     socks5_p->socksHeader.helloHeader.bytes = 0;
 }

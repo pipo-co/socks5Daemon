@@ -4,7 +4,7 @@
 #include "helloParser.h"
 
 
-void hello_parser_init(HelloParser *p, void (*on_auth_method)(HelloParser *p, uint8_t currentMethod), void * data) {
+void hello_parser_init(HelloParser *p, bool (*on_auth_method)(HelloParser *p, uint8_t currentMethod), void * data) {
 
     p->current_state = HELLO_PARSER_VERSION;
     p->on_auth_method = on_auth_method;
@@ -36,7 +36,8 @@ enum HelloParserState hello_parser_feed(HelloParser *p, uint8_t b) {
 
         case HELLO_PARSER_METHODS:
            
-            p->on_auth_method(p, b);
+            if(!p->on_auth_method(p, b) )
+                p->current_state = HELLO_PARSER_INVALID_AUTH_METHOD_STATE;
             
             p->methods_remaining--;
 
@@ -51,6 +52,11 @@ enum HelloParserState hello_parser_feed(HelloParser *p, uint8_t b) {
         case HELLO_PARSER_INVALID_STATE:
             // Nothing to do
         break;
+
+        case HELLO_PARSER_INVALID_AUTH_METHOD_STATE:
+            // Nothing to do
+        break;
+
 
         default:
             p->current_state = HELLO_PARSER_INVALID_STATE;
@@ -92,6 +98,7 @@ bool hello_parser_is_done(enum HelloParserState state, bool *errored) {
         break;
 
         case HELLO_PARSER_INVALID_STATE:
+        case HELLO_PARSER_INVALID_AUTH_METHOD_STATE:
         default:
             if(errored != NULL)
                 *errored = true;
@@ -110,6 +117,11 @@ char * hello_parser_error_message(enum HelloParserState state){
         
             return "Hello parser: no error";
         break;
+
+        case HELLO_PARSER_INVALID_AUTH_METHOD_STATE:
+            return "Hello parser: Invalid auth method!";
+        break;
+
         case HELLO_PARSER_INVALID_STATE:
         default:
             return "Hello parser: Reached invalid state!";

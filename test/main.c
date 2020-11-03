@@ -9,15 +9,15 @@ typedef Suite *(*suiteSupplier)(void);
 
 // Test files being exercised
 #include "tests/buffer_test.c"
-#include "tests/socks5Test.c"
-#include "tests/parser_test.c"
+//#include "tests/socks5Test.c"
+//#include "tests/parser_test.c"
 #include "tests/selector_test.c"
-#include "tests/parser_utils_test.c"
+//#include "tests/parser_utils_test.c"
 #include "tests/helloTest.c"
 #include "tests/helloParserTest.c"
-#include "tests/requestParserTest.c"
+//#include "tests/requestParserTest.c"
 //#include "tests/stateMachineTest.c"
-#include "tests/requestTest.c"
+//#include "tests/requestTest.c"
 
 // Tests being exercised
 static const suiteSupplier suiteSuppliers[] = {
