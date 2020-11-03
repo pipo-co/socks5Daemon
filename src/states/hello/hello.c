@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #include "buffer/buffer.h"
-#include "helloParser.h"
+#include "parsers/hello/helloParser.h"
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 

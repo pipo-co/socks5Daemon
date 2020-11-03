@@ -7,7 +7,7 @@
 
 #include "buffer/buffer.h"
 #include "socks5/socks5.h"
-#include "requestParser.h"
+#include "parsers/request/requestParser.h"
 
 static void request_on_arrival (SelectorEvent *event);
 static unsigned request_on_post_read(SelectorEvent *event);

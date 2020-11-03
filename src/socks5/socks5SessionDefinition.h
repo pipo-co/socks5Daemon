@@ -8,10 +8,9 @@
 #include "buffer/buffer.h"
 #include "stateMachine/selectorStateMachine.h"
 
-// TODO: move parser files to parsers/
-#include "states/hello/helloParser.h"
-#include "states/authRequest/authRequestParser.h"
-#include "states/request/requestParser.h"
+#include "parsers/hello/helloParser.h"
+#include "parsers/authRequest/authRequestParser.h"
+#include "parsers/request/requestParser.h"
 
 typedef enum SessionState {
     HELLO = 0, 

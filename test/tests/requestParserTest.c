@@ -3,7 +3,7 @@
 #include <arpa/inet.h>
 
 // Archivo testeado
-#include "states/request/requestParser.c"
+#include "parsers/request/requestParser.c"
 
 uint8_t request_parser_test_input_domain_success[] = {
     SOCKS_VERSION, REQUEST_PARSER_COMMAND_CONNECT, 0x00, REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME,

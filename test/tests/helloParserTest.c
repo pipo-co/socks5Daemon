@@ -2,7 +2,7 @@
 #include <check.h>
 
 // Archivo testeado
-#include "states/hello/helloParser.c"
+#include "parsers/hello/helloParser.c"
 
 // enum AuthMethodsTest {
 //     NO_ACCEPTABLE_METHODS = 0xff, 
