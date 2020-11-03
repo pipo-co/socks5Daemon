@@ -12,7 +12,7 @@
 #include "states/ipConnect/ipConnect.h"                             // IP_CONNECT
 // #include DNS
 #include "states/requestSuccessful/requestSuccessful.h"             // REQUEST_SUCCESSFUL
-// #include FORWARDING
+#include "states/forwarding/forwarding.h"                           // FORWARDING
 // #include CLOSE
 // #include FINISH
 

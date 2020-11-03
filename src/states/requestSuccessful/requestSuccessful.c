@@ -24,7 +24,7 @@ static unsigned request_successful_on_post_write(SelectorEvent *event) {
     {
         selector_set_interest(event->s, socks5_p->serverConnection.fd, OP_READ|OP_WRITE);
         selector_set_interest_event(event, OP_READ|OP_WRITE);
-        return FINISH; // TODO: FORWARDING;
+        return FORWARDING;
     }
     return socks5_p->sessionStateMachine.current;
 
