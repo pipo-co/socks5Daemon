@@ -8,7 +8,7 @@ static unsigned ip_connect_on_pre_write(SelectorEvent *event) {
     
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
     int error;
-    int len = sizeof(error);
+    socklen_t len = sizeof(error);
 
     if(getsockopt(socks5_p->serverConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1){
         selector_unregister_fd(event->s, socks5_p->serverConnection.fd);
