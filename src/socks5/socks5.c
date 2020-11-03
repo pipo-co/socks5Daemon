@@ -35,7 +35,9 @@ static void socks5_server_write(SelectorEvent *event);
 static void socks5_client_read(SelectorEvent *event);
 static void socks5_client_write(SelectorEvent *event);
 static SessionHandlerP socks5_session_init(void);
+static void socks5_close_session(SessionHandlerP session, SelectorEvent *event);
 static void socks5_session_destroy(SessionHandlerP session);
+
 
 void socks5_init(char *dnsServerIp) {
     sessionInputBufferSize = DEFAULT_INPUT_BUFFER_SIZE;
@@ -112,7 +114,7 @@ static void socks5_server_read(SelectorEvent *event){
             session->serverConnection.state = CLOSING;
 
         if(selector_state_machine_proccess_post_read(&session->sessionStateMachine, event) == FINISH)
-            closeSession(session, event);
+            socks5_close_session(session, event);
     }
 
     else {
@@ -142,7 +144,7 @@ static void socks5_server_write(SelectorEvent *event){
         buffer_read_adv(buffer, writeBytes);
 
         if(selector_state_machine_proccess_post_write(&session->sessionStateMachine, event) == FINISH)
-            closeSession(session, event);
+            socks5_close_session(session, event);
     }
     else if (writeBytes == 0){
         fprintf(stderr, "%d wrote 0 bytes", session->serverConnection.fd);
@@ -176,7 +178,7 @@ static void socks5_client_read(SelectorEvent *event){
             session->clientConnection.state = CLOSING;
 
         if(selector_state_machine_proccess_post_read(&session->sessionStateMachine, event) == FINISH)
-            closeSession(session, event);
+            socks5_close_session(session, event);
     }
 
     else {
@@ -205,7 +207,7 @@ static void socks5_client_write(SelectorEvent *event){
         buffer_read_adv(buffer, writeBytes);
 
         if(selector_state_machine_proccess_post_write(&session->sessionStateMachine, event) == FINISH)
-            closeSession(session, event);
+            socks5_close_session(session, event);
     }
     else if (writeBytes == 0){
         fprintf(stderr, "%d wrote 0 bytes", session->clientConnection.fd);
@@ -241,7 +243,7 @@ static SessionHandlerP socks5_session_init(void) {
     return session;
 }
 
-static void closeSession(SessionHandlerP session, SelectorEvent *event) {
+static void socks5_close_session(SessionHandlerP session, SelectorEvent *event) {
 
     selector_state_machine_close(&session->sessionStateMachine, event);
 
