@@ -25,7 +25,7 @@ static const suiteSupplier suiteSuppliers[] = {
     // parser_test_suite,
     // parser_utils_test_suite,
     hello_test_suite,
-    //hello_parser_test_suite,
+    hello_parser_test_suite,
     // selector_test_suite,
     //request_parser_test_suite,
     //request_test_suite

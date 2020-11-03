@@ -22,13 +22,13 @@
 
 static FdHandler clientHandler;
 static FdHandler serverHandler;
-static FdHandler DNSHandler;
+// static FdHandler DNSHandler;
 
 static int sessionInputBufferSize;
 static int sessionOutputBufferSize;
 static int dnsBufferSize;
 
-static char *dnsServerIp; 
+// static char *dnsServerIp; 
 
 static void socks5_server_read(struct SelectorEvent *key);
 static void socks5_server_write(struct SelectorEvent *key);
@@ -124,11 +124,7 @@ static void socks5_server_write(struct SelectorEvent *key){
 
 void socks5_register_server(FdSelector s, SessionHandlerP socks5_p){
     
-    FdHandler handler;
-    handler.handle_read = socks5_server_read;
-    handler.handle_write = socks5_server_write;
-
-    selector_register(s, socks5_p->serverConnection.fd, &handler, OP_WRITE, &socks5_p);
+    selector_register(s, socks5_p->serverConnection.fd, &serverHandler, OP_WRITE, &socks5_p);
     
 }
 

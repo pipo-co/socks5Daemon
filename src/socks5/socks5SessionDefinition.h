@@ -1,3 +1,5 @@
+#ifndef SOCKS5_SESSION_DEFINITION_H_a7f0b7011d5bc49decb646a7852c4531c07e17b5
+#define SOCKS5_SESSION_DEFINITION_H_a7f0b7011d5bc49decb646a7852c4531c07e17b5
 
 #include <stdint.h>
 #include <arpa/inet.h>
@@ -51,7 +53,7 @@ typedef struct AuthRequestHeader{
 
 typedef struct RequestHeader{
     RequestParser parser;
-    uint8_t bytes;
+    size_t bytes;
     uint8_t rep;
 } RequestHeader;
 
@@ -78,3 +80,4 @@ typedef struct SessionHandler {
 } SessionHandler;
 
 typedef SessionHandler * SessionHandlerP;
+#endif

@@ -57,10 +57,6 @@ START_TEST (hello_test_core_on_arrival) {
 
     SessionHandlerP socks5_p =  malloc(sizeof(*socks5_p));
 
-    HelloHeader helloHeader;
-
-    socks5_p->socksHeader.helloHeader = helloHeader;
-
     ClientInfo clientInfo;
     clientInfo.authMethod = NO_AUTHENTICATION;
     socks5_p->clientInfo = clientInfo;
@@ -229,16 +225,22 @@ START_TEST (hello_test_core_on_post_read_errored_no_acceptable_methods) {
     buffer_init(&socks5_p->input, N(hello_test_input_no_acceptable_methods), hello_test_input_no_acceptable_methods);
     buffer_write_adv(&socks5_p->input, N(hello_test_input_no_acceptable_methods));
 
+    ClientInfo clientInfo;
+
+    clientInfo.authMethod = NO_ACCEPTABLE_METHODS;
+
+    socks5_p->clientInfo = clientInfo;
+
     HelloHeader helloHeader;
     helloHeader.parser.current_state = HELLO_PARSER_VERSION;
     helloHeader.parser.on_auth_method = on_auth_method;
 
-    uint8_t method = NO_ACCEPTABLE_METHODS;
-    helloHeader.parser.data = &method;
+    helloHeader.parser.data = &socks5_p->clientInfo.authMethod;
     helloHeader.parser.methods_remaining = 0;
 
-
     socks5_p->socksHeader.helloHeader = helloHeader;
+
+    key->data = socks5_p;
 
     unsigned state = hello_on_post_read(key);
 

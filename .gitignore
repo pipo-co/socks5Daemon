@@ -58,7 +58,7 @@ Thumbs.db
 .vscode/
 
 # Files
-main
+server
 client
 test
 

@@ -2,37 +2,15 @@
 
 #define REQUEST_ERROR_SIZE 10
 
-static int request_error_marshall(Buffer *b, uint8_t *bytes, uint8_t rep);
+static void request_error_marshall(Buffer *b, size_t *bytes, uint8_t rep);
 static unsigned request_error_on_pre_write(SelectorEvent *event);
 static unsigned request_error_on_post_write(SelectorEvent *event);
-
-static int request_error_marshall(Buffer *b, uint8_t *bytes, uint8_t rep) {
-
-        while(*bytes < REQUEST_ERROR_SIZE && buffer_can_write(b)) {
-            if(*bytes == 0){
-                buffer_write(b, SOCKS_VERSION);
-            }
-            else if(*bytes == 1){
-                buffer_write(b, rep);
-            }
-            else if (*bytes == 2){
-                buffer_write(b, RSV);
-            }
-            else if (*bytes == 3){
-                buffer_write(b, ATYP);
-            }
-            else {
-                buffer_write(b, 0);
-            }
-            *bytes++;
-        }
-    }
 
 static unsigned request_error_on_pre_write(SelectorEvent *event) {
     
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
-    request_error_marshall(&socks5_p->output, socks5_p->socksHeader.requestHeader.bytes, socks5_p->socksHeader.requestHeader.rep);  
+    request_error_marshall(&socks5_p->output, &socks5_p->socksHeader.requestHeader.bytes, socks5_p->socksHeader.requestHeader.rep);  
     
     return socks5_p->sessionStateMachine.current; 
 
@@ -50,6 +28,28 @@ static unsigned request_error_on_post_write(SelectorEvent *event) {
     return socks5_p->sessionStateMachine.current;
 
 }
+
+static void request_error_marshall(Buffer *b, size_t *bytes, uint8_t rep) {
+
+        while(*bytes < REQUEST_ERROR_SIZE && buffer_can_write(b)) {
+            if(*bytes == 0){
+                buffer_write(b, SOCKS_VERSION);
+            }
+            else if(*bytes == 1){
+                buffer_write(b, rep);
+            }
+            else if (*bytes == 2){
+                buffer_write(b, RSV);
+            }
+            else if (*bytes == 3){
+                buffer_write(b, ATYP);
+            }
+            else {
+                buffer_write(b, 0);
+            }
+            (*bytes)++;
+        }
+    }
 
 SelectorStateDefinition request_error_state_definition_supplier(void) {
 

@@ -2,29 +2,15 @@
 
 #define HELLO_ERROR_RESPONSE_SIZE 2
 
-static int hello_error_marshall(Buffer *b, uint8_t *bytes);
+static void hello_error_marshall(Buffer *b, size_t *bytes);
 static unsigned hello_error_on_pre_write(SelectorEvent *event);
 static unsigned hello_error_on_post_write(SelectorEvent *event);
-static void hello_error_on_departure(SelectorEvent *event);
-
-static int hello_error_marshall(Buffer *b, uint8_t *bytes) {
-
-        while(*bytes < HELLO_ERROR_RESPONSE_SIZE && buffer_can_write(b)){
-            if(*bytes == 0){
-                buffer_write(b, SOCKS_VERSION);
-            }
-            if(*bytes == 1){
-                buffer_write(b, NO_ACCEPTABLE_METHODS);
-            }
-            *bytes++;
-        }
-    }
 
 static unsigned hello_error_on_pre_write(SelectorEvent *event) {
     
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
-    hello_error_marshall(&socks5_p->output, socks5_p->socksHeader.helloHeader.bytes);  
+    hello_error_marshall(&socks5_p->output, &socks5_p->socksHeader.helloHeader.bytes);  
     
     return socks5_p->sessionStateMachine.current; 
 
@@ -43,9 +29,19 @@ static unsigned hello_error_on_post_write(SelectorEvent *event) {
 
 }
 
-static void hello_error_on_departure(SelectorEvent *event) {
+static void hello_error_marshall(Buffer *b, size_t *bytes) {
 
-}
+        while(*bytes < HELLO_ERROR_RESPONSE_SIZE && buffer_can_write(b)){
+            if(*bytes == 0){
+                buffer_write(b, SOCKS_VERSION);
+            }
+            if(*bytes == 1){
+                buffer_write(b, NO_ACCEPTABLE_METHODS);
+            }
+            (*bytes)++;
+        }
+    }
+
 
 SelectorStateDefinition hello_error_state_definition_supplier(void) {
 
