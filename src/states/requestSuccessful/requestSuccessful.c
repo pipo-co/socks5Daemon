@@ -20,7 +20,7 @@ static unsigned request_successful_on_post_write(SelectorEvent *event) {
 
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
-    if (socks5_p->socksHeader.requestHeader.bytes == REPLY_SIZE && buffer_can_read(&socks5_p->output))
+    if (socks5_p->socksHeader.requestHeader.bytes == REPLY_SIZE && !buffer_can_read(&socks5_p->output))
     {
         selector_set_interest(event->s, socks5_p->serverConnection.fd, OP_READ|OP_WRITE);
         selector_set_interest_event(event, OP_READ|OP_WRITE);
@@ -58,9 +58,9 @@ SelectorStateDefinition request_successful_state_definition_supplier(void) {
 
         .state = REQUEST_SUCCESSFUL,
         .on_arrival = NULL,
-        .on_post_read = request_successful_on_post_write,
+        .on_post_read = NULL,
         .on_pre_write = request_successful_on_pre_write,
-        .on_post_write = NULL,
+        .on_post_write = request_successful_on_post_write,
         .on_block_ready = NULL,
         .on_departure = NULL,
     };

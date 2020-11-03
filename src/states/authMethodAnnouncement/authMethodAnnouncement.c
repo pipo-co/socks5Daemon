@@ -19,7 +19,7 @@ static unsigned method_announcement_on_post_write(struct SelectorEvent *key) {
 
     SessionHandlerP socks5_p = (SessionHandlerP) key->data;
 
-    if (socks5_p->socksHeader.helloHeader.bytes == INITIAL_RESPONSE_SIZE && buffer_can_read(&socks5_p->output))
+    if (socks5_p->socksHeader.helloHeader.bytes == INITIAL_RESPONSE_SIZE && !buffer_can_read(&socks5_p->output))
     {
         selector_set_interest_event(key, OP_READ);
         if(socks5_p->clientInfo.authMethod == NO_AUTHENTICATION){

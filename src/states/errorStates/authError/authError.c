@@ -20,7 +20,7 @@ static unsigned auth_error_on_post_write(SelectorEvent *event) {
 
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
-    if (socks5_p->socksHeader.authRequestHeader.bytes == AUTH_ERROR_RESPONSE_SIZE && buffer_can_read(&socks5_p->output))
+    if (socks5_p->socksHeader.authRequestHeader.bytes == AUTH_ERROR_RESPONSE_SIZE && !buffer_can_read(&socks5_p->output))
     {
         selector_unregister_fd(event->s, event->fd);
         return FINISH;

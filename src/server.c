@@ -26,6 +26,7 @@
 #include <netinet/tcp.h>
 
 #include "selector/selector.h"
+#include "netutils/netutils.h"
 #include "socks5/socks5.h"
 //#include "socks5nio.h"
 
@@ -130,13 +131,16 @@ int main(const int argc, const char **argv) {
         .handle_write      = NULL,
         .handle_close      = NULL, // nada que liberar
     };
-    
+
     ss = selector_register(selector, server, &socksv5,
                                               OP_READ, NULL);
     if(ss != SELECTOR_SUCCESS) {
         err_msg = "registering fd";
         goto finally;
     }
+
+    socks5_init("8.8.8.8");
+
     while(!done) {
         err_msg = NULL;
         ss = selector_select(selector);

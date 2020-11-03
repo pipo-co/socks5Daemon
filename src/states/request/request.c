@@ -8,6 +8,7 @@
 #include "buffer/buffer.h"
 #include "socks5/socks5.h"
 #include "parsers/request/requestParser.h"
+#include "netutils/netutils.h"
 
 static void request_on_arrival (SelectorEvent *event);
 static unsigned request_on_post_read(SelectorEvent *event);
@@ -52,39 +53,38 @@ static unsigned request_on_post_read(SelectorEvent *event) {
         selector_set_interest_event(event, OP_NOOP);
         return FINISH; // TODO: GENERATE_DNS_QUERY; 
     }
-    else{
-
-        if(socks5_p->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP4){
-            //TODO add connect
-            // socks5_p->serverConnection.fd = new_ipv4_socket(socks5_p->socksHeader.requestHeader.parser.address, socks5_p->socksHeader.requestHeader.parser.port);    
-        }
-        else if(socks5_p->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP6){
-            //TODO add connect
-            // socks5_p->serverConnection.fd = new_ipv6_socket(socks5_p->socksHeader.requestHeader.parser.address, socks5_p->socksHeader.requestHeader.parser.port);
-        }
-        if (socks5_p->serverConnection.fd  == -1){
-            if(errno == ENETUNREACH){
-                socks5_p->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
-                
-            }
-            else if(errno = EHOSTUNREACH){
-                socks5_p->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
-            }
-            else if(errno = ECONNREFUSED){
-                socks5_p->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
-            }
-            else
-            {
-                socks5_p->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE; // arbitrario, revisar
-            }
-            //logger stderr(errno);
-            selector_set_interest_event(event, OP_WRITE);
-            return REQUEST_ERROR;      
-        }
-        socks5_register_server(event->s, socks5_p);
-        selector_set_interest_event(event, OP_NOOP);
-        return IP_CONNECT;
+    
+    if(socks5_p->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP4){
+        //TODO add connect
+        socks5_p->serverConnection.fd = new_ipv4_socket(socks5_p->socksHeader.requestHeader.parser.address.ipv4, socks5_p->socksHeader.requestHeader.parser.port);    
     }
+    else if(socks5_p->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP6){
+        //TODO add connect
+        // socks5_p->serverConnection.fd = new_ipv6_socket(socks5_p->socksHeader.requestHeader.parser.address, socks5_p->socksHeader.requestHeader.parser.port);
+    }
+
+    if (socks5_p->serverConnection.fd  == -1){
+        if(errno == ENETUNREACH){
+            socks5_p->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
+            
+        }
+        else if(errno = EHOSTUNREACH){
+            socks5_p->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
+        }
+        else if(errno = ECONNREFUSED){
+            socks5_p->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
+        }
+        else
+        {
+            socks5_p->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE; // arbitrario, revisar
+        }
+        //logger stderr(errno);
+        selector_set_interest_event(event, OP_WRITE);
+        return REQUEST_ERROR;      
+    }
+    socks5_register_server(event->s, socks5_p);
+    selector_set_interest_event(event, OP_NOOP);
+    return IP_CONNECT;
 }
 
 SelectorStateDefinition request_state_definition_supplier(void) {
