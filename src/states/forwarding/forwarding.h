@@ -4,6 +4,6 @@
 #include "socksDefs.h"
 #include "socks5/socks5SessionDefinition.h"
 
-SelectorStateDefinition request_successful_state_definition_supplier(void);
+SelectorStateDefinition forwarding_state_definition_supplier(void);
 
 #endif

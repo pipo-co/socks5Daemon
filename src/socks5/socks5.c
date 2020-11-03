@@ -105,7 +105,7 @@ static void socks5_server_read(SelectorEvent *event){
     size_t nbytes;
     uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
 
-    if(readBytes = read(event->fd, writePtr, nbytes), readBytes >= 0){
+    if(readBytes = read(event->fd, writePtr, nbytes), readBytes >= 0) {
         buffer_write_adv(buffer, readBytes);
 
         if(readBytes == 0)

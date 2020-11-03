@@ -13,12 +13,29 @@
 // #include DNS
 #include "states/requestSuccessful/requestSuccessful.h"             // REQUEST_SUCCESSFUL
 #include "states/forwarding/forwarding.h"                           // FORWARDING
-// #include CLOSE
-// #include FINISH
+#include "states/close/flushCloser/flushCloser.h"                   // FLUSH_CLOSER
+#include "states/close/flushClosy/flushClosy.h"                     // FLUSH_CLOSY
+
+
+static SelectorStateDefinition finish_state_definition_supplier(void);
 
 typedef SelectorStateDefinition (*SelectorStateDefinitionSupplier)(void);
 
 static SelectorStateDefinition sessionStateDefinitions[FINISH];
+
+static SelectorStateDefinition finish_state_definition_supplier(void) {
+    SelectorStateDefinition ssd = {
+        .state = FINISH,
+        .on_arrival = NULL,
+        .on_post_read = NULL,
+        .on_pre_write = NULL,
+        .on_post_write = NULL,
+        .on_block_ready = NULL,
+        .on_departure = NULL,
+    };
+
+    return ssd;
+}
 
 void socks5_session_state_machine_builder_init() {
 
@@ -33,12 +50,12 @@ void socks5_session_state_machine_builder_init() {
     sessionStateDefinitions[IP_CONNECT]                 = ip_connect_state_definition_supplier();
     // sessionStateDefinitions[DNS]                     = dns_state_definition_supplier();
     sessionStateDefinitions[REQUEST_SUCCESSFUL]         = request_successful_state_definition_supplier();
-    // #include FORWARDING
-    // #include CLOSE
-    // #include FINISH
+    sessionStateDefinitions[FORWARDING]                 = forwarding_state_definition_supplier();
+    sessionStateDefinitions[FLUSH_CLOSER]               = flush_closer_state_definition_supplier();
+    sessionStateDefinitions[FLUSH_CLOSY]                = flush_closy_state_definition_supplier();
+    sessionStateDefinitions[FINISH]                     = finish_state_definition_supplier();
 }
 
 void build_socks_session_state_machine(SSM ssm) {
-    // TODO: sacar el -1 de maxState
-    selector_state_machine_init(ssm, HELLO, FINISH - 1, sessionStateDefinitions);
+    selector_state_machine_init(ssm, HELLO, FINISH, sessionStateDefinitions);
 }

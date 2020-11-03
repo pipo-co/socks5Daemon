@@ -111,7 +111,7 @@ static unsigned flush_closer_on_post_write(SelectorEvent *event) {
 }
 
 
-SelectorStateDefinition auth_successful_state_definition_supplier(void) {
+SelectorStateDefinition flush_closer_state_definition_supplier(void) {
 
     SelectorStateDefinition stateDefinition = {
 
