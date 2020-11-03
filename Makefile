@@ -9,4 +9,5 @@ tests:
 
 clean:
 	cd test; make clean;
-	cd src; make clean;
+	cd src
+	; make clean;

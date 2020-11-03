@@ -21,7 +21,7 @@ static SelectorStateDefinition finish_state_definition_supplier(void);
 
 typedef SelectorStateDefinition (*SelectorStateDefinitionSupplier)(void);
 
-static SelectorStateDefinition sessionStateDefinitions[FINISH];
+static SelectorStateDefinition sessionStateDefinitions[FINISH + 1];
 
 static SelectorStateDefinition finish_state_definition_supplier(void) {
     SelectorStateDefinition ssd = {
