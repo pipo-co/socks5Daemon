@@ -55,12 +55,10 @@ static unsigned request_on_post_read(SelectorEvent *event) {
     }
     
     if(socks5_p->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP4){
-        //TODO add connect
         socks5_p->serverConnection.fd = new_ipv4_socket(socks5_p->socksHeader.requestHeader.parser.address.ipv4, socks5_p->socksHeader.requestHeader.parser.port);    
     }
     else if(socks5_p->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP6){
-        //TODO add connect
-        // socks5_p->serverConnection.fd = new_ipv6_socket(socks5_p->socksHeader.requestHeader.parser.address, socks5_p->socksHeader.requestHeader.parser.port);
+        socks5_p->serverConnection.fd = new_ipv6_socket(socks5_p->socksHeader.requestHeader.parser.address.ipv6, socks5_p->socksHeader.requestHeader.parser.port);
     }
 
     if (socks5_p->serverConnection.fd  == -1){

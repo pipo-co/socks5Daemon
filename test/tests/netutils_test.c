@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <check.h>
 
-#include "netutils.h"
+#include "netutils/netutils.c"
 
 START_TEST (test_sockaddr_to_human_ipv4) {
     char buff[50] = {0};
@@ -57,8 +57,7 @@ START_TEST (test_sockaddr_to_human_ipv6) {
 }
 END_TEST
 
-Suite * 
-hello_suite(void) {
+Suite * hello_suite(void) {
     Suite *s;
     TCase *tc;
 
@@ -74,18 +73,4 @@ hello_suite(void) {
     return s;
 }
 
-int 
-main(void) {
-    int number_failed;
-    Suite *s;
-    SRunner *sr;
-
-    s = hello_suite();
-    sr = srunner_create(s);
-
-    srunner_run_all(sr, CK_NORMAL);
-    number_failed = srunner_ntests_failed(sr);
-    srunner_free(sr);
-    return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
-}
 
