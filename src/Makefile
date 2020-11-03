@@ -10,7 +10,7 @@ CLIENT=client
 SOURCE_FILES = $(foreach dir, $(SOURCE_PATHS), $(wildcard $(dir)/*.c))
 OBJECTS = $(patsubst %.c, %.o, $(SOURCE_FILES))
 
-all: $(SERVER) $(CLIENT) 
+all: $(SERVER)
 
 clean: 
 	rm -rf $(OBJECTS) $(SERVER) $(CLIENT)

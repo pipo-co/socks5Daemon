@@ -6,7 +6,6 @@
 #include "stateMachine/selectorStateMachine.h"
 #include "socks5/socks5SessionDefinition.h"
 
-
 void socks5_init(char *dnsServerIp);
 
 void socks5_passive_accept(SelectorEvent *event);

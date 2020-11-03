@@ -18,7 +18,7 @@ selector_state_machine_init(SSM ssm, unsigned initialState, unsigned maxState, S
 
     // verificamos que los estados son correlativos, y que están bien asignados.
     for(unsigned i = 0 ; i <= ssm->maxState; i++) {
-        if(ssm->states[i].state != i) {
+        if(ssm->states[i].state != i) {        
             abort();
         }
     }

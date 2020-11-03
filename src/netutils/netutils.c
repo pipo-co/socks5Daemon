@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
+#include <fcntl.h>
 
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -99,7 +100,7 @@ sock_blocking_copy(const int source, const int dest) {
     return ret;
 }
 
-int new_ipv4_socket(char *ip, uint16_t port) {
+int new_ipv4_socket(struct in_addr ip, in_port_t port) {
 	
 	int sock;
 	struct sockaddr_in addr; 
@@ -109,12 +110,14 @@ int new_ipv4_socket(char *ip, uint16_t port) {
     if (sock == -1) { 
         return -1;
     } 
+
+    selector_fd_set_nio(sock);
     
 	memset(&addr, '\0',sizeof(addr)); 
 
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(port); 
-	inet_pton(AF_INET, ip, &addr.sin_addr.s_addr);
+    addr.sin_port = port; 
+	addr.sin_addr = ip;
 
 	if (connect(sock, (struct sockaddr*) &addr, sizeof(addr)) != 0) { 
         if(errno == EINPROGRESS)
@@ -151,3 +154,17 @@ int new_ipv6_socket(char *ip, uint16_t port) {
 	return sock;
 }
 
+
+int
+selector_fd_set_nio(const int fd) {
+    int ret = 0;
+    int flags = fcntl(fd, F_GETFD, 0);
+    if(flags == -1) {
+        ret = -1;
+    } else {
+        if(fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+            ret = -1;
+        }
+    }
+    return ret;
+}

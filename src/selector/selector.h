@@ -179,13 +179,6 @@ selector_set_interest_event(SelectorEvent *event, FdInterest i);
 SelectorStatus
 selector_select(FdSelector s);
 
-/**
- * Método de utilidad que activa O_NONBLOCK en un fd.
- *
- * retorna -1 ante error, y deja detalles en errno.
- */
-int
-selector_fd_set_nio(const int fd);
 
 /** notifica que un trabajo bloqueante terminó */
 SelectorStatus

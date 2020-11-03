@@ -40,8 +40,11 @@ sock_blocking_write(const int fd, Buffer *b);
 int
 sock_blocking_copy(const int source, const int dest);
 
-int new_ipv4_socket(char *ip, uint16_t port);
+int new_ipv4_socket(struct in_addr ip, in_port_t port);
 
 int new_ipv6_socket(char *ip, uint16_t port);
+
+int
+selector_fd_set_nio(const int fd);
 
 #endif

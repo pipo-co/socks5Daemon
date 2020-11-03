@@ -28,7 +28,7 @@ static int sessionInputBufferSize;
 static int sessionOutputBufferSize;
 static int dnsBufferSize;
 
-// static char *dnsServerIp; 
+static char *dnsServerIp; 
 
 static void socks5_server_read(struct SelectorEvent *key);
 static void socks5_server_write(struct SelectorEvent *key);
@@ -77,7 +77,7 @@ static void socks5_server_read(struct SelectorEvent *key){
     size_t nbytes;
     uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
 
-    if((readBytes = read(key->fd, writePtr, nbytes) > 0)){
+    if(readBytes = read(key->fd, writePtr, nbytes), readBytes > 0){
         buffer_write_adv(buffer, readBytes);
         selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, key);
     }
@@ -100,14 +100,15 @@ static void socks5_server_write(struct SelectorEvent *key){
 
     Buffer * buffer = &socks5_p->input;
 
-    if(!buffer_can_read(buffer))
+    if(!buffer_can_read(buffer)) {
         return;
+    }
     
     ssize_t writeBytes;
     size_t nbytes;
     uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
     
-    if( (writeBytes = write(key->fd, readPtr, nbytes)) > 0){
+    if((writeBytes = write(key->fd, readPtr, nbytes)) > 0){
         buffer_read_adv(buffer, writeBytes);
         selector_state_machine_proccess_post_write(&socks5_p->sessionStateMachine, key);
     }
@@ -124,7 +125,7 @@ static void socks5_server_write(struct SelectorEvent *key){
 
 void socks5_register_server(FdSelector s, SessionHandlerP socks5_p){
     
-    selector_register(s, socks5_p->serverConnection.fd, &serverHandler, OP_WRITE, &socks5_p);
+    selector_register(s, socks5_p->serverConnection.fd, &serverHandler, OP_WRITE, socks5_p);
     
 }
 
@@ -142,7 +143,7 @@ static void socks5_client_read(struct SelectorEvent *key){
     size_t nbytes;
     uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
 
-    if((readBytes = read(key->fd, writePtr, nbytes) > 0)){
+    if(readBytes = read(key->fd, writePtr, nbytes), readBytes > 0){
         buffer_write_adv(buffer, readBytes);
         selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, key);
     }
@@ -158,7 +159,6 @@ static void socks5_client_read(struct SelectorEvent *key){
 }
 
 static void socks5_client_write(struct SelectorEvent *key){
-    
     
     SessionHandlerP socks5_p = (SessionHandlerP) key->data;
 
