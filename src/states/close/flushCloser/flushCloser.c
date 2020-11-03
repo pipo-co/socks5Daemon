@@ -100,7 +100,7 @@ static unsigned flush_closer_on_post_write(SelectorEvent *event) {
 
     // Si ya no hay nada que mandarle al closer pero todavía no le mandamos el shutdown
     else if(*closerStateP == CLOSING) {
-        shutdown(closerFd, SHUT_RD);
+        shutdown(closyFd, SHUT_WR);
         *closerStateP = CLOSED;
     }
 

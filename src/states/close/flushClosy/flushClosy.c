@@ -25,7 +25,7 @@ static unsigned flush_closy_on_post_write(SelectorEvent *event) {
         selector_set_interest(event->s, serverFd, OP_WRITE);
     }
     else if(*clientState == CLOSING) {
-        shutdown(clientFd, SHUT_RD);
+        shutdown(serverFd, SHUT_WR);
         *clientState = CLOSED;
     }
 
@@ -33,7 +33,7 @@ static unsigned flush_closy_on_post_write(SelectorEvent *event) {
         selector_set_interest(event->s, clientFd, OP_WRITE);
     }
     else if(*serverState == CLOSING) {
-        shutdown(serverFd, SHUT_RD);
+        shutdown(clientFd, SHUT_WR);
         *serverState = CLOSED;
     }
 
