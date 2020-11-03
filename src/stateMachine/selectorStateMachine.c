@@ -60,7 +60,7 @@ unsigned selector_state_machine_proccess_post_read(SSM ssm, SelectorEvent *event
     handle_first(ssm, event);
 
     if(ssm->states[ssm->current].on_post_read == NULL) {
-        abort();
+        return ssm->current;
     }
 
     const unsigned int ret = ssm->states[ssm->current].on_post_read(event);
@@ -73,7 +73,7 @@ unsigned selector_state_machine_proccess_pre_write(SSM ssm, SelectorEvent *event
     handle_first(ssm, event);
 
     if(ssm->states[ssm->current].on_pre_write == NULL) {
-        abort();
+        return ssm->current;
     }
 
     const unsigned int ret = ssm->states[ssm->current].on_pre_write(event);
@@ -86,7 +86,7 @@ unsigned selector_state_machine_proccess_post_write(SSM ssm, SelectorEvent *even
     handle_first(ssm, event);
 
     if(ssm->states[ssm->current].on_post_write == NULL) {
-        abort();
+        return ssm->current;
     }
 
     const unsigned int ret = ssm->states[ssm->current].on_post_write(event);

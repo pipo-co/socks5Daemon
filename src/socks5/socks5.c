@@ -32,7 +32,6 @@ static char *dnsServerIp;
 
 static void socks5_server_read(struct SelectorEvent *key);
 static void socks5_server_write(struct SelectorEvent *key);
-void socks5_register_server(FdSelector s, SessionHandlerP socks5_p);
 static void socks5_client_read(struct SelectorEvent *key);
 static void socks5_client_write(struct SelectorEvent *key);
 static SessionHandlerP socks5_session_init(void);
@@ -63,23 +62,25 @@ void socks5_init(char *dnsServerIp) {
     socks5_session_state_machine_builder_init();
 }
 
-static void socks5_server_read(struct SelectorEvent *key){
+static void socks5_server_read(SelectorEvent *event){
 
-    SessionHandlerP socks5_p = (SessionHandlerP) key->data;
+    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
     Buffer * buffer = &socks5_p->output;
     
     //pre_read(socks5_p->stm, key)
 
-    if(!buffer_can_write(buffer))
+    if(!buffer_can_write(buffer)) {
+        fprintf(stderr, "A read socket was registered on pselect, but there was no space in buffer");
         return;
+    }
 
     ssize_t readBytes;
     size_t nbytes;
     uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
 
-    if(readBytes = read(key->fd, writePtr, nbytes), readBytes > 0){
+    if(readBytes = read(event->fd, writePtr, nbytes), readBytes > 0){
         buffer_write_adv(buffer, readBytes);
-        selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, key);
+        selector_state_machine_proccess_post_read(&socks5_p->sessionStateMachine, event);
     }
     else if (readBytes == 0){
         //server cerro conexion
