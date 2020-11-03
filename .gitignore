@@ -53,6 +53,7 @@ Thumbs.db
 
 # Compiled files
 *.o
+*.inc
 
 # VSCode
 .vscode/
