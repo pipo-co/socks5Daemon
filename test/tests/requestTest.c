@@ -64,8 +64,6 @@ START_TEST (request_test_core_on_arrival) {
 
     socks5_p = (SessionHandlerP) key->data;
 
-    ck_assert(socks5_p->socksHeader.requestHeader.bytes == 0);
-
     ck_assert_uint_eq(socks5_p->socksHeader.requestHeader.rep, SUCCESSFUL);
 
     free(key);
@@ -74,7 +72,7 @@ START_TEST (request_test_core_on_arrival) {
 }
 END_TEST
 
-START_TEST (request_test_core_on_post_read_same_state) {
+START_TEST (request_test_core_on_read_same_state) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -95,7 +93,7 @@ START_TEST (request_test_core_on_post_read_same_state) {
 
     key->data = socks5_p;
 
-    unsigned state = request_on_post_read(key);
+    unsigned state = request_on_read(key);
 
     free(key);
     free(socks5_p);
@@ -104,7 +102,7 @@ START_TEST (request_test_core_on_post_read_same_state) {
 }
 END_TEST
 
-START_TEST (request_test_core_on_post_read_unsupported_address_type) {
+START_TEST (request_test_core_on_read_unsupported_address_type) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -125,7 +123,7 @@ START_TEST (request_test_core_on_post_read_unsupported_address_type) {
 
     key->data = socks5_p;
 
-    unsigned state = request_on_post_read(key);
+    unsigned state = request_on_read(key);
 
     free(key);
     free(socks5_p);
@@ -134,7 +132,7 @@ START_TEST (request_test_core_on_post_read_unsupported_address_type) {
 }
 END_TEST
 
-START_TEST (request_test_core_on_post_read_unsupported_version) {
+START_TEST (request_test_core_on_read_unsupported_version) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -155,7 +153,7 @@ START_TEST (request_test_core_on_post_read_unsupported_version) {
 
     key->data = socks5_p;
 
-    unsigned state = request_on_post_read(key);
+    unsigned state = request_on_read(key);
 
     free(key);
     free(socks5_p);
@@ -164,7 +162,7 @@ START_TEST (request_test_core_on_post_read_unsupported_version) {
 }
 END_TEST
 
-START_TEST (request_test_core_on_post_read_unsupported_command) {
+START_TEST (request_test_core_on_read_unsupported_command) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -187,7 +185,7 @@ START_TEST (request_test_core_on_post_read_unsupported_command) {
     
 
     const struct FdHandler socksv5 = {
-        .handle_read       = socks5_passive_accept,//socksv5_passive_accept,
+        .handle_read       = NULL,//socksv5_passive_accept,
         .handle_write      = NULL,
         .handle_close      = NULL, // nada que liberar
     };
@@ -196,7 +194,7 @@ START_TEST (request_test_core_on_post_read_unsupported_command) {
     
     key->data = socks5_p;
 
-    unsigned state = request_on_post_read(key);
+    unsigned state = request_on_read(key);
 
     selector_destroy(key->s);
     free(key);
@@ -206,7 +204,7 @@ START_TEST (request_test_core_on_post_read_unsupported_command) {
 }
 END_TEST
 
-START_TEST (request_test_core_on_post_read_valid_ipv4) {
+START_TEST (request_test_core_on_read_valid_ipv4) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -250,7 +248,7 @@ START_TEST (request_test_core_on_post_read_valid_ipv4) {
     key->s = selector;
     key->data = socks5_p;
 
-    unsigned state = request_on_post_read(key);
+    unsigned state = request_on_read(key);
 
     ck_assert_uint_eq(state, IP_CONNECT);
     
@@ -260,7 +258,7 @@ START_TEST (request_test_core_on_post_read_valid_ipv4) {
 }
 END_TEST
 
-START_TEST (request_test_core_on_post_read_invalid_ipv4) {
+START_TEST (request_test_core_on_read_invalid_ipv4) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -304,7 +302,7 @@ START_TEST (request_test_core_on_post_read_invalid_ipv4) {
     key->s = selector;
     key->data = socks5_p;
 
-    unsigned state = request_on_post_read(key);
+    unsigned state = request_on_read(key);
 
     ck_assert_uint_eq(state, REQUEST_ERROR);
     
@@ -314,7 +312,7 @@ START_TEST (request_test_core_on_post_read_invalid_ipv4) {
 }
 END_TEST
 
-START_TEST (request_test_core_on_post_read_valid_ipv6) {
+START_TEST (request_test_core_on_read_valid_ipv6) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -358,7 +356,7 @@ START_TEST (request_test_core_on_post_read_valid_ipv6) {
     key->s = selector;
     key->data = socks5_p;
 
-    unsigned state = request_on_post_read(key);
+    unsigned state = request_on_read(key);
 
     ck_assert_uint_eq(state, IP_CONNECT);
     
@@ -368,7 +366,7 @@ START_TEST (request_test_core_on_post_read_valid_ipv6) {
 }
 END_TEST
 
-START_TEST (request_test_core_on_post_read_invalid_ipv6) {
+START_TEST (request_test_core_on_read_invalid_ipv6) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -412,7 +410,7 @@ START_TEST (request_test_core_on_post_read_invalid_ipv6) {
     key->s = selector;
     key->data = socks5_p;
 
-    unsigned state = request_on_post_read(key);
+    unsigned state = request_on_read(key);
 
     ck_assert_uint_eq(state, REQUEST_ERROR);
     
@@ -428,14 +426,14 @@ Suite * request_test_suite(void) {
     TCase *tc  = tcase_create("core");
 
     tcase_add_test(tc, request_test_core_on_arrival);
-    tcase_add_test(tc, request_test_core_on_post_read_same_state);
-    tcase_add_test(tc, request_test_core_on_post_read_unsupported_address_type);
-    tcase_add_test(tc, request_test_core_on_post_read_unsupported_version);
-    tcase_add_test(tc, request_test_core_on_post_read_unsupported_command);
-    tcase_add_test(tc, request_test_core_on_post_read_valid_ipv4);
-    tcase_add_test(tc, request_test_core_on_post_read_invalid_ipv4);
-    tcase_add_test(tc, request_test_core_on_post_read_valid_ipv6);
-    tcase_add_test(tc, request_test_core_on_post_read_invalid_ipv6);
+    tcase_add_test(tc, request_test_core_on_read_same_state);
+    tcase_add_test(tc, request_test_core_on_read_unsupported_address_type);
+    tcase_add_test(tc, request_test_core_on_read_unsupported_version);
+    tcase_add_test(tc, request_test_core_on_read_unsupported_command);
+    tcase_add_test(tc, request_test_core_on_read_valid_ipv4);
+    tcase_add_test(tc, request_test_core_on_read_invalid_ipv4);
+    tcase_add_test(tc, request_test_core_on_read_valid_ipv6);
+    tcase_add_test(tc, request_test_core_on_read_invalid_ipv6);
     
 
     suite_add_tcase(s, tc);

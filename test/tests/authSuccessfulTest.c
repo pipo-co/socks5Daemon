@@ -35,7 +35,7 @@ END_TEST
 
 
 
-START_TEST (auth_successful_test_core_on_post_write_success) {
+START_TEST (auth_successful_test_core_on_write_success) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -75,7 +75,7 @@ START_TEST (auth_successful_test_core_on_post_write_success) {
     key->s = selector;
     key->data = socks5_p;
 
-    unsigned state = auth_successful_on_post_write(key);
+    unsigned state = auth_successful_on_write(key);
 
     ck_assert_uint_eq(state, REQUEST);
 
@@ -87,7 +87,7 @@ START_TEST (auth_successful_test_core_on_post_write_success) {
 }
 END_TEST
 
-START_TEST (auth_successful_test_core_on_post_write_current) {
+START_TEST (auth_successful_test_core_on_write_current) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -127,7 +127,7 @@ START_TEST (auth_successful_test_core_on_post_write_current) {
     key->s = selector;
     key->data = socks5_p;
 
-    unsigned state = auth_successful_on_post_write(key);
+    unsigned state = auth_successful_on_write(key);
 
     ck_assert_uint_eq(state, AUTH_SUCCESSFUL);
     
@@ -147,8 +147,8 @@ Suite * auth_success_test_suite(void) {
 
     tcase_add_test(tc, auth_successful_test_core_request_marshall_incomplete);
     tcase_add_test(tc, auth_successful_test_core_request_marshall_complete);
-    tcase_add_test(tc, auth_successful_test_core_on_post_write_success);
-    tcase_add_test(tc, auth_successful_test_core_on_post_write_current);
+    tcase_add_test(tc, auth_successful_test_core_on_write_success);
+    tcase_add_test(tc, auth_successful_test_core_on_write_current);
     
 
     suite_add_tcase(s, tc);

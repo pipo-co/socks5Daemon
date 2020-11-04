@@ -34,7 +34,7 @@ START_TEST (hello_error_test_core_request_marshall_complete) {
 END_TEST
 
 
-START_TEST (hello_error_test_core_on_post_write_success) {
+START_TEST (hello_error_test_core_on_write_success) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -74,7 +74,7 @@ START_TEST (hello_error_test_core_on_post_write_success) {
     key->s = selector;
     key->data = socks5_p;
 
-    unsigned state = hello_error_on_post_write(key);
+    unsigned state = hello_error_on_write(key);
 
     ck_assert_uint_eq(state, FINISH);
 
@@ -86,7 +86,7 @@ START_TEST (hello_error_test_core_on_post_write_success) {
 }
 END_TEST
 
-START_TEST (hello_error_test_core_on_post_write_current) {
+START_TEST (hello_error_test_core_on_write_current) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -126,7 +126,7 @@ START_TEST (hello_error_test_core_on_post_write_current) {
     key->s = selector;
     key->data = socks5_p;
 
-    unsigned state = hello_error_on_post_write(key);
+    unsigned state = hello_error_on_write(key);
 
     ck_assert_uint_eq(state, HELLO_ERROR);
     
@@ -146,8 +146,8 @@ Suite * hello_error_test_suite(void) {
 
     tcase_add_test(tc, hello_error_test_core_request_marshall_incomplete);
     tcase_add_test(tc, hello_error_test_core_request_marshall_complete);
-    tcase_add_test(tc, hello_error_test_core_on_post_write_success);
-    tcase_add_test(tc, hello_error_test_core_on_post_write_current);
+    tcase_add_test(tc, hello_error_test_core_on_write_success);
+    tcase_add_test(tc, hello_error_test_core_on_write_current);
     
 
     suite_add_tcase(s, tc);

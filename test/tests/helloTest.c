@@ -67,15 +67,13 @@ START_TEST (hello_test_core_on_arrival) {
 
     socks5_p = (SessionHandlerP) key->data;
 
-    ck_assert(socks5_p->socksHeader.helloHeader.bytes == 0);
-
     free(key);
     free(socks5_p);
 
 }
 END_TEST
 
-START_TEST (hello_test_core_on_post_read_same_state) {
+START_TEST (hello_test_core_on_read_same_state) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -98,7 +96,7 @@ START_TEST (hello_test_core_on_post_read_same_state) {
 
     key->data = socks5_p;
 
-    unsigned state = hello_on_post_read(key);
+    unsigned state = hello_on_read(key);
 
     free(key);
     free(socks5_p);
@@ -107,7 +105,7 @@ START_TEST (hello_test_core_on_post_read_same_state) {
 }
 END_TEST
 
-START_TEST (hello_test_core_on_post_read_success) {
+START_TEST (hello_test_core_on_read_success) {
 
     SelectorEvent *key = malloc(sizeof(*key));
 
@@ -133,7 +131,7 @@ START_TEST (hello_test_core_on_post_read_success) {
 
     key->data = socks5_p;
 
-    unsigned state = hello_on_post_read(key);
+    unsigned state = hello_on_read(key);
 
     ck_assert_uint_eq(state, AUTH_METHOD_ANNOUNCEMENT);
 
@@ -143,7 +141,7 @@ START_TEST (hello_test_core_on_post_read_success) {
 }
 END_TEST
 
-START_TEST (hello_test_core_on_post_read_errored) {
+START_TEST (hello_test_core_on_read_errored) {
 
     SelectorEvent *key = malloc(sizeof(*key));
 
@@ -166,7 +164,7 @@ START_TEST (hello_test_core_on_post_read_errored) {
 
     key->data = socks5_p;
 
-    unsigned state = hello_on_post_read(key);
+    unsigned state = hello_on_read(key);
 
     ck_assert_uint_eq(state, HELLO_ERROR);
 
@@ -176,7 +174,7 @@ START_TEST (hello_test_core_on_post_read_errored) {
 }
 END_TEST
 
-START_TEST (hello_test_core_on_post_read_unsupported_version) {
+START_TEST (hello_test_core_on_read_unsupported_version) {
 
     SelectorEvent *key = malloc(sizeof(*key));
 
@@ -202,7 +200,7 @@ START_TEST (hello_test_core_on_post_read_unsupported_version) {
 
     key->data = socks5_p;
 
-    unsigned state = hello_on_post_read(key);
+    unsigned state = hello_on_read(key);
 
     ck_assert_uint_eq(state, HELLO_ERROR);
 
@@ -212,7 +210,7 @@ START_TEST (hello_test_core_on_post_read_unsupported_version) {
 }
 END_TEST
 
-START_TEST (hello_test_core_on_post_read_errored_no_acceptable_methods) {
+START_TEST (hello_test_core_on_read_errored_no_acceptable_methods) {
 
     SelectorEvent *key = malloc(sizeof(*key));
 
@@ -242,7 +240,7 @@ START_TEST (hello_test_core_on_post_read_errored_no_acceptable_methods) {
 
     key->data = socks5_p;
 
-    unsigned state = hello_on_post_read(key);
+    unsigned state = hello_on_read(key);
 
     ck_assert_uint_eq(state, HELLO_ERROR);
 
@@ -259,11 +257,11 @@ Suite * hello_test_suite(void) {
     TCase *tc  = tcase_create("core");
     tcase_add_test(tc, hello_test_core_on_auth_method);
     tcase_add_test(tc, hello_test_core_on_arrival);
-    tcase_add_test(tc, hello_test_core_on_post_read_same_state);
-    tcase_add_test(tc, hello_test_core_on_post_read_success);
-    tcase_add_test(tc, hello_test_core_on_post_read_errored);
-    tcase_add_test(tc, hello_test_core_on_post_read_unsupported_version);
-    tcase_add_test(tc, hello_test_core_on_post_read_errored_no_acceptable_methods);
+    tcase_add_test(tc, hello_test_core_on_read_same_state);
+    tcase_add_test(tc, hello_test_core_on_read_success);
+    tcase_add_test(tc, hello_test_core_on_read_errored);
+    tcase_add_test(tc, hello_test_core_on_read_unsupported_version);
+    tcase_add_test(tc, hello_test_core_on_read_errored_no_acceptable_methods);
     suite_add_tcase(s, tc);
 
     return s;

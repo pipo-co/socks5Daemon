@@ -4,7 +4,7 @@ uint8_t forwardingDummyBuffer[] = {
     0x05, 0x01, 0x02
 };
 
-START_TEST (forwarding_test_core_on_post_read_flush_closer) {
+START_TEST (forwarding_test_core_on_read_flush_closer) {
 
     SelectorEvent *event =  malloc(sizeof(*event));
 
@@ -14,7 +14,7 @@ START_TEST (forwarding_test_core_on_post_read_flush_closer) {
 
     event->data = socks5_p;
 
-    unsigned state = forwarding_on_post_read(event);
+    unsigned state = forwarding_on_read(event);
 
     ck_assert_uint_eq(state, FLUSH_CLOSER);
 
@@ -29,7 +29,7 @@ START_TEST (forwarding_test_core_on_post_read_flush_closer) {
 
     event2->data = socks5_p2;
 
-    state = forwarding_on_post_read(event2);
+    state = forwarding_on_read(event2);
 
     ck_assert_uint_eq(state, FLUSH_CLOSER);
 
@@ -38,7 +38,7 @@ START_TEST (forwarding_test_core_on_post_read_flush_closer) {
 }
 END_TEST
 
-START_TEST (forwarding_test_core_on_post_read_server) {
+START_TEST (forwarding_test_core_on_read_server) {
 
     SelectorEvent *event =  malloc(sizeof(*event));
 
@@ -84,7 +84,7 @@ START_TEST (forwarding_test_core_on_post_read_server) {
     event->s = selector;
     event->data = socks5_p;
 
-    unsigned state = forwarding_on_post_read(event);
+    unsigned state = forwarding_on_read(event);
 
     ck_assert_uint_eq(state, FORWARDING);
 
@@ -95,7 +95,7 @@ START_TEST (forwarding_test_core_on_post_read_server) {
 }
 END_TEST
 
-START_TEST (forwarding_test_core_on_post_read_client) {
+START_TEST (forwarding_test_core_on_read_client) {
 
     SelectorEvent *event =  malloc(sizeof(*event));
 
@@ -142,7 +142,7 @@ START_TEST (forwarding_test_core_on_post_read_client) {
     event->s = selector;
     event->data = socks5_p;
 
-    unsigned state = forwarding_on_post_read(event);
+    unsigned state = forwarding_on_read(event);
 
     ck_assert_uint_eq(state, FORWARDING);
 
@@ -153,7 +153,7 @@ START_TEST (forwarding_test_core_on_post_read_client) {
 }
 END_TEST
 
-START_TEST (forwarding_test_core_on_post_write_server) {
+START_TEST (forwarding_test_core_on_write_server) {
 
     SelectorEvent *event =  malloc(sizeof(*event));
 
@@ -200,7 +200,7 @@ START_TEST (forwarding_test_core_on_post_write_server) {
     event->s = selector;
     event->data = socks5_p;
 
-    unsigned state = forwarding_on_post_read(event);
+    unsigned state = forwarding_on_read(event);
 
     ck_assert_uint_eq(state, FORWARDING);
 
@@ -211,7 +211,7 @@ START_TEST (forwarding_test_core_on_post_write_server) {
 }
 END_TEST
 
-START_TEST (forwarding_test_core_on_post_write_client) {
+START_TEST (forwarding_test_core_on_write_client) {
 
     SelectorEvent *event =  malloc(sizeof(*event));
 
@@ -258,7 +258,7 @@ START_TEST (forwarding_test_core_on_post_write_client) {
     event->s = selector;
     event->data = socks5_p;
 
-    unsigned state = forwarding_on_post_read(event);
+    unsigned state = forwarding_on_read(event);
 
     ck_assert_uint_eq(state, FORWARDING);
 
@@ -274,11 +274,11 @@ Suite * forwarding_test_suite(void) {
     Suite *s   = suite_create("forwarding");
     TCase *tc  = tcase_create("core");
 
-    tcase_add_test(tc, forwarding_test_core_on_post_read_flush_closer);
-    tcase_add_test(tc, forwarding_test_core_on_post_read_server);
-    tcase_add_test(tc, forwarding_test_core_on_post_read_client);
-    tcase_add_test(tc, forwarding_test_core_on_post_write_server);
-    tcase_add_test(tc, forwarding_test_core_on_post_write_client);
+    tcase_add_test(tc, forwarding_test_core_on_read_flush_closer);
+    tcase_add_test(tc, forwarding_test_core_on_read_server);
+    tcase_add_test(tc, forwarding_test_core_on_read_client);
+    tcase_add_test(tc, forwarding_test_core_on_write_server);
+    tcase_add_test(tc, forwarding_test_core_on_write_client);
     
 
     suite_add_tcase(s, tc);

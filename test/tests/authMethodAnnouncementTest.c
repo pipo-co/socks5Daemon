@@ -34,7 +34,7 @@ START_TEST (auth_method_announcement_test_core_request_marshall_complete) {
 END_TEST
 
 
-START_TEST (auth_method_announcement_test_core_on_post_write_success_no_authentication) {
+START_TEST (auth_method_announcement_test_core_on_write_success_no_authentication) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -76,7 +76,7 @@ START_TEST (auth_method_announcement_test_core_on_post_write_success_no_authenti
     key->s = selector;
     key->data = socks5_p;
 
-    unsigned state = method_announcement_on_post_write(key);
+    unsigned state = method_announcement_on_write(key);
 
     ck_assert_uint_eq(state, REQUEST);
 
@@ -87,7 +87,7 @@ START_TEST (auth_method_announcement_test_core_on_post_write_success_no_authenti
 }
 END_TEST
 
-START_TEST (auth_method_announcement_test_core_on_post_write_success_authentication) {
+START_TEST (auth_method_announcement_test_core_on_write_success_authentication) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -129,7 +129,7 @@ START_TEST (auth_method_announcement_test_core_on_post_write_success_authenticat
     key->s = selector;
     key->data = socks5_p;
 
-    unsigned state = method_announcement_on_post_write(key);
+    unsigned state = method_announcement_on_write(key);
 
     ck_assert_uint_eq(state, AUTH_REQUEST);
 
@@ -140,7 +140,7 @@ START_TEST (auth_method_announcement_test_core_on_post_write_success_authenticat
 }
 END_TEST
 
-START_TEST (auth_method_announcement_test_core_on_post_write_current) {
+START_TEST (auth_method_announcement_test_core_on_write_current) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -180,7 +180,7 @@ START_TEST (auth_method_announcement_test_core_on_post_write_current) {
     key->s = selector;
     key->data = socks5_p;
 
-    unsigned state = method_announcement_on_post_write(key);
+    unsigned state = method_announcement_on_write(key);
 
     ck_assert_uint_eq(state, AUTH_METHOD_ANNOUNCEMENT);
     
@@ -200,9 +200,9 @@ Suite * auth_method_announcement_test_suite(void) {
 
     tcase_add_test(tc, auth_method_announcement_test_core_request_marshall_incomplete);
     tcase_add_test(tc, auth_method_announcement_test_core_request_marshall_complete);
-    tcase_add_test(tc, auth_method_announcement_test_core_on_post_write_success_no_authentication);
-    tcase_add_test(tc, auth_method_announcement_test_core_on_post_write_success_authentication);
-    tcase_add_test(tc, auth_method_announcement_test_core_on_post_write_current);
+    tcase_add_test(tc, auth_method_announcement_test_core_on_write_success_no_authentication);
+    tcase_add_test(tc, auth_method_announcement_test_core_on_write_success_authentication);
+    tcase_add_test(tc, auth_method_announcement_test_core_on_write_current);
     
 
     suite_add_tcase(s, tc);
