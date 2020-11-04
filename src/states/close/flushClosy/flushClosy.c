@@ -40,7 +40,7 @@ static unsigned flush_closy_on_post_write(SelectorEvent *event) {
     if(*clientState == CLOSED && *serverState == CLOSED)
         return FINISH;
 
-    return FLUSH_CLOSY;
+    return socks5_p->sessionStateMachine.current;
 }
 
 

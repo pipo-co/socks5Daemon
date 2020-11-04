@@ -6,9 +6,10 @@ static unsigned forwarding_on_post_write(SelectorEvent *event);
 static unsigned forwarding_on_post_read(SelectorEvent *event) {
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
-    if(socks5_p->clientConnection.state != OPEN || socks5_p->serverConnection.state != OPEN)
+    if(socks5_p->clientConnection.state != OPEN || socks5_p->serverConnection.state != OPEN){
         return FLUSH_CLOSER; 
-
+    }
+    
     size_t nbytes;
     uint8_t * buff;
     bool buffCanWrite, isServer = false;
