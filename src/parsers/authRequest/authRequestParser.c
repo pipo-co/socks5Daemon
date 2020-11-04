@@ -73,8 +73,8 @@ char * auth_request_parser_error_message(AuthRequestParser *p) {
     switch(p->errorType){
         case AUTH_REQUEST_VALID:            return "No error"; break;
         case AUTH_REQUEST_INVALID_VERSION:  return "Invalid Version Provided"; break;
-        case AUTH_REQUEST_INVALID_ULEN:     return "Invalid Username Length Provided (min 1, max 255)"; break;
-        case AUTH_REQUEST_INVALID_PLEN:     return "Invalid Password Length Provided (min 1, max 255)"; break;
+        case AUTH_REQUEST_INVALID_ULEN:     return "Invalid Username Length Provided (min 1)"; break;
+        case AUTH_REQUEST_INVALID_PLEN:     return "Invalid Password Length Provided (min 1)"; break;
         default:                            return "Invalid State"; break;
     }
 }
@@ -93,7 +93,7 @@ static AuthRequestParserState auth_request_state_version(AuthRequestParser *p,ui
 
 static AuthRequestParserState auth_request_state_ulen(AuthRequestParser *p, uint8_t byte) {
 
-    if(byte < 1 || byte > 255) {
+    if(byte < 1) {
         p->errorType = AUTH_REQUEST_INVALID_ULEN;
         return AUTH_REQUEST_PARSER_INVALID_STATE;
     }
@@ -118,7 +118,7 @@ static AuthRequestParserState auth_request_state_uname(AuthRequestParser *p, uin
 
 static AuthRequestParserState auth_request_state_plen(AuthRequestParser *p, uint8_t byte) {
 
-    if(byte < 1 || byte > 255) {
+    if(byte < 1) {
         p->errorType = AUTH_REQUEST_INVALID_PLEN;
         return AUTH_REQUEST_PARSER_INVALID_STATE;
     }

@@ -50,11 +50,13 @@ UserInfoP user_handler_add_user(char *username, char *password) {
 
     int ret;
 
-    khiter_t iter = kh_put(STRING_TO_CHAR_MAP, userMap, newUser, &ret);
+    khiter_t iter = kh_put(STRING_TO_CHAR_MAP, userMap, username, &ret);
     if(ret < 0) {
         free(newUser);
         return NULL;
     }
+
+    kh_value(userMap, iter) = newUser;
 
     return newUser;
 }

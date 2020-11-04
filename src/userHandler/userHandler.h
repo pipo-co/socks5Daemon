@@ -20,8 +20,8 @@ UserInfoP user_handler_get_user_by_username(char *username);
 
 UserInfoP user_handler_add_user(char *username, char *password);
 
-UserInfoP user_handler_delete_user(char *username);
+bool user_handler_delete_user(char *username);
 
-bool user_handler_destroy(void);
+void user_handler_destroy(void);
 
 #endif

@@ -21,6 +21,8 @@
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 #define ERROR(msg) perror(msg);
 
+static Socks5Args * args;
+
 static FdHandler clientHandler;
 static FdHandler serverHandler;
 // static FdHandler DNSHandler;
@@ -43,7 +45,9 @@ static void socks5_client_close(SelectorEvent *event);
 static void socks5_close_session(SelectorEvent *event);
 static int socks5_accept_connection(int passiveFd, struct sockaddr *cli_addr, socklen_t *clilen);
 
-void socks5_init(char *dnsServerIp) {
+void socks5_init(Socks5Args *argsParam) {
+
+    args = argsParam;
     stateLogCount = 0;
 
     sessionInputBufferSize = DEFAULT_INPUT_BUFFER_SIZE;
