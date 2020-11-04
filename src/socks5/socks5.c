@@ -149,6 +149,7 @@ static void socks5_server_read(SelectorEvent *event){
             socks5_close_session(event);
 
         fprintf(stderr, "%d: Server Read, State %ud\n", stateLogCount, state);
+        stateLogCount++;
     }
 
     else {
@@ -180,10 +181,11 @@ static void socks5_server_write(SelectorEvent *event){
     if(writeBytes = send(event->fd, readPtr, nbytes, MSG_NOSIGNAL), writeBytes > 0) {
         buffer_read_adv(buffer, writeBytes);
 
-        if(state = selector_state_machine_proccess_post_write(&session->sessionStateMachine, event), state == FINISH)
+        if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
 
         fprintf(stderr, "%d: Server Write, State %ud\n", stateLogCount, state);
+        stateLogCount++;
     }
     else if (writeBytes == 0){
         fprintf(stderr, "%d wrote 0 bytes", session->serverConnection.fd);
@@ -194,11 +196,6 @@ static void socks5_server_write(SelectorEvent *event){
         //logger stderr(errno)
     }
     
-}
-
-static void socks5_server_close(SelectorEvent *event) {
-    
-    close(event->fd);
 }
 
 static void socks5_client_read(SelectorEvent *event){
@@ -230,6 +227,7 @@ static void socks5_client_read(SelectorEvent *event){
             socks5_close_session(event);
 
         fprintf(stderr, "%d: Client Read, State %ud\n", stateLogCount, state);
+        stateLogCount++;
     }
 
     else {
@@ -265,6 +263,7 @@ static void socks5_client_write(SelectorEvent *event){
             socks5_close_session(event);
 
         fprintf(stderr, "%d: Client Write, State %ud\n", stateLogCount, state);
+        stateLogCount++;
     }
     else if (writeBytes == 0){
         fprintf(stderr, "%d wrote 0 bytes\n", session->clientConnection.fd);
@@ -274,23 +273,6 @@ static void socks5_client_write(SelectorEvent *event){
         //cerrar conexion
         //logger stderr(errno)
     }
-}
-
-static void socks5_client_close(SelectorEvent *event){
-    
-    SessionHandlerP session = (SessionHandlerP) event->data;
-
-    selector_state_machine_close(&session->sessionStateMachine, event);
-
-    if(session->serverConnection.fd != INVALID) {   
-        selector_unregister_fd(event->s, session->serverConnection.fd); 
-    }
-
-    close(session->clientConnection.fd);
-
-    free(session->input.data);
-    free(session->output.data);
-    free(session);
 }
 
 static SessionHandlerP socks5_session_init(void) {
@@ -318,9 +300,30 @@ static SessionHandlerP socks5_session_init(void) {
     return session;
 }
 
+static void socks5_client_close(SelectorEvent *event){
+    
+    SessionHandlerP session = (SessionHandlerP) event->data;
+
+    selector_state_machine_close(&session->sessionStateMachine, event);
+
+    close(session->clientConnection.fd);
+
+    free(session->input.data);
+    free(session->output.data);
+    free(session);
+}
+
+static void socks5_server_close(SelectorEvent *event) {
+    close(event->fd);
+}
+
 static void socks5_close_session(SelectorEvent *event) {
 
     SessionHandlerP session = (SessionHandlerP) event->data;
+
+    if(session->serverConnection.fd != INVALID) {
+        selector_unregister_fd(event->s, session->serverConnection.fd);
+    }
 
     selector_unregister_fd(event->s, session->clientConnection.fd);
 }
