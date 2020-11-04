@@ -68,6 +68,9 @@ void socks5_init(char *dnsServerIp) {
     // serverHandler.handle_block = NULL;
 
     socks5_session_state_machine_builder_init();
+
+    // Load Parsers
+    auth_request_parser_load();
 }
 
 static int socks5_accept_connection(int passiveFd, struct sockaddr *cli_addr, socklen_t *clilen) {
