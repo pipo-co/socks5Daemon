@@ -32,6 +32,7 @@ selector_state_machine_init(SSM ssm, unsigned initialState, unsigned maxState, S
 inline static void
 handle_first(SSM ssm, SelectorEvent *event) {
     if(!ssm->started) {
+        ssm->started = true;
         if(ssm->states[ssm->current].on_arrival != NULL) {
             ssm->states[ssm->current].on_arrival(event);
         }

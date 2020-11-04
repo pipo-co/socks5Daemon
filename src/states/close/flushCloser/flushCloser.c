@@ -13,27 +13,44 @@ static unsigned flush_closer_on_read(SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
 
     Buffer closyBuffer;
-
     int closerFd;
+    unsigned *closyState, *closerState;
 
     // Client = Closy
     // Server = Closer
     if(session->clientConnection.fd == event->fd) {
-        if(session->clientConnection.state == CLOSING)
-            return FLUSH_CLOSY;
 
         closerFd = session->serverConnection.fd;
         closyBuffer = session->input;
+
+        closyState = &session->clientConnection.state;
+        closerState = &session->serverConnection.state;
     }
 
     // Server = Closy
     // Client = Closer
     else {
-        if(session->serverConnection.state == CLOSING)
-            return FLUSH_CLOSY;
 
         closerFd = session->clientConnection.fd;
         closyBuffer = session->output;
+
+        closyState = &session->serverConnection.state;
+        closerState = &session->clientConnection.state;
+    }
+
+    // State Transition
+    if(*closyState == CLOSING) {
+
+        // If either connection need flushing, we are done
+        if(*closerState == CLOSED && !buffer_can_read(&closyBuffer)) {
+
+            shutdown(closerFd, SHUT_WR);
+            *closyState = CLOSED;
+
+            return FINISH;
+        }
+
+        return FLUSH_CLOSY;
     }
 
     if(buffer_can_write(&closyBuffer)) {

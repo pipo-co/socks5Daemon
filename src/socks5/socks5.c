@@ -3,6 +3,7 @@
 #include <string.h>
 #include <strings.h>
 
+#include <errno.h>
 #include <unistd.h>
 #include <sys/types.h>   // socket
 #include <sys/socket.h>  // socket
@@ -74,6 +75,7 @@ void socks5_passive_accept_ipv4(SelectorEvent *event){
     struct sockaddr_in cli_addr;
     socklen_t clilen = sizeof(cli_addr);
 
+    // TODO: Verify connection
     int fd = accept(event->fd,(struct sockaddr *)&cli_addr, &clilen);
     
     if (fd < 0 ){}
@@ -131,6 +133,9 @@ static void socks5_server_read(SelectorEvent *event){
         if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
 
+        fprintf(stderr, "%d: Server Read, State %ud\n", stateLogCount, state);
+        stateLogCount++;
+
         return;
     }
 
@@ -171,6 +176,9 @@ static void socks5_server_write(SelectorEvent *event){
         if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
 
+        fprintf(stderr, "%d: Server Write, State %ud\n", stateLogCount, state);
+        stateLogCount++;
+
         return;
     }
     
@@ -192,6 +200,9 @@ static void socks5_server_write(SelectorEvent *event){
     }
     else
     {
+        if(errno == EPIPE) {
+            fprintf(stderr, "EPIPE on server write fd %d state %u", session->serverConnection.fd, session->serverConnection.state);
+        }
         //cerrar conexion
         //logger stderr(errno)
     }
@@ -262,7 +273,7 @@ static void socks5_client_write(SelectorEvent *event){
         if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
 
-        fprintf(stderr, "%d: Client Write, State %ud\n", stateLogCount, state);
+        fprintf(stderr, "%d: Client Write, State %u\n", stateLogCount, state);
         stateLogCount++;
     }
     else if (writeBytes == 0){
@@ -270,6 +281,9 @@ static void socks5_client_write(SelectorEvent *event){
     }
     else
     {
+        if(errno == EPIPE) {
+            fprintf(stderr, "EPIPE on server write fd %d state %u", session->serverConnection.fd, session->serverConnection.state);
+        }
         //cerrar conexion
         //logger stderr(errno)
     }
