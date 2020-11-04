@@ -56,40 +56,27 @@ void jump(SSM ssm, unsigned next, SelectorEvent *event) {
     }
 }
 
-unsigned selector_state_machine_proccess_post_read(SSM ssm, SelectorEvent *event) {
+unsigned selector_state_machine_proccess_read(SSM ssm, SelectorEvent *event) {
     handle_first(ssm, event);
 
-    if(ssm->states[ssm->current].on_post_read == NULL) {
+    if(ssm->states[ssm->current].on_read == NULL) {
         return ssm->current;
     }
 
-    const unsigned int ret = ssm->states[ssm->current].on_post_read(event);
+    const unsigned int ret = ssm->states[ssm->current].on_read(event);
     jump(ssm, ret, event);
 
     return ret;
 }
 
-unsigned selector_state_machine_proccess_pre_write(SSM ssm, SelectorEvent *event) {
+unsigned selector_state_machine_proccess_write(SSM ssm, SelectorEvent *event) {
     handle_first(ssm, event);
 
-    if(ssm->states[ssm->current].on_pre_write == NULL) {
+    if(ssm->states[ssm->current].on_write == NULL) {
         return ssm->current;
     }
 
-    const unsigned int ret = ssm->states[ssm->current].on_pre_write(event);
-    jump(ssm, ret, event);
-
-    return ret;
-}
-
-unsigned selector_state_machine_proccess_post_write(SSM ssm, SelectorEvent *event) {
-    handle_first(ssm, event);
-
-    if(ssm->states[ssm->current].on_post_write == NULL) {
-        return ssm->current;
-    }
-
-    const unsigned int ret = ssm->states[ssm->current].on_post_write(event);
+    const unsigned int ret = ssm->states[ssm->current].on_write(event);
     jump(ssm, ret, event);
 
     return ret;

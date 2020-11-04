@@ -39,13 +39,10 @@ typedef struct SelectorStateDefinition {
     void (*on_departure)(SelectorEvent*);
 
     /** ejecutado cuando fueron leidos nuevos datos */
-    StateFunction on_post_read;
-
-    /** ejecutado antes de escribir datos nuevos */
-    StateFunction on_pre_write;
+    StateFunction on_read;
 
     /** ejecutado cuando fueron escritos datos nuevos */
-    StateFunction on_post_write;
+    StateFunction on_write;
 
     /** ejecutado cuando se vuelve de una operación bloqueante resuelto con un thread (para expansion futura) */
     StateFunction on_block_ready;
@@ -76,11 +73,9 @@ typedef SelectorStateMachine * SSM;
 
 void selector_state_machine_init(SSM ssm, unsigned initialState, unsigned maxState, SelectorStateDefinition *stateDefinitions);
 
-unsigned selector_state_machine_proccess_post_read(SSM ssm, SelectorEvent *event);
+unsigned selector_state_machine_proccess_read(SSM ssm, SelectorEvent *event);
 
-unsigned selector_state_machine_proccess_pre_write(SSM ssm, SelectorEvent *event);
-
-unsigned selector_state_machine_proccess_post_write(SSM ssm, SelectorEvent *event);
+unsigned selector_state_machine_proccess_write(SSM ssm, SelectorEvent *event);
 
 void selector_state_machine_close(SSM ssm, SelectorEvent *event);
 

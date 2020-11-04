@@ -103,11 +103,9 @@ static void socks5_server_read(SelectorEvent *event){
 
     SessionHandlerP session = (SessionHandlerP) event->data;
     Buffer * buffer = &session->output;
-    
-    //pre_read(socks5_p->stm, key)
 
     if(!buffer_can_write(buffer)) {
-        fprintf(stderr, "A read socket was registered on pselect, but there was no space in buffer");
+        fprintf(stderr, "Read server socket %d was registered on pselect, but there was no space in buffer", event->fd);
         return;
     }
 
@@ -122,7 +120,7 @@ static void socks5_server_read(SelectorEvent *event){
         if(readBytes == 0)
             session->serverConnection.state = CLOSING;
 
-        if(state = selector_state_machine_proccess_post_read(&session->sessionStateMachine, event), state == FINISH)
+        if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(session, event);
 
         fprintf(stderr, "%d: Server Read, State %ud\n", stateLogCount, state);
@@ -139,11 +137,10 @@ static void socks5_server_write(SelectorEvent *event){
 
     SessionHandlerP session = (SessionHandlerP) event->data;
 
-    selector_state_machine_proccess_pre_write(&session->sessionStateMachine, event);
-
     Buffer * buffer = &session->input;
 
     if(!buffer_can_read(buffer)) {
+        fprintf(stderr, "Write server socket %d was registered on pselect, but there was no space in buffer", event->fd);
         return;
     }
     
@@ -152,10 +149,10 @@ static void socks5_server_write(SelectorEvent *event){
     uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
     unsigned state;
     
-    if((writeBytes = write(event->fd, readPtr, nbytes)) > 0){
+    if(writeBytes = write(event->fd, readPtr, nbytes), writeBytes > 0){
         buffer_read_adv(buffer, writeBytes);
 
-        if(state = selector_state_machine_proccess_post_write(&session->sessionStateMachine, event), state == FINISH)
+        if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(session, event);
 
         fprintf(stderr, "%d: Server Write, State %ud\n", stateLogCount, state);
@@ -174,12 +171,13 @@ static void socks5_server_write(SelectorEvent *event){
 static void socks5_client_read(SelectorEvent *event){
 
     SessionHandlerP session = (SessionHandlerP) event->data;
-    Buffer * buffer = &session->input;
-    
-    //pre_read(socks5_p->stm, key)
 
-    if(!buffer_can_write(buffer))
+    Buffer * buffer = &session->input;
+
+    if(!buffer_can_write(buffer)) {
+        fprintf(stderr, "Read client socket %d was registered on pselect, but there was no space in buffer", event->fd);
         return;
+    }
 
     ssize_t readBytes;
     size_t nbytes;
@@ -192,7 +190,7 @@ static void socks5_client_read(SelectorEvent *event){
         if(readBytes == 0)
             session->clientConnection.state = CLOSING;
 
-        if(state = selector_state_machine_proccess_post_read(&session->sessionStateMachine, event), state == FINISH)
+        if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(session, event);
 
         fprintf(stderr, "%d: Client Read, State %ud\n", stateLogCount, state);
@@ -209,22 +207,22 @@ static void socks5_client_write(SelectorEvent *event){
     
     SessionHandlerP session = (SessionHandlerP) event->data;
 
-    selector_state_machine_proccess_pre_write(&session->sessionStateMachine, event);
-
     Buffer * buffer = &session->output;
 
-    if(!buffer_can_read(buffer))
+    if(!buffer_can_read(buffer)) {
+        fprintf(stderr, "Write client socket %d was registered on pselect, but there was no space in buffer", event->fd);
         return;
+    }
     
     ssize_t writeBytes;
     size_t nbytes;
     uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
     unsigned state;
     
-    if( (writeBytes = write(event->fd, readPtr, nbytes)) > 0){
+    if(writeBytes = write(event->fd, readPtr, nbytes), writeBytes > 0){
         buffer_read_adv(buffer, writeBytes);
 
-        if(state = selector_state_machine_proccess_post_write(&session->sessionStateMachine, event), state == FINISH)
+        if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(session, event);
 
         fprintf(stderr, "%d: Client Write, State %ud\n", stateLogCount, state);

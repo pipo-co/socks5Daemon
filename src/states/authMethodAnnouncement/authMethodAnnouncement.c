@@ -2,36 +2,39 @@
 
 #define HELLO_REPLY_SIZE 2
 
-static void hello_marshall(Buffer *b, size_t *bytes, uint8_t method);
-static unsigned method_announcement_on_pre_write(struct SelectorEvent *key);
-static unsigned method_announcement_on_post_write(struct SelectorEvent *key);
+static void hello_marshall(Buffer *b, size_t * bytes, uint8_t method);
+static void method_announcement_on_arrival(SelectorEvent *event);
+static unsigned method_announcement_on_write(SelectorEvent *event);
 
-static unsigned method_announcement_on_pre_write(struct SelectorEvent *key) {
+static void method_announcement_on_arrival(SelectorEvent *event) {
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
-    SessionHandlerP socks5_p = (SessionHandlerP) key->data;
+    session->socksHeader.helloHeader.bytes = 0;
 
-    hello_marshall(&socks5_p->output, &socks5_p->socksHeader.helloHeader.bytes, socks5_p->clientInfo.authMethod);  
+    hello_marshall(&session->output, &session->socksHeader.helloHeader.bytes, session->clientInfo.authMethod); 
 
-    return socks5_p->sessionStateMachine.current;  
+    selector_set_interest_event(event, OP_WRITE);
 }
 
-static unsigned method_announcement_on_post_write(struct SelectorEvent *key) {
+static unsigned method_announcement_on_write(SelectorEvent *event) {
 
-    SessionHandlerP socks5_p = (SessionHandlerP) key->data;
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
-    if (socks5_p->socksHeader.helloHeader.bytes == HELLO_REPLY_SIZE && !buffer_can_read(&socks5_p->output))
-    {
-        selector_set_interest_event(key, OP_READ);
-        if(socks5_p->clientInfo.authMethod == NO_AUTHENTICATION){
+    if(session->socksHeader.helloHeader.bytes == HELLO_REPLY_SIZE && !buffer_can_read(&session->output)) {
+
+        if(session->clientInfo.authMethod == NO_AUTHENTICATION) {
             //TODO: cargar credenciales del usuario anonimo
             return REQUEST;
         }
-        else
-        {
+        else {
             return AUTH_REQUEST;
         }
     }
-    return socks5_p->sessionStateMachine.current;
+
+    // Preparar buffer para proximo write 
+    hello_marshall(&session->output, session->clientInfo.authMethod, &session->socksHeader.helloHeader.bytes); 
+
+    return session->sessionStateMachine.current;
 }
 
 static void hello_marshall(Buffer *b, size_t * bytes, uint8_t method) {
@@ -40,7 +43,7 @@ static void hello_marshall(Buffer *b, size_t * bytes, uint8_t method) {
         if(*bytes == 0){
             buffer_write(b, SOCKS_VERSION);
         }
-        if(*bytes == 1){
+        if(*bytes == 1) {
             buffer_write(b, method);
         }
         (*bytes)++;
@@ -52,10 +55,9 @@ SelectorStateDefinition auth_method_announcement_state_definition_supplier(void)
     SelectorStateDefinition stateDefinition = {
 
         .state = AUTH_METHOD_ANNOUNCEMENT,
-        .on_arrival = NULL,
-        .on_post_read = NULL,
-        .on_pre_write = method_announcement_on_pre_write,
-        .on_post_write = method_announcement_on_post_write,
+        .on_arrival = method_announcement_on_arrival,
+        .on_read = NULL,
+        .on_write = method_announcement_on_write,
         .on_block_ready = NULL,
         .on_departure = NULL,
     };
