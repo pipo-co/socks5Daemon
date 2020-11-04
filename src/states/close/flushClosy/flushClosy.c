@@ -39,7 +39,7 @@ static unsigned flush_closy_on_write(SelectorEvent *event) {
     if(*clientState == CLOSED && *serverState == CLOSED)
         return FINISH;
 
-    return socks5_p->sessionStateMachine.current;
+    return session->sessionStateMachine.current;
 }
 
 SelectorStateDefinition flush_closy_state_definition_supplier(void) {

@@ -180,7 +180,7 @@ static void socks5_server_write(SelectorEvent *event){
     if(writeBytes = send(event->fd, readPtr, nbytes, MSG_NOSIGNAL), writeBytes > 0) {
         buffer_read_adv(buffer, writeBytes);
 
-        if(state = selector_state_machine_proccess_post_write(&session->sessionStateMachine, event), state == FINISH)
+        if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
 
         fprintf(stderr, "%d: Server Write, State %ud\n", stateLogCount, state);
