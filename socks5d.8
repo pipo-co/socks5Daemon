@@ -1,0 +1,150 @@
+.\" Macros
+.ds PX \s-1POSIX\s+1
+.de EXAMPLE .\" Format de los ejemplos
+.RS 10
+.BR "\\$1"
+.RE
+..
+
+.TH socks5d 0.0.0 "27 de octubre 2020"
+.LO 8
+.SH NAME
+socks5d \- proxy SOCKS versión 5 con esteroides
+
+.SH SINOPSIS
+.HP 10
+.B  socks5d
+[ POSIX style options ]
+
+.SH OPCIONES
+
+.\".IP "\fB\-d\fB"
+.\"Establece que debe ejecutar con la configuración predeterminada.
+.\".IP
+.\"Aquellos servidores donde la configuración sea persistente (el enunciado
+.\"no lo requiere) presentan un desafío a la hora de realizar pruebas ya que
+.\"se debe conocer la configuración actual.
+.\".IP
+.\"En esos casos esta opción olvida toda configuración previa y establece
+.\"la configuración predeterminada.
+.\".IP
+.\"La configuración predeterminada consiste en tener apagada las transformaciones.
+
+.IP "\fB\--doh-ip\fB \fIdirección-doh\fR"
+Establece la dirección del servidor DoH.
+Por defecto \fI127.0.0.1\fR.
+.IP "\fB\--doh-port\fB \fIport\fR"
+Establece el puerto del servidor DoH.
+Por defecto \fI8053\fR.
+.IP "\fB\--doh-host\fB \fIhostname\fR"
+Establece el valor del header Host.
+Por defecto \fIlocalhost\fR.
+.IP "\fB\--doh-path\fB \fIpath\fR"
+establece el path del request doh.
+por defecto \fI/getnsrecord\fR.
+.IP "\fB\--doh-query\fB \fIquery\fR"
+establece el query string si el request DoH utiliza el método Doh
+por defecto \fI?dns=\fR.
+
+
+
+.IP "\fB-h\fR"
+Imprime la ayuda y termina.
+
+.IP "\fB\-l\fB \fIdirección-http\fR"
+Establece la dirección donde servirá el proxy SOCKS.
+Por defecto escucha en todas las interfaces. 
+
+.IP "\fB\-N\fB"
+Deshabilita los passwords disectors.
+
+.IP "\fB\-L\fB \fIdirección-de-management\fR"
+Establece la dirección donde servirá el servicio de
+management. Por defecto escucha únicamente en loopback.
+
+.IP "\fB\-p\fB \fIpuerto-local\fR"
+Puerto TCP donde escuchará por conexiones entrantes SOCKS.
+Por defecto el valor es \fI1080\fR.
+
+.IP "\fB\-P\fB \fIpuerto-conf\fR"
+Puerto SCTP  donde escuchará por conexiones entrante del protocolo
+de configuración. Por defecto el valor es \fI8080\fR.
+
+.IP "\fB\-u\fB \fIuser:pass\fR"
+Declara un usuario del proxy con su contraseña. Se puede utilizar
+hasta 10 veces.
+
+
+.IP "\fB\-v\fB"
+Imprime información sobre la versión versión y termina.
+
+.SH REGISTRO DE ACCESO
+
+Registra el uso del proxy en salida estandar. Una conexión por línea. Los campos de una
+línea separado por tabs:
+
+.IP "\fBfecha\fR" 
+que se procesó la conexión en formato ISO-8601.
+Ejemplo 2020-06-15T19:56:34Z.
+
+.IP "\fBnombre de usuario\fR" 
+que hace el requerimiento.
+Ejemplo juan.
+
+.IP "\fBtipo de registro\fR" 
+Siempre el caracter A.
+
+.IP "\fBdireccion IP origen\fR" 
+desde donde se conectó el usuario.
+Ejemplo ::1.
+
+.IP "\fBpuerto origen\fR" 
+desde donde se conectó el usuario.
+Ejemplo 54786.
+
+.IP "\fBdestino\fR"
+a donde nos conectamos. nombre o dirección IP (según ATY).
+Ejemplo www.itba.edu.ar.
+Ejemplo ::1.
+
+.IP "\fBpuerto destino\fR" a donde nos conectamos.
+Ejemplo 443.
+
+.IP "\fBstatus\fR" status SOCKS (0 exito, ...)
+Ejemplo 0.
+
+
+.SH REGISTRO DE PASSWORDS
+
+Registra las credenciales descubiertas en salida estandar. Una credencial por línea.
+Los campos de una línea separados por tabs:
+
+.IP "\fBfecha\fR" 
+que se procesó la conexión en formato ISO-8601.
+Ejemplo 2020-06-15T19:56:34Z.
+
+.IP "\fBnombre de usuario\fR" 
+que hace el requerimiento.
+Ejemplo juan.
+
+.IP "\fBtipo de registro\fR" 
+Siempre el caracter P.
+
+
+.IP "\fBprotocolo\fR"
+Protocolo del que se trata. HTTP o POP3.
+
+.IP "\fBdestino\fR"
+a donde nos conectamos. nombre o dirección IP (según ATY).
+Ejemplo www.itba.edu.ar.
+Ejemplo ::1.
+
+.IP "\fBpuerto destino\fR" a donde nos conectamos.
+Ejemplo 443.
+
+.IP "\fBusuario\fR"
+Usuario descubierto.
+
+.IP "\fBpassword\fR"
+Password descubierta.
+
