@@ -64,8 +64,6 @@ START_TEST (request_test_core_on_arrival) {
 
     socks5_p = (SessionHandlerP) key->data;
 
-    ck_assert(socks5_p->socksHeader.requestHeader.bytes == 0);
-
     ck_assert_uint_eq(socks5_p->socksHeader.requestHeader.rep, SUCCESSFUL);
 
     free(key);
@@ -187,7 +185,7 @@ START_TEST (request_test_core_on_read_unsupported_command) {
     
 
     const struct FdHandler socksv5 = {
-        .handle_read       = socks5_passive_accept,//socksv5_passive_accept,
+        .handle_read       = NULL,//socksv5_passive_accept,
         .handle_write      = NULL,
         .handle_close      = NULL, // nada que liberar
     };

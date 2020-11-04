@@ -67,8 +67,6 @@ START_TEST (hello_test_core_on_arrival) {
 
     socks5_p = (SessionHandlerP) key->data;
 
-    ck_assert(socks5_p->socksHeader.helloHeader.bytes == 0);
-
     free(key);
     free(socks5_p);
 
