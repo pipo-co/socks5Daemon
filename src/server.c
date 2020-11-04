@@ -91,7 +91,7 @@ int main(const int argc, const char **argv) {
 
     serverHandler.ipv4addr.s_addr = htonl(INADDR_ANY);
     
-    if(generate_register_ipv4_socket(selector, &err_msg) != 0 ) {
+    if(generate_register_ipv4_socket(selector, &err_msg) != 0) {
          goto finally;
     }
     
@@ -237,7 +237,7 @@ static int generate_new_socket(struct sockaddr *addr, socklen_t addrLen,char ** 
         return -1;
     }
 
-    if (listen(fd, SERVER_BACKLOG) < 0) {
+    if(listen(fd, SERVER_BACKLOG) < 0) {
         *errorMessage = "Unable to listen";
         return -1;
     }
