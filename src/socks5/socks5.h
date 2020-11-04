@@ -8,7 +8,9 @@
 
 void socks5_init(char *dnsServerIp);
 
-void socks5_passive_accept(SelectorEvent *event);
+void socks5_passive_accept_ipv4(SelectorEvent *event);
+
+void socks5_passive_accept_ipv6(SelectorEvent *event);
 
 void socks5_register_server(FdSelector s, SessionHandlerP socks5_p);
 

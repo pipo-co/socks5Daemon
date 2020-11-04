@@ -30,14 +30,13 @@ static int dnsBufferSize;
 
 static char *dnsServerIp; 
 
+static SessionHandlerP socks5_session_init(void);
 static void socks5_server_read(SelectorEvent *event);
 static void socks5_server_write(SelectorEvent *event);
 static void socks5_client_read(SelectorEvent *event);
 static void socks5_client_write(SelectorEvent *event);
-static SessionHandlerP socks5_session_init(void);
-static void socks5_close_session(SessionHandlerP session, SelectorEvent *event);
-static void socks5_session_destroy(SessionHandlerP session);
-
+static void socks5_client_close(SelectorEvent *event);
+static void socks5_close_session(SelectorEvent *event);
 
 void socks5_init(char *dnsServerIp) {
     sessionInputBufferSize = DEFAULT_INPUT_BUFFER_SIZE;
@@ -48,7 +47,7 @@ void socks5_init(char *dnsServerIp) {
 
     clientHandler.handle_read = socks5_client_read;
     clientHandler.handle_write = socks5_client_write;
-    clientHandler.handle_close = NULL;
+    clientHandler.handle_close = socks5_client_close;
     clientHandler.handle_block = NULL;
 
     serverHandler.handle_read = socks5_server_read;
@@ -65,12 +64,32 @@ void socks5_init(char *dnsServerIp) {
 }
 
 //tendría que haber otro passive accept para ipv6
-void socks5_passive_accept(SelectorEvent *event){
+void socks5_passive_accept_ipv4(SelectorEvent *event){
     
     struct sockaddr_in cli_addr;
     socklen_t clilen = sizeof(cli_addr);
 
     int fd = accept(event->fd,(struct sockaddr *)&cli_addr, &clilen);
+    
+    if (fd < 0 ){}
+       //logger stderr(errno)
+
+    SessionHandlerP session = socks5_session_init();
+
+    session->clientConnection.fd = fd;
+
+    memcpy(&session->clientConnection.addr, (struct sockaddr *)&cli_addr, clilen);
+
+    selector_register(event->s, session->clientConnection.fd, &clientHandler, OP_READ, session);
+}
+
+//tendría que haber otro passive accept para ipv6
+void socks5_passive_accept_ipv6(SelectorEvent *event){
+    
+    struct sockaddr_in6 cli_addr;
+    socklen_t clilen = sizeof(cli_addr);
+
+    int fd = accept(event->fd, (struct sockaddr *)&cli_addr, &clilen);
     
     if (fd < 0 ){}
        //logger stderr(errno)
@@ -107,14 +126,15 @@ static void socks5_server_read(SelectorEvent *event){
     size_t nbytes;
     uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
 
-    if(readBytes = read(event->fd, writePtr, nbytes), readBytes >= 0) {
+
+    if(readBytes = recv(event->fd, writePtr, nbytes, MSG_NOSIGNAL), readBytes >= 0) {
         buffer_write_adv(buffer, readBytes);
 
         if(readBytes == 0)
             session->serverConnection.state = CLOSING;
 
         if(selector_state_machine_proccess_post_read(&session->sessionStateMachine, event) == FINISH)
-            socks5_close_session(session, event);
+            socks5_close_session(event);
     }
 
     else {
@@ -140,11 +160,11 @@ static void socks5_server_write(SelectorEvent *event){
     size_t nbytes;
     uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
     
-    if((writeBytes = write(event->fd, readPtr, nbytes)) > 0){
+    if((writeBytes = send(event->fd, readPtr, nbytes, MSG_NOSIGNAL)) > 0){
         buffer_read_adv(buffer, writeBytes);
 
         if(selector_state_machine_proccess_post_write(&session->sessionStateMachine, event) == FINISH)
-            socks5_close_session(session, event);
+            socks5_close_session(event);
     }
     else if (writeBytes == 0){
         fprintf(stderr, "%d wrote 0 bytes", session->serverConnection.fd);
@@ -171,14 +191,14 @@ static void socks5_client_read(SelectorEvent *event){
     size_t nbytes;
     uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
 
-    if(readBytes = read(event->fd, writePtr, nbytes), readBytes >= 0) {
+    if(readBytes = recv(event->fd, writePtr, nbytes, MSG_NOSIGNAL), readBytes >= 0) {
         buffer_write_adv(buffer, readBytes);
 
         if(readBytes == 0)
             session->clientConnection.state = CLOSING;
 
         if(selector_state_machine_proccess_post_read(&session->sessionStateMachine, event) == FINISH)
-            socks5_close_session(session, event);
+            socks5_close_session(event);
     }
 
     else {
@@ -203,11 +223,11 @@ static void socks5_client_write(SelectorEvent *event){
     size_t nbytes;
     uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
     
-    if( (writeBytes = write(event->fd, readPtr, nbytes)) > 0){
+    if( (writeBytes = send(event->fd, readPtr, nbytes, MSG_NOSIGNAL)) > 0){
         buffer_read_adv(buffer, writeBytes);
 
         if(selector_state_machine_proccess_post_write(&session->sessionStateMachine, event) == FINISH)
-            socks5_close_session(session, event);
+            socks5_close_session(event);
     }
     else if (writeBytes == 0){
         fprintf(stderr, "%d wrote 0 bytes", session->clientConnection.fd);
@@ -217,6 +237,21 @@ static void socks5_client_write(SelectorEvent *event){
         //cerrar conexion
         //logger stderr(errno)
     }
+}
+
+static void socks5_client_close(SelectorEvent *event){
+    
+    SessionHandlerP session = (SessionHandlerP) event->data;
+
+    selector_state_machine_close(&session->sessionStateMachine, event);
+
+    selector_unregister_fd(event->s, session->serverConnection.fd); 
+
+    close(session->clientConnection.fd);
+
+    free(session->input.data);
+    free(session->output.data);
+    free(session);
 }
 
 static SessionHandlerP socks5_session_init(void) {
@@ -243,24 +278,9 @@ static SessionHandlerP socks5_session_init(void) {
     return session;
 }
 
-static void socks5_close_session(SessionHandlerP session, SelectorEvent *event) {
+static void socks5_close_session(SelectorEvent *event) {
 
-    selector_state_machine_close(&session->sessionStateMachine, event);
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
     selector_unregister_fd(event->s, session->clientConnection.fd);
-    selector_unregister_fd(event->s, session->serverConnection.fd);
-
-    close(session->clientConnection.fd);
-    close(session->serverConnection.fd);
-
-    socks5_session_destroy(session);
 }
-
-static void socks5_session_destroy(SessionHandlerP session) {
-
-    free(session->input.data);
-    free(session->output.data);
-    free(session);
-}
-
-
