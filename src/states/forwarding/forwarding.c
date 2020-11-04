@@ -12,8 +12,9 @@ static void forwarding_on_arrival(SelectorEvent *event) {
 static unsigned forwarding_on_read(SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
 
-    if(session->clientConnection.state != OPEN || session->serverConnection.state != OPEN)
-        return FLUSH_CLOSER; 
+    if(session->clientConnection.state != OPEN || session->serverConnection.state != OPEN) {
+        return FLUSH_CLOSER;
+    }
 
     forwarding_calculate_new_fd_interest(event);
 

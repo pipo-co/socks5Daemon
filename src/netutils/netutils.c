@@ -139,6 +139,8 @@ int new_ipv6_socket(struct in6_addr ip, in_port_t port) {
         return -1;
     } 
     
+    selector_fd_set_nio(sock);
+
 	memset(&addr, '\0',sizeof(addr));
 
     addr.sin6_family = AF_INET6;
@@ -167,4 +169,24 @@ selector_fd_set_nio(const int fd) {
         }
     }
     return ret;
+}
+
+struct sockaddr_in6 get_ipv6_sockaddr(const char * addr, uint16_t port) {
+
+    struct sockaddr_in6 sockaddr;
+    sockaddr.sin6_family = AF_INET6;
+    sockaddr.sin6_port = htons(port);
+    inet_pton(AF_INET6, addr, &sockaddr.sin6_addr);
+
+    return sockaddr;
+}
+
+struct sockaddr_in get_ipv4_sockaddr(const char * addr, uint16_t port) {
+
+    struct sockaddr_in sockaddr;
+    sockaddr.sin_family = AF_INET;
+    sockaddr.sin_port = htons(port);
+    inet_pton(AF_INET, addr, &sockaddr.sin_addr);
+
+    return sockaddr;
 }

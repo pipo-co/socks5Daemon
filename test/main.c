@@ -52,6 +52,8 @@ static const suiteSupplier suiteSuppliers[] = {
     request_success_test_suite,
     request_error_test_suite,
     forwarding_test_suite,
+    flush_closer_test_suite,
+    flush_closy_test_suite,
 };
 
 SRunner * test_srunner_init(void) {

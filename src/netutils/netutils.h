@@ -47,4 +47,8 @@ int new_ipv6_socket(struct in6_addr ip, in_port_t port);
 int
 selector_fd_set_nio(const int fd);
 
+struct sockaddr_in6 get_ipv6_sockaddr(const char * addr, uint16_t port);
+
+struct sockaddr_in get_ipv4_sockaddr(const char * addr, uint16_t port);
+
 #endif

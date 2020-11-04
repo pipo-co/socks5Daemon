@@ -32,14 +32,14 @@ static char *dnsServerIp;
 
 static int stateLogCount;
 
+static SessionHandlerP socks5_session_init(void);
 static void socks5_server_read(SelectorEvent *event);
 static void socks5_server_write(SelectorEvent *event);
+static void socks5_server_close(SelectorEvent *event);
 static void socks5_client_read(SelectorEvent *event);
 static void socks5_client_write(SelectorEvent *event);
-static SessionHandlerP socks5_session_init(void);
-static void socks5_close_session(SessionHandlerP session, SelectorEvent *event);
-static void socks5_session_destroy(SessionHandlerP session);
-
+static void socks5_client_close(SelectorEvent *event);
+static void socks5_close_session(SelectorEvent *event);
 
 void socks5_init(char *dnsServerIp) {
     stateLogCount = 0;
@@ -52,12 +52,12 @@ void socks5_init(char *dnsServerIp) {
 
     clientHandler.handle_read = socks5_client_read;
     clientHandler.handle_write = socks5_client_write;
-    clientHandler.handle_close = NULL;
+    clientHandler.handle_close = socks5_client_close;
     clientHandler.handle_block = NULL;
 
     serverHandler.handle_read = socks5_server_read;
     serverHandler.handle_write = socks5_server_write;
-    serverHandler.handle_close = NULL;
+    serverHandler.handle_close = socks5_server_close;
     serverHandler.handle_block = NULL;
 
     // serverHandler.handle_read = socks5_dns_read;
@@ -69,7 +69,7 @@ void socks5_init(char *dnsServerIp) {
 }
 
 //tendría que haber otro passive accept para ipv6
-void socks5_passive_accept(SelectorEvent *event){
+void socks5_passive_accept_ipv4(SelectorEvent *event){
     
     struct sockaddr_in cli_addr;
     socklen_t clilen = sizeof(cli_addr);
@@ -88,6 +88,26 @@ void socks5_passive_accept(SelectorEvent *event){
     selector_register(event->s, session->clientConnection.fd, &clientHandler, OP_READ, session);
 
     fprintf(stderr, "Registered new client %d\n", fd);
+}
+
+//tendría que haber otro passive accept para ipv6
+void socks5_passive_accept_ipv6(SelectorEvent *event){
+    
+    struct sockaddr_in6 cli_addr;
+    socklen_t clilen = sizeof(cli_addr);
+
+    int fd = accept(event->fd, (struct sockaddr *)&cli_addr, &clilen);
+    
+    if (fd < 0 ){}
+       //logger stderr(errno)
+
+    SessionHandlerP session = socks5_session_init();
+
+    session->clientConnection.fd = fd;
+
+    memcpy(&session->clientConnection.addr, (struct sockaddr *)&cli_addr, clilen);
+
+    selector_register(event->s, session->clientConnection.fd, &clientHandler, OP_READ, session);
 }
 
 void socks5_register_server(FdSelector s, SessionHandlerP socks5_p){
@@ -109,7 +129,7 @@ static void socks5_server_read(SelectorEvent *event){
         fprintf(stderr, "Read server socket %d was registered on pselect, but there was no space in buffer", event->fd);
 
         if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
-            socks5_close_session(session, event);
+            socks5_close_session(event);
 
         return;
     }
@@ -118,14 +138,15 @@ static void socks5_server_read(SelectorEvent *event){
     size_t nbytes;
     uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
 
-    if(readBytes = read(event->fd, writePtr, nbytes), readBytes >= 0) {
+
+    if(readBytes = recv(event->fd, writePtr, nbytes, MSG_NOSIGNAL), readBytes >= 0) {
         buffer_write_adv(buffer, readBytes);
 
         if(readBytes == 0)
             session->serverConnection.state = CLOSING;
 
         if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
-            socks5_close_session(session, event);
+            socks5_close_session(event);
 
         fprintf(stderr, "%d: Server Read, State %ud\n", stateLogCount, state);
     }
@@ -147,7 +168,7 @@ static void socks5_server_write(SelectorEvent *event){
         fprintf(stderr, "Write server socket %d was registered on pselect, but there was nothing on buffer", event->fd);
 
         if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
-            socks5_close_session(session, event);
+            socks5_close_session(event);
 
         return;
     }
@@ -156,11 +177,11 @@ static void socks5_server_write(SelectorEvent *event){
     size_t nbytes;
     uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
     
-    if(writeBytes = write(event->fd, readPtr, nbytes), writeBytes > 0){
+    if(writeBytes = send(event->fd, readPtr, nbytes, MSG_NOSIGNAL), writeBytes > 0) {
         buffer_read_adv(buffer, writeBytes);
 
-        if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
-            socks5_close_session(session, event);
+        if(state = selector_state_machine_proccess_post_write(&session->sessionStateMachine, event), state == FINISH)
+            socks5_close_session(event);
 
         fprintf(stderr, "%d: Server Write, State %ud\n", stateLogCount, state);
     }
@@ -175,6 +196,11 @@ static void socks5_server_write(SelectorEvent *event){
     
 }
 
+static void socks5_server_close(SelectorEvent *event) {
+    
+    close(event->fd);
+}
+
 static void socks5_client_read(SelectorEvent *event){
     SessionHandlerP session = (SessionHandlerP) event->data;
 
@@ -185,7 +211,7 @@ static void socks5_client_read(SelectorEvent *event){
         fprintf(stderr, "Read client socket %d was registered on pselect, but there was no space in buffer", event->fd);
 
         if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
-            socks5_close_session(session, event);
+            socks5_close_session(event);
 
         return;
     }
@@ -194,14 +220,14 @@ static void socks5_client_read(SelectorEvent *event){
     size_t nbytes;
     uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
 
-    if(readBytes = read(event->fd, writePtr, nbytes), readBytes >= 0) {
+    if(readBytes = recv(event->fd, writePtr, nbytes, MSG_NOSIGNAL), readBytes >= 0) {
         buffer_write_adv(buffer, readBytes);
 
         if(readBytes == 0)
             session->clientConnection.state = CLOSING;
 
         if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
-            socks5_close_session(session, event);
+            socks5_close_session(event);
 
         fprintf(stderr, "%d: Client Read, State %ud\n", stateLogCount, state);
     }
@@ -223,7 +249,7 @@ static void socks5_client_write(SelectorEvent *event){
         fprintf(stderr, "Write client socket %d was registered on pselect, but there was no space in buffer", event->fd);
 
         if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
-            socks5_close_session(session, event);
+            socks5_close_session(event);
 
         return;
     }
@@ -232,11 +258,11 @@ static void socks5_client_write(SelectorEvent *event){
     size_t nbytes;
     uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
     
-    if(writeBytes = write(event->fd, readPtr, nbytes), writeBytes > 0){
+    if(writeBytes = send(event->fd, readPtr, nbytes, MSG_NOSIGNAL), writeBytes > 0){
         buffer_read_adv(buffer, writeBytes);
 
         if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
-            socks5_close_session(session, event);
+            socks5_close_session(event);
 
         fprintf(stderr, "%d: Client Write, State %ud\n", stateLogCount, state);
     }
@@ -248,6 +274,23 @@ static void socks5_client_write(SelectorEvent *event){
         //cerrar conexion
         //logger stderr(errno)
     }
+}
+
+static void socks5_client_close(SelectorEvent *event){
+    
+    SessionHandlerP session = (SessionHandlerP) event->data;
+
+    selector_state_machine_close(&session->sessionStateMachine, event);
+
+    if(session->serverConnection.fd != INVALID) {   
+        selector_unregister_fd(event->s, session->serverConnection.fd); 
+    }
+
+    close(session->clientConnection.fd);
+
+    free(session->input.data);
+    free(session->output.data);
+    free(session);
 }
 
 static SessionHandlerP socks5_session_init(void) {
@@ -270,30 +313,14 @@ static SessionHandlerP socks5_session_init(void) {
     build_socks_session_state_machine(&session->sessionStateMachine);
 
     session->clientConnection.state = OPEN;
+    session->serverConnection.state = INVALID;
 
     return session;
 }
 
-static void socks5_close_session(SessionHandlerP session, SelectorEvent *event) {
+static void socks5_close_session(SelectorEvent *event) {
 
-    selector_state_machine_close(&session->sessionStateMachine, event);
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
     selector_unregister_fd(event->s, session->clientConnection.fd);
-    selector_unregister_fd(event->s, session->serverConnection.fd);
-
-    close(session->clientConnection.fd);
-    close(session->serverConnection.fd);
-
-    socks5_session_destroy(session);
-
-    fprintf(stderr, "Closed session from Client %d and Server %d\n", session->clientConnection.fd, session->serverConnection.fd);
 }
-
-static void socks5_session_destroy(SessionHandlerP session) {
-
-    free(session->input.data);
-    free(session->output.data);
-    free(session);
-}
-
-

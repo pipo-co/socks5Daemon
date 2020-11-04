@@ -31,6 +31,7 @@ typedef enum SessionState {
 } SessionState;
 
 typedef enum SocketState {
+    INVALID,
     OPEN,
     CLOSING,
     CLOSED,

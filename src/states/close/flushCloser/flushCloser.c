@@ -44,7 +44,7 @@ static unsigned flush_closer_on_read(SelectorEvent *event) {
         selector_set_interest(event->s, closerFd, OP_WRITE);
     }
 
-    return FLUSH_CLOSER;
+    return socks5_p->sessionStateMachine.current;
 }
 
 static unsigned flush_closer_on_write(SelectorEvent *event) {
@@ -107,7 +107,7 @@ static unsigned flush_closer_on_write(SelectorEvent *event) {
     selector_set_interest(event->s, closyFd, closyInterest);
     selector_set_interest(event->s, closerFd, closerInterest);
 
-    return FLUSH_CLOSER;
+    return socks5_p->sessionStateMachine.current;
 }
 
 
