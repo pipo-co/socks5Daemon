@@ -149,6 +149,7 @@ static void socks5_server_read(SelectorEvent *event){
             socks5_close_session(event);
 
         fprintf(stderr, "%d: Server Read, State %ud\n", stateLogCount, state);
+        stateLogCount++;
     }
 
     else {
@@ -184,6 +185,7 @@ static void socks5_server_write(SelectorEvent *event){
             socks5_close_session(event);
 
         fprintf(stderr, "%d: Server Write, State %ud\n", stateLogCount, state);
+        stateLogCount++;
     }
     else if (writeBytes == 0){
         fprintf(stderr, "%d wrote 0 bytes", session->serverConnection.fd);
@@ -225,6 +227,7 @@ static void socks5_client_read(SelectorEvent *event){
             socks5_close_session(event);
 
         fprintf(stderr, "%d: Client Read, State %ud\n", stateLogCount, state);
+        stateLogCount++;
     }
 
     else {
@@ -260,6 +263,7 @@ static void socks5_client_write(SelectorEvent *event){
             socks5_close_session(event);
 
         fprintf(stderr, "%d: Client Write, State %ud\n", stateLogCount, state);
+        stateLogCount++;
     }
     else if (writeBytes == 0){
         fprintf(stderr, "%d wrote 0 bytes\n", session->clientConnection.fd);
