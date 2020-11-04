@@ -33,6 +33,7 @@ static char *dnsServerIp;
 static SessionHandlerP socks5_session_init(void);
 static void socks5_server_read(SelectorEvent *event);
 static void socks5_server_write(SelectorEvent *event);
+static void socks5_server_close(SelectorEvent *event);
 static void socks5_client_read(SelectorEvent *event);
 static void socks5_client_write(SelectorEvent *event);
 static void socks5_client_close(SelectorEvent *event);
@@ -52,7 +53,7 @@ void socks5_init(char *dnsServerIp) {
 
     serverHandler.handle_read = socks5_server_read;
     serverHandler.handle_write = socks5_server_write;
-    serverHandler.handle_close = NULL;
+    serverHandler.handle_close = socks5_server_close;
     serverHandler.handle_block = NULL;
 
     // serverHandler.handle_read = socks5_dns_read;
@@ -177,6 +178,11 @@ static void socks5_server_write(SelectorEvent *event){
     
 }
 
+static void socks5_server_close(SelectorEvent *event) {
+    
+    close(event->fd);
+}
+
 static void socks5_client_read(SelectorEvent *event){
 
     SessionHandlerP session = (SessionHandlerP) event->data;
@@ -245,7 +251,9 @@ static void socks5_client_close(SelectorEvent *event){
 
     selector_state_machine_close(&session->sessionStateMachine, event);
 
-    selector_unregister_fd(event->s, session->serverConnection.fd); 
+    if(session->serverConnection.fd != INVALID) {   
+        selector_unregister_fd(event->s, session->serverConnection.fd); 
+    }
 
     close(session->clientConnection.fd);
 
@@ -274,6 +282,7 @@ static SessionHandlerP socks5_session_init(void) {
     build_socks_session_state_machine(&session->sessionStateMachine);
 
     session->clientConnection.state = OPEN;
+    session->serverConnection.state = INVALID;
 
     return session;
 }
