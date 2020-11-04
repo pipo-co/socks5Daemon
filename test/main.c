@@ -42,9 +42,16 @@ static const suiteSupplier suiteSuppliers[] = {
     parser_utils_test_suite,
     hello_test_suite,
     hello_parser_test_suite,
+    hello_error_test_suite,
+    auth_method_announcement_test_suite,
+    auth_success_test_suite,
+    auth_error_test_suite,
     selector_test_suite,
     request_parser_test_suite,
     request_test_suite,
+    request_success_test_suite,
+    request_error_test_suite,
+    forwarding_test_suite,
 };
 
 SRunner * test_srunner_init(void) {

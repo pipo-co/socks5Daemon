@@ -1,6 +1,6 @@
 #include "authSuccessful.h"
 
-#define AUTH_RESPONSE_SIZE 2
+#define AUTH_REPLY_SIZE 2
 
 static void auth_marshall(Buffer *b, size_t *bytes);
 static unsigned auth_successful_on_pre_write(SelectorEvent *event);
@@ -20,7 +20,7 @@ static unsigned auth_successful_on_post_write(SelectorEvent *event) {
 
      SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
-    if (socks5_p->socksHeader.authRequestHeader.bytes == AUTH_RESPONSE_SIZE && !buffer_can_read(&socks5_p->output)) {
+    if (socks5_p->socksHeader.authRequestHeader.bytes == AUTH_REPLY_SIZE && !buffer_can_read(&socks5_p->output)) {
         selector_set_interest_event(event, OP_READ);
         return REQUEST;
     }
@@ -29,7 +29,7 @@ static unsigned auth_successful_on_post_write(SelectorEvent *event) {
 
 static void auth_marshall(Buffer *b, size_t *bytes) {
 
-    while(*bytes < AUTH_RESPONSE_SIZE && buffer_can_write(b)){
+    while(*bytes < AUTH_REPLY_SIZE && buffer_can_write(b)){
         if(*bytes == 0){
             buffer_write(b, SOCKS_VERSION);
         }

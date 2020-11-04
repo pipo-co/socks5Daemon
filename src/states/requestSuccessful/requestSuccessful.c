@@ -37,7 +37,7 @@ static void request_marshall(Buffer *b, size_t *bytes) {
                 buffer_write(b, SOCKS_VERSION);
             }
             else if(*bytes == 1){
-                buffer_write(b, AUTH_SUCCESS_MESSAGE);
+                buffer_write(b, RESPONSE_SUCCESS_MESSAGE);
             }
             else if (*bytes == 2){
                 buffer_write(b, RSV);
