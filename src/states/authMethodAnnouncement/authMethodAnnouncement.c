@@ -1,8 +1,8 @@
 #include "authMethodAnnouncement.h"
 
-#define INITIAL_RESPONSE_SIZE 2
+#define HELLO_REPLY_SIZE 2
 
-static void hello_marshall(Buffer *b, uint8_t method, size_t *bytes);
+static void hello_marshall(Buffer *b, size_t *bytes, uint8_t method);
 static unsigned method_announcement_on_pre_write(struct SelectorEvent *key);
 static unsigned method_announcement_on_post_write(struct SelectorEvent *key);
 
@@ -10,7 +10,7 @@ static unsigned method_announcement_on_pre_write(struct SelectorEvent *key) {
 
     SessionHandlerP socks5_p = (SessionHandlerP) key->data;
 
-    hello_marshall(&socks5_p->output, socks5_p->clientInfo.authMethod, &socks5_p->socksHeader.helloHeader.bytes);  
+    hello_marshall(&socks5_p->output, &socks5_p->socksHeader.helloHeader.bytes, socks5_p->clientInfo.authMethod);  
 
     return socks5_p->sessionStateMachine.current;  
 }
@@ -19,7 +19,7 @@ static unsigned method_announcement_on_post_write(struct SelectorEvent *key) {
 
     SessionHandlerP socks5_p = (SessionHandlerP) key->data;
 
-    if (socks5_p->socksHeader.helloHeader.bytes == INITIAL_RESPONSE_SIZE && !buffer_can_read(&socks5_p->output))
+    if (socks5_p->socksHeader.helloHeader.bytes == HELLO_REPLY_SIZE && !buffer_can_read(&socks5_p->output))
     {
         selector_set_interest_event(key, OP_READ);
         if(socks5_p->clientInfo.authMethod == NO_AUTHENTICATION){
@@ -34,9 +34,9 @@ static unsigned method_announcement_on_post_write(struct SelectorEvent *key) {
     return socks5_p->sessionStateMachine.current;
 }
 
-static void hello_marshall(Buffer *b, uint8_t method, size_t * bytes) {
+static void hello_marshall(Buffer *b, size_t * bytes, uint8_t method) {
 
-    while(*bytes < INITIAL_RESPONSE_SIZE && buffer_can_write(b)){
+    while(*bytes < HELLO_REPLY_SIZE && buffer_can_write(b)){
         if(*bytes == 0){
             buffer_write(b, SOCKS_VERSION);
         }
