@@ -1,6 +1,6 @@
 #include "helloError.h"
 
-#define HELLO_ERROR_RESPONSE_SIZE 2
+#define HELLO_ERROR_REPLY_SIZE 2
 
 static void hello_error_marshall(Buffer *b, size_t *bytes);
 static unsigned hello_error_on_pre_write(SelectorEvent *event);
@@ -19,7 +19,7 @@ static unsigned hello_error_on_post_write(SelectorEvent *event) {
 
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
-    if (socks5_p->socksHeader.helloHeader.bytes == HELLO_ERROR_RESPONSE_SIZE && !buffer_can_read(&socks5_p->output)) {
+    if (socks5_p->socksHeader.helloHeader.bytes == HELLO_ERROR_REPLY_SIZE && !buffer_can_read(&socks5_p->output)) {
         selector_unregister_fd(event->s, event->fd);
         return FINISH;
     }
@@ -29,7 +29,7 @@ static unsigned hello_error_on_post_write(SelectorEvent *event) {
 
 static void hello_error_marshall(Buffer *b, size_t *bytes) {
 
-        while(*bytes < HELLO_ERROR_RESPONSE_SIZE && buffer_can_write(b)){
+        while(*bytes < HELLO_ERROR_REPLY_SIZE && buffer_can_write(b)){
             if(*bytes == 0){
                 buffer_write(b, SOCKS_VERSION);
             }

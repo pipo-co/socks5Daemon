@@ -1,6 +1,6 @@
 #include "authError.h"
 
-#define AUTH_ERROR_RESPONSE_SIZE 2
+#define AUTH_ERROR_REPLY_SIZE 2
 
 static void auth_error_marshall(Buffer *b, size_t *bytes);
 static unsigned auth_error_on_pre_write(SelectorEvent *event);
@@ -19,7 +19,7 @@ static unsigned auth_error_on_post_write(SelectorEvent *event) {
 
     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
 
-    if (socks5_p->socksHeader.authRequestHeader.bytes == AUTH_ERROR_RESPONSE_SIZE && !buffer_can_read(&socks5_p->output)) {
+    if (socks5_p->socksHeader.authRequestHeader.bytes == AUTH_ERROR_REPLY_SIZE && !buffer_can_read(&socks5_p->output)) {
         selector_unregister_fd(event->s, event->fd);
         return FINISH;
     }
@@ -29,7 +29,7 @@ static unsigned auth_error_on_post_write(SelectorEvent *event) {
 
 static void auth_error_marshall(Buffer *b, size_t *bytes) {
 
-        while(*bytes < AUTH_ERROR_RESPONSE_SIZE && buffer_can_write(b)){
+        while(*bytes < AUTH_ERROR_REPLY_SIZE && buffer_can_write(b)){
             if(*bytes == 0){
                 buffer_write(b, SOCKS_VERSION);
             }
