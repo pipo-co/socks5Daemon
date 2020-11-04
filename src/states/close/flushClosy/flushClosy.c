@@ -23,17 +23,23 @@ static unsigned flush_closy_on_write(SelectorEvent *event) {
     if(buffer_can_read(&clientBuffer)) {
         selector_set_interest(event->s, serverFd, OP_WRITE);
     }
-    else if(*clientState == CLOSING) {
-        shutdown(serverFd, SHUT_WR);
-        *clientState = CLOSED;
+    else {
+        if(*clientState == CLOSING) {
+            shutdown(serverFd, SHUT_WR);
+            *clientState = CLOSED;
+        }
+        selector_set_interest(event->s, serverFd, OP_NOOP);
     }
 
     if(buffer_can_read(&serverBuffer)) {
         selector_set_interest(event->s, clientFd, OP_WRITE);
     }
-    else if(*serverState == CLOSING) {
-        shutdown(clientFd, SHUT_WR);
-        *serverState = CLOSED;
+    else {
+        if(*serverState == CLOSING) {
+            shutdown(clientFd, SHUT_WR);
+            *serverState = CLOSED;
+        }
+        selector_set_interest(event->s, clientFd, OP_NOOP);
     }
 
     if(*clientState == CLOSED && *serverState == CLOSED)
