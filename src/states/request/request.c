@@ -11,77 +11,84 @@
 #include "netutils/netutils.h"
 
 static void request_on_arrival (SelectorEvent *event);
-static unsigned request_on_post_read(SelectorEvent *event);
+static unsigned request_on_read(SelectorEvent *event);
 
 static void request_on_arrival (SelectorEvent *event) {
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
-    request_parser_init(&socks5_p->socksHeader.requestHeader.parser);
-    socks5_p->socksHeader.requestHeader.bytes = 0;
-    socks5_p->socksHeader.requestHeader.rep = SUCCESSFUL;
+    request_parser_init(&session->socksHeader.requestHeader.parser);
+
+    session->socksHeader.requestHeader.rep = SUCCESSFUL;
+
+    selector_set_interest(event->s, session->clientConnection.fd, OP_READ);
 }
 
-static unsigned request_on_post_read(SelectorEvent *event) {
+static unsigned request_on_read(SelectorEvent *event) {
      
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
+    SessionHandlerP session = (SessionHandlerP) event->data;
     bool errored;
 
-    if(!request_parser_consume(&socks5_p->input, &socks5_p->socksHeader.requestHeader.parser, &errored)){
-        return socks5_p->sessionStateMachine.current;
+    if(!request_parser_consume(&session->input, &session->socksHeader.requestHeader.parser, &errored)){
+        return session->sessionStateMachine.current;
     }
     if (errored == true){
         //loggear ( request_parser_error_message(socks5_p->request_parser.current_state);)
-        selector_set_interest_event(event, OP_WRITE);
+        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
         return REQUEST_ERROR;
     }
 
-    if (socks5_p->socksHeader.requestHeader.parser.version != SOCKS_VERSION){
+    if (session->socksHeader.requestHeader.parser.version != SOCKS_VERSION){
         //loggear ("Request: Invalid version!")
-        selector_set_interest_event(event, OP_WRITE);
+        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
         return REQUEST_ERROR;
     }
     
-    if (socks5_p->socksHeader.requestHeader.parser.cmd != REQUEST_PARSER_COMMAND_CONNECT){
+    if (session->socksHeader.requestHeader.parser.cmd != REQUEST_PARSER_COMMAND_CONNECT){
         //loggear ("Request: Unsupported command!")
-        selector_set_interest_event(event, OP_WRITE);
+        session->socksHeader.requestHeader.rep = COMMAND_NOT_SUPPORTED;
         return REQUEST_ERROR;
     }
     
-    if(socks5_p->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME){
+    if(session->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME){
         // connectDoh(socks5_p)
         //registrar al selector el fd del dns
-        selector_set_interest_event(event, OP_NOOP);
         return FINISH; // TODO: GENERATE_DNS_QUERY; 
     }
     
-    if(socks5_p->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP4){
-        socks5_p->serverConnection.fd = new_ipv4_socket(socks5_p->socksHeader.requestHeader.parser.address.ipv4, socks5_p->socksHeader.requestHeader.parser.port);    
+    if(session->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP4){
+        session->serverConnection.fd = new_ipv4_socket(session->socksHeader.requestHeader.parser.address.ipv4, session->socksHeader.requestHeader.parser.port);    
     }
-    else if(socks5_p->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP6){
-        socks5_p->serverConnection.fd = new_ipv6_socket(socks5_p->socksHeader.requestHeader.parser.address.ipv6, socks5_p->socksHeader.requestHeader.parser.port);
+    else if(session->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP6){
+        session->serverConnection.fd = new_ipv6_socket(session->socksHeader.requestHeader.parser.address.ipv6, session->socksHeader.requestHeader.parser.port);
+    }
+    else {
+        session->socksHeader.requestHeader.rep = ADDRESS_TYPE_NOT_SUPPORTED;
+        return REQUEST_ERROR;
     }
 
-    if (socks5_p->serverConnection.fd  == -1){
+    if (session->serverConnection.fd  == -1) {
         if(errno == ENETUNREACH){
-            socks5_p->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
-            
+            session->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
         }
-        else if(errno = EHOSTUNREACH){
-            socks5_p->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
+
+        else if(errno = EHOSTUNREACH) {
+            session->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
         }
-        else if(errno = ECONNREFUSED){
-            socks5_p->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
+
+        else if(errno = ECONNREFUSED) {
+            session->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
         }
-        else
-        {
-            socks5_p->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE; // arbitrario, revisar
+
+        else {
+            session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
         }
+
         //logger stderr(errno);
-        selector_set_interest_event(event, OP_WRITE);
         return REQUEST_ERROR;      
     }
-    socks5_register_server(event->s, socks5_p);
-    selector_set_interest_event(event, OP_NOOP);
+
+    socks5_register_server(event->s, session);
+
     return IP_CONNECT;
 }
 
@@ -91,9 +98,8 @@ SelectorStateDefinition request_state_definition_supplier(void) {
 
         .state = REQUEST,
         .on_arrival = request_on_arrival,
-        .on_post_read = request_on_post_read,
-        .on_pre_write = NULL,
-        .on_post_write = NULL,
+        .on_read = request_on_read,
+        .on_write = NULL,
         .on_block_ready = NULL,
         .on_departure = NULL,
     };

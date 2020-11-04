@@ -13,7 +13,7 @@ static void auth_request_on_arrival(SelectorEvent *event) {
 
     session->socksHeader.authRequestHeader.bytes = 0;
 
-    selector_set_interest_event(event, OP_READ);
+    selector_set_interest(event->s, session->clientConnection.fd, OP_READ);
 }
 
 static unsigned auth_request_on_read(SelectorEvent *event) {
@@ -54,7 +54,7 @@ SelectorStateDefinition auth_request_state_definition_supplier(void) {
 
         .state = AUTH_REQUEST,
         .on_arrival = auth_request_on_arrival,
-        .on_post_read = auth_request_on_read,
+        .on_read = auth_request_on_read,
         .on_write = NULL,
         .on_block_ready = NULL,
         .on_departure = NULL,

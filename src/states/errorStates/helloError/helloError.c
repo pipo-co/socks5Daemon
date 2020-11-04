@@ -3,28 +3,31 @@
 #define HELLO_ERROR_REPLY_SIZE 2
 
 static void hello_error_marshall(Buffer *b, size_t *bytes);
-static unsigned hello_error_on_pre_write(SelectorEvent *event);
-static unsigned hello_error_on_post_write(SelectorEvent *event);
+static void hello_error_on_arrival(SelectorEvent *event);
+static unsigned hello_error_on_write(SelectorEvent *event);
 
-static unsigned hello_error_on_pre_write(SelectorEvent *event) {
+static void hello_error_on_arrival(SelectorEvent *event) {
     
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
-    hello_error_marshall(&socks5_p->output, &socks5_p->socksHeader.helloHeader.bytes);  
-    
-    return socks5_p->sessionStateMachine.current;
+    session->socksHeader.helloHeader.bytes = 0;
+
+    hello_error_marshall(&session->output, &session->socksHeader.helloHeader.bytes);
+
+    selector_set_interest(event->s, session->clientConnection.fd, OP_WRITE);
 }
 
-static unsigned hello_error_on_post_write(SelectorEvent *event) {
+static unsigned hello_error_on_write(SelectorEvent *event) {
 
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
-    if (socks5_p->socksHeader.helloHeader.bytes == HELLO_ERROR_REPLY_SIZE && !buffer_can_read(&socks5_p->output)) {
-        selector_unregister_fd(event->s, event->fd);
+    if (session->socksHeader.helloHeader.bytes == HELLO_ERROR_REPLY_SIZE && !buffer_can_read(&session->output)) {
         return FINISH;
     }
 
-    return socks5_p->sessionStateMachine.current;
+    hello_error_marshall(&session->output, &session->socksHeader.helloHeader.bytes);
+
+    return session->sessionStateMachine.current;
 }
 
 static void hello_error_marshall(Buffer *b, size_t *bytes) {
@@ -46,10 +49,9 @@ SelectorStateDefinition hello_error_state_definition_supplier(void) {
     SelectorStateDefinition stateDefinition = {
 
         .state = HELLO_ERROR,
-        .on_arrival = NULL,
-        .on_post_read = NULL,
-        .on_pre_write = hello_error_on_pre_write,
-        .on_post_write = hello_error_on_post_write,
+        .on_arrival = hello_error_on_arrival,
+        .on_read = NULL,
+        .on_write = hello_error_on_write,
         .on_block_ready = NULL,
         .on_departure = NULL,
     };

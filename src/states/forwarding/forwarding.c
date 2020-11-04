@@ -1,84 +1,57 @@
 #include "forwarding.h"
 
-static unsigned forwarding_on_post_read(SelectorEvent *event);
-static unsigned forwarding_on_post_write(SelectorEvent *event);
+static unsigned forwarding_on_read(SelectorEvent *event);
+static unsigned forwarding_on_write(SelectorEvent *event);
+static void forwarding_on_arrival(SelectorEvent *event);
+static void forwarding_calculate_new_fd_interest(SelectorEvent *event);
 
-static unsigned forwarding_on_post_read(SelectorEvent *event) {
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
-
-    if(socks5_p->clientConnection.state != OPEN || socks5_p->serverConnection.state != OPEN)
-        return FLUSH_CLOSER; 
-
-    size_t nbytes;
-    uint8_t * buff;
-    bool buffCanWrite, isServer = false;
-
-    if(event->fd == socks5_p->serverConnection.fd){
-        buff = buffer_read_ptr(&socks5_p->output, &nbytes);
-        buffCanWrite = buffer_can_write(&socks5_p->output);
-        isServer = true;
-    } 
-    else {
-        buff = buffer_read_ptr(&socks5_p->input, &nbytes);
-        buffCanWrite = buffer_can_write(&socks5_p->input);
-    }
-
-    if(!buffCanWrite) {
-        // no puedo escribir mas al buffer de input, me despierten mas por read
-        selector_remove_interest_event(event, OP_READ);
-    }
- 
-    if(nbytes != 0){
-        if(isServer){
-            //como tengo espacio en el buffer de lectura, me interesa que me escriban, desperta al que me escribe por write
-            selector_add_interest(event->s, socks5_p->clientConnection.fd, OP_WRITE);
-        }
-        else{
-            selector_add_interest(event->s, socks5_p->serverConnection.fd, OP_WRITE);
-        }   
-    }
-
-    // while (nbytes > 0) {
-    //     //process buffer information
-    //     nbytes--;
-    // }
-
-    return socks5_p->sessionStateMachine.current;
-    
+static void forwarding_on_arrival(SelectorEvent *event) {
+    forwarding_calculate_new_fd_interest(event);
 }
 
-static unsigned forwarding_on_post_write(SelectorEvent *event) {
+static unsigned forwarding_on_read(SelectorEvent *event) {
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
+    if(session->clientConnection.state != OPEN || session->serverConnection.state != OPEN)
+        return FLUSH_CLOSER; 
 
-    bool buffCanWrite, buffCanRead, isServer = false;
+    forwarding_calculate_new_fd_interest(event);
 
-    if(event->fd == socks5_p->serverConnection.fd){
-        buffCanRead = buffer_can_read(&socks5_p->input);
-        buffCanWrite = buffer_can_write(&socks5_p->input);
-        isServer = true;
-    } 
-    else
-    {
-        buffCanRead = buffer_can_read(&socks5_p->output);
-        buffCanWrite = buffer_can_write(&socks5_p->output);
+    return session->sessionStateMachine.current;   
+}
+
+static unsigned forwarding_on_write(SelectorEvent *event) {
+    SessionHandlerP session = (SessionHandlerP) event->data;
+
+    forwarding_calculate_new_fd_interest(event);
+
+    return session->sessionStateMachine.current;
+}
+
+static void forwarding_calculate_new_fd_interest(SelectorEvent *event) {
+    SessionHandlerP session = (SessionHandlerP) event->data;
+
+    unsigned clientInterest = OP_NOOP;
+    unsigned serverInterest = OP_NOOP;
+
+    if(buffer_can_write(&session->input)) {
+        clientInterest |= OP_READ;
     }
 
-    if(buffCanWrite){
-        if(isServer){
-            //ya tengo lugar en el buffer de output, el contrario puede seguir cargandome
-            selector_add_interest(event->s, socks5_p->clientConnection.fd, OP_READ);
-        }
-        else{
-            selector_add_interest(event->s, socks5_p->serverConnection.fd, OP_READ);
-        }   
-    }
-    if(!buffCanRead){
-        //Ya lei todo asi que no me llames mas por lectura
-        selector_remove_interest_event(event, OP_WRITE);
+    if(buffer_can_read(&session->input)) {
+        serverInterest |= OP_WRITE;
     }
 
-    return socks5_p->sessionStateMachine.current;
+    if(buffer_can_write(&session->output)) {
+        serverInterest |= OP_READ;
+    }
+
+    if(buffer_can_read(&session->output)) {
+        clientInterest |= OP_WRITE;
+    }
+
+    selector_set_interest(event->s, session->clientConnection.fd, clientInterest);
+    selector_set_interest(event->s, session->serverConnection.fd, serverInterest);
 }
 
 SelectorStateDefinition forwarding_state_definition_supplier(void) {
@@ -86,10 +59,9 @@ SelectorStateDefinition forwarding_state_definition_supplier(void) {
     SelectorStateDefinition stateDefinition = {
 
         .state = FORWARDING,
-        .on_arrival = NULL,
-        .on_post_read = forwarding_on_post_read,
-        .on_pre_write = NULL,
-        .on_post_write = forwarding_on_post_write,
+        .on_arrival = forwarding_on_arrival,
+        .on_read = forwarding_on_read,
+        .on_write = forwarding_on_write,
         .on_block_ready = NULL,
         .on_departure = NULL,
     };

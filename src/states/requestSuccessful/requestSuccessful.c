@@ -3,31 +3,32 @@
 #define REPLY_SIZE 10
 
 static void request_marshall(Buffer *b, size_t *bytes);
-static unsigned request_successful_on_pre_write(SelectorEvent *event);
-static unsigned request_successful_on_post_write(SelectorEvent *event);
+static void request_successful_on_arrival(SelectorEvent *event);
+static unsigned request_successful_on_write(SelectorEvent *event);
 
-static unsigned request_successful_on_pre_write(SelectorEvent *event) {
+static void request_successful_on_arrival(SelectorEvent *event) {
     
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
-    request_marshall(&socks5_p->output, &socks5_p->socksHeader.requestHeader.bytes);  
+    session->socksHeader.requestHeader.bytes = 0;
 
-    return socks5_p->sessionStateMachine.current; 
+    request_marshall(&session->output, &session->socksHeader.requestHeader.bytes);  
 
+    selector_set_interest(event->s, session->clientConnection.fd, OP_WRITE);
+    selector_set_interest(event->s, session->serverConnection.fd, OP_NOOP);
 }
 
-static unsigned request_successful_on_post_write(SelectorEvent *event) {
+static unsigned request_successful_on_write(SelectorEvent *event) {
 
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
-    if (socks5_p->socksHeader.requestHeader.bytes == REPLY_SIZE && !buffer_can_read(&socks5_p->output))
-    {
-        selector_set_interest(event->s, socks5_p->serverConnection.fd, OP_READ|OP_WRITE);
-        selector_set_interest_event(event, OP_READ|OP_WRITE);
+    if(session->socksHeader.requestHeader.bytes == REPLY_SIZE && !buffer_can_read(&session->output)) {
         return FORWARDING;
     }
-    return socks5_p->sessionStateMachine.current;
 
+    request_marshall(&session->output, &session->socksHeader.requestHeader.bytes); 
+
+    return session->sessionStateMachine.current;
 }
 
 static void request_marshall(Buffer *b, size_t *bytes) {
@@ -57,10 +58,9 @@ SelectorStateDefinition request_successful_state_definition_supplier(void) {
     SelectorStateDefinition stateDefinition = {
 
         .state = REQUEST_SUCCESSFUL,
-        .on_arrival = NULL,
-        .on_post_read = NULL,
-        .on_pre_write = request_successful_on_pre_write,
-        .on_post_write = request_successful_on_post_write,
+        .on_arrival = request_successful_on_arrival,
+        .on_read = NULL,
+        .on_write = request_successful_on_write,
         .on_block_ready = NULL,
         .on_departure = NULL,
     };

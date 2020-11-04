@@ -27,9 +27,8 @@ static SelectorStateDefinition finish_state_definition_supplier(void) {
     SelectorStateDefinition ssd = {
         .state = FINISH,
         .on_arrival = NULL,
-        .on_post_read = NULL,
-        .on_pre_write = NULL,
-        .on_post_write = NULL,
+        .on_read = NULL,
+        .on_write = NULL,
         .on_block_ready = NULL,
         .on_departure = NULL,
     };

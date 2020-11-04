@@ -3,28 +3,32 @@
 #define AUTH_REPLY_SIZE 2
 
 static void auth_marshall(Buffer *b, size_t *bytes);
-static unsigned auth_successful_on_pre_write(SelectorEvent *event);
-static unsigned auth_successful_on_post_write(SelectorEvent *event);
+static void auth_successful_on_arrival(SelectorEvent *event);
+static unsigned auth_successful_on_write(SelectorEvent *event);
 
 
-static unsigned auth_successful_on_pre_write(SelectorEvent *event) {
+static void auth_successful_on_arrival(SelectorEvent *event) {
     
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
-    auth_marshall(&socks5_p->output, &socks5_p->socksHeader.authRequestHeader.bytes);  
+    session->socksHeader.authRequestHeader.bytes = 0;
+
+    auth_marshall(&session->output, &session->socksHeader.authRequestHeader.bytes);  
     
-    return socks5_p->sessionStateMachine.current; 
+    selector_set_interest(event->s, session->clientConnection.fd, OP_WRITE);
 }
 
-static unsigned auth_successful_on_post_write(SelectorEvent *event) {
+static unsigned auth_successful_on_write(SelectorEvent *event) {
 
-     SessionHandlerP socks5_p = (SessionHandlerP) event->data;
+     SessionHandlerP session = (SessionHandlerP) event->data;
 
-    if (socks5_p->socksHeader.authRequestHeader.bytes == AUTH_REPLY_SIZE && !buffer_can_read(&socks5_p->output)) {
-        selector_set_interest_event(event, OP_READ);
+    if(session->socksHeader.authRequestHeader.bytes == AUTH_REPLY_SIZE && !buffer_can_read(&session->output)) {
         return REQUEST;
     }
-    return socks5_p->sessionStateMachine.current;
+
+    auth_marshall(&session->output, &session->socksHeader.authRequestHeader.bytes); 
+
+    return session->sessionStateMachine.current;
 }
 
 static void auth_marshall(Buffer *b, size_t *bytes) {
@@ -45,10 +49,9 @@ SelectorStateDefinition auth_successful_state_definition_supplier(void) {
     SelectorStateDefinition stateDefinition = {
 
         .state = AUTH_SUCCESSFUL,
-        .on_arrival = NULL,
-        .on_post_read = NULL,
-        .on_pre_write = auth_successful_on_pre_write,
-        .on_post_write = auth_successful_on_post_write,
+        .on_arrival = auth_successful_on_arrival,
+        .on_read = NULL,
+        .on_write = auth_successful_on_write,
         .on_block_ready = NULL,
         .on_departure = NULL,
     };

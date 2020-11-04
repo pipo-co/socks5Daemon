@@ -32,7 +32,7 @@ static unsigned method_announcement_on_write(SelectorEvent *event) {
     }
 
     // Preparar buffer para proximo write 
-    hello_marshall(&session->output, session->clientInfo.authMethod, &session->socksHeader.helloHeader.bytes); 
+    hello_marshall(&session->output, &session->socksHeader.helloHeader.bytes, session->clientInfo.authMethod); 
 
     return session->sessionStateMachine.current;
 }

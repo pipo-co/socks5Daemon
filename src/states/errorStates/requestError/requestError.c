@@ -3,29 +3,31 @@
 #define REQUEST_ERROR_SIZE 10
 
 static void request_error_marshall(Buffer *b, size_t *bytes, uint8_t rep);
-static unsigned request_error_on_pre_write(SelectorEvent *event);
-static unsigned request_error_on_post_write(SelectorEvent *event);
+static void request_error_on_arrival(SelectorEvent *event);
+static unsigned request_error_on_write(SelectorEvent *event);
 
-static unsigned request_error_on_pre_write(SelectorEvent *event) {
+static void request_error_on_arrival(SelectorEvent *event) {
     
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
-    request_error_marshall(&socks5_p->output, &socks5_p->socksHeader.requestHeader.bytes, socks5_p->socksHeader.requestHeader.rep);  
+    session->socksHeader.requestHeader.bytes = 0;
+
+    request_error_marshall(&session->output, &session->socksHeader.requestHeader.bytes, session->socksHeader.requestHeader.rep);  
     
-    return socks5_p->sessionStateMachine.current; 
-
+    selector_set_interest(event->s, session->clientConnection.fd, OP_WRITE);
 }
 
-static unsigned request_error_on_post_write(SelectorEvent *event) {
+static unsigned request_error_on_write(SelectorEvent *event) {
 
-    SessionHandlerP socks5_p = (SessionHandlerP) event->data;
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
-    if (socks5_p->socksHeader.requestHeader.bytes == REQUEST_ERROR_SIZE && !buffer_can_read(&socks5_p->output)) {
-        selector_unregister_fd(event->s, event->fd);
+    if (session->socksHeader.requestHeader.bytes == REQUEST_ERROR_SIZE && !buffer_can_read(&session->output)) {
         return FINISH;
     }
 
-    return socks5_p->sessionStateMachine.current;
+    request_error_marshall(&session->output, &session->socksHeader.requestHeader.bytes, session->socksHeader.requestHeader.rep);
+
+    return session->sessionStateMachine.current;
 }
 
 static void request_error_marshall(Buffer *b, size_t *bytes, uint8_t rep) {
@@ -55,10 +57,9 @@ SelectorStateDefinition request_error_state_definition_supplier(void) {
     SelectorStateDefinition stateDefinition = {
 
         .state = REQUEST_ERROR,
-        .on_arrival = NULL,
-        .on_post_read = NULL,
-        .on_pre_write = request_error_on_pre_write,
-        .on_post_write = request_error_on_post_write,
+        .on_arrival = request_error_on_arrival,
+        .on_read = NULL,
+        .on_write = request_error_on_write,
         .on_block_ready = NULL,
         .on_departure = NULL,
     };
