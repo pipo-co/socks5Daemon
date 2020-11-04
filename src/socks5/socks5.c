@@ -28,7 +28,9 @@ static int sessionInputBufferSize;
 static int sessionOutputBufferSize;
 static int dnsBufferSize;
 
-static char *dnsServerIp; 
+static char *dnsServerIp;
+
+static int stateLogCount;
 
 static void socks5_server_read(SelectorEvent *event);
 static void socks5_server_write(SelectorEvent *event);
@@ -40,6 +42,8 @@ static void socks5_session_destroy(SessionHandlerP session);
 
 
 void socks5_init(char *dnsServerIp) {
+    stateLogCount = 0;
+
     sessionInputBufferSize = DEFAULT_INPUT_BUFFER_SIZE;
     sessionOutputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
     dnsBufferSize = dnsBufferSize;
@@ -82,6 +86,8 @@ void socks5_passive_accept(SelectorEvent *event){
     memcpy(&session->clientConnection.addr, (struct sockaddr *)&cli_addr, clilen);
 
     selector_register(event->s, session->clientConnection.fd, &clientHandler, OP_READ, session);
+
+    fprintf(stderr, "Registered new client %d\n", fd);
 }
 
 void socks5_register_server(FdSelector s, SessionHandlerP socks5_p){
@@ -89,6 +95,8 @@ void socks5_register_server(FdSelector s, SessionHandlerP socks5_p){
     socks5_p->serverConnection.state = OPEN;
 
     selector_register(s, socks5_p->serverConnection.fd, &serverHandler, OP_WRITE, socks5_p);
+
+    fprintf(stderr, "Registered new server %d\n", socks5_p->serverConnection.fd);
 }
 
 static void socks5_server_read(SelectorEvent *event){
@@ -106,6 +114,7 @@ static void socks5_server_read(SelectorEvent *event){
     ssize_t readBytes;
     size_t nbytes;
     uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
+    unsigned state;
 
     if(readBytes = read(event->fd, writePtr, nbytes), readBytes >= 0) {
         buffer_write_adv(buffer, readBytes);
@@ -113,8 +122,10 @@ static void socks5_server_read(SelectorEvent *event){
         if(readBytes == 0)
             session->serverConnection.state = CLOSING;
 
-        if(selector_state_machine_proccess_post_read(&session->sessionStateMachine, event) == FINISH)
+        if(state = selector_state_machine_proccess_post_read(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(session, event);
+
+        fprintf(stderr, "%d: Server Read, State %ud\n", stateLogCount, state);
     }
 
     else {
@@ -139,12 +150,15 @@ static void socks5_server_write(SelectorEvent *event){
     ssize_t writeBytes;
     size_t nbytes;
     uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
+    unsigned state;
     
     if((writeBytes = write(event->fd, readPtr, nbytes)) > 0){
         buffer_read_adv(buffer, writeBytes);
 
-        if(selector_state_machine_proccess_post_write(&session->sessionStateMachine, event) == FINISH)
+        if(state = selector_state_machine_proccess_post_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(session, event);
+
+        fprintf(stderr, "%d: Server Write, State %ud\n", stateLogCount, state);
     }
     else if (writeBytes == 0){
         fprintf(stderr, "%d wrote 0 bytes", session->serverConnection.fd);
@@ -170,6 +184,7 @@ static void socks5_client_read(SelectorEvent *event){
     ssize_t readBytes;
     size_t nbytes;
     uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
+    unsigned state;
 
     if(readBytes = read(event->fd, writePtr, nbytes), readBytes >= 0) {
         buffer_write_adv(buffer, readBytes);
@@ -177,8 +192,10 @@ static void socks5_client_read(SelectorEvent *event){
         if(readBytes == 0)
             session->clientConnection.state = CLOSING;
 
-        if(selector_state_machine_proccess_post_read(&session->sessionStateMachine, event) == FINISH)
+        if(state = selector_state_machine_proccess_post_read(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(session, event);
+
+        fprintf(stderr, "%d: Client Read, State %ud\n", stateLogCount, state);
     }
 
     else {
@@ -202,15 +219,18 @@ static void socks5_client_write(SelectorEvent *event){
     ssize_t writeBytes;
     size_t nbytes;
     uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
+    unsigned state;
     
     if( (writeBytes = write(event->fd, readPtr, nbytes)) > 0){
         buffer_read_adv(buffer, writeBytes);
 
-        if(selector_state_machine_proccess_post_write(&session->sessionStateMachine, event) == FINISH)
+        if(state = selector_state_machine_proccess_post_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(session, event);
+
+        fprintf(stderr, "%d: Client Write, State %ud\n", stateLogCount, state);
     }
     else if (writeBytes == 0){
-        fprintf(stderr, "%d wrote 0 bytes", session->clientConnection.fd);
+        fprintf(stderr, "%d wrote 0 bytes\n", session->clientConnection.fd);
     }
     else
     {
@@ -254,6 +274,8 @@ static void socks5_close_session(SessionHandlerP session, SelectorEvent *event) 
     close(session->serverConnection.fd);
 
     socks5_session_destroy(session);
+
+    fprintf(stderr, "Closed session from Client %d and Server\n", session->clientConnection.fd, session->serverConnection.fd);
 }
 
 static void socks5_session_destroy(SessionHandlerP session) {
