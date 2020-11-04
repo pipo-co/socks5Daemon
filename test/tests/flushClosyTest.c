@@ -9,7 +9,7 @@ uint8_t flushClosyDummyBufferOutput[] = {
 };
 
 
-START_TEST (flush_closy_test_core_on_post_write_server) {
+START_TEST (flush_closy_test_core_on_write_server) {
 
     SelectorEvent *event =  malloc(sizeof(*event));
 
@@ -57,7 +57,7 @@ START_TEST (flush_closy_test_core_on_post_write_server) {
     event->s = selector;
     event->data = socks5_p;
 
-    unsigned state = flush_closy_on_post_write(event);
+    unsigned state = flush_closy_on_write(event);
 
     ck_assert_uint_eq(state, FLUSH_CLOSY);
 
@@ -68,7 +68,7 @@ START_TEST (flush_closy_test_core_on_post_write_server) {
 }
 END_TEST
 
-START_TEST (flush_closy_test_core_on_post_write_client) {
+START_TEST (flush_closy_test_core_on_write_client) {
 
     SelectorEvent *event =  malloc(sizeof(*event));
 
@@ -116,7 +116,7 @@ START_TEST (flush_closy_test_core_on_post_write_client) {
     event->s = selector;
     event->data = socks5_p;
 
-    unsigned state = flush_closy_on_post_write(event);
+    unsigned state = flush_closy_on_write(event);
 
     ck_assert_uint_eq(state, FLUSH_CLOSY);
 
@@ -127,7 +127,7 @@ START_TEST (flush_closy_test_core_on_post_write_client) {
 }
 END_TEST
 
-START_TEST (flush_closy_test_core_on_post_write_success) {
+START_TEST (flush_closy_test_core_on_write_success) {
 
     SelectorEvent *event =  malloc(sizeof(*event));
 
@@ -174,7 +174,7 @@ START_TEST (flush_closy_test_core_on_post_write_success) {
     event->s = selector;
     event->data = socks5_p;
 
-    unsigned state = flush_closy_on_post_write(event);
+    unsigned state = flush_closy_on_write(event);
 
     ck_assert_uint_eq(state, FINISH);
 
@@ -191,9 +191,9 @@ Suite * flush_closy_test_suite(void) {
     TCase *tc  = tcase_create("core");
 
     
-    tcase_add_test(tc, flush_closy_test_core_on_post_write_server);
-    tcase_add_test(tc, flush_closy_test_core_on_post_write_client);
-    tcase_add_test(tc, flush_closy_test_core_on_post_write_success);
+    tcase_add_test(tc, flush_closy_test_core_on_write_server);
+    tcase_add_test(tc, flush_closy_test_core_on_write_client);
+    tcase_add_test(tc, flush_closy_test_core_on_write_success);
     
 
     suite_add_tcase(s, tc);

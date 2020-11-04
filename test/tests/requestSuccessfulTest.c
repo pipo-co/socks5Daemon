@@ -46,7 +46,7 @@ END_TEST
 
 
 
-START_TEST (request_successful_test_core_on_post_write_success) {
+START_TEST (request_successful_test_core_on_write_success) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -86,7 +86,7 @@ START_TEST (request_successful_test_core_on_post_write_success) {
     key->s = selector;
     key->data = socks5_p;
 
-    unsigned state = request_successful_on_post_write(key);
+    unsigned state = request_successful_on_write(key);
 
     ck_assert_uint_eq(state, FORWARDING);
 
@@ -98,7 +98,7 @@ START_TEST (request_successful_test_core_on_post_write_success) {
 }
 END_TEST
 
-START_TEST (request_successful_test_core_on_post_write_current) {
+START_TEST (request_successful_test_core_on_write_current) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
@@ -138,7 +138,7 @@ START_TEST (request_successful_test_core_on_post_write_current) {
     key->s = selector;
     key->data = socks5_p;
 
-    unsigned state = request_successful_on_post_write(key);
+    unsigned state = request_successful_on_write(key);
 
     ck_assert_uint_eq(state, REQUEST_SUCCESSFUL);
     
@@ -158,8 +158,8 @@ Suite * request_success_test_suite(void) {
 
     tcase_add_test(tc, request_successful_test_core_request_marshall_incomplete);
     tcase_add_test(tc, request_successful_test_core_request_marshall_complete);
-    tcase_add_test(tc, request_successful_test_core_on_post_write_success);
-    tcase_add_test(tc, request_successful_test_core_on_post_write_current);
+    tcase_add_test(tc, request_successful_test_core_on_write_success);
+    tcase_add_test(tc, request_successful_test_core_on_write_current);
     
 
     suite_add_tcase(s, tc);

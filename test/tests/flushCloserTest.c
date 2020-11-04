@@ -8,7 +8,7 @@ uint8_t flushCloserDummyBufferOutput[] = {
     0x05, 0x01, 0x02
 };
 
-START_TEST (flush_closer_test_core_on_post_read_flush_closing) {
+START_TEST (flush_closer_test_core_on_read_flush_closing) {
 
     SelectorEvent *event =  malloc(sizeof(*event));
 
@@ -20,7 +20,7 @@ START_TEST (flush_closer_test_core_on_post_read_flush_closing) {
     event->fd = socks5_p->clientConnection.fd;
     event->data = socks5_p;
 
-    unsigned state = flush_closer_on_post_read(event);
+    unsigned state = flush_closer_on_read(event);
 
     ck_assert_uint_eq(state, FLUSH_CLOSY);
 
@@ -38,7 +38,7 @@ START_TEST (flush_closer_test_core_on_post_read_flush_closing) {
     event2->fd = socks5_p2->serverConnection.fd;
     event2->data = socks5_p2;
 
-    state = flush_closer_on_post_read(event2);
+    state = flush_closer_on_read(event2);
 
     ck_assert_uint_eq(state, FLUSH_CLOSY);
 
@@ -47,7 +47,7 @@ START_TEST (flush_closer_test_core_on_post_read_flush_closing) {
 }
 END_TEST
 
-START_TEST (flush_closer_test_core_on_post_read_server) {
+START_TEST (flush_closer_test_core_on_read_server) {
 
     SelectorEvent *event =  malloc(sizeof(*event));
 
@@ -92,7 +92,7 @@ START_TEST (flush_closer_test_core_on_post_read_server) {
     event->s = selector;
     event->data = socks5_p;
 
-    unsigned state = flush_closer_on_post_read(event);
+    unsigned state = flush_closer_on_read(event);
 
     ck_assert_uint_eq(state, FLUSH_CLOSER);
 
@@ -103,7 +103,7 @@ START_TEST (flush_closer_test_core_on_post_read_server) {
 }
 END_TEST
 
-START_TEST (flush_closer_test_core_on_post_read_client) {
+START_TEST (flush_closer_test_core_on_read_client) {
 
     SelectorEvent *event =  malloc(sizeof(*event));
 
@@ -149,7 +149,7 @@ START_TEST (flush_closer_test_core_on_post_read_client) {
     event->s = selector;
     event->data = socks5_p;
 
-    unsigned state = flush_closer_on_post_read(event);
+    unsigned state = flush_closer_on_read(event);
 
     ck_assert_uint_eq(state, FLUSH_CLOSER);
 
@@ -160,7 +160,7 @@ START_TEST (flush_closer_test_core_on_post_read_client) {
 }
 END_TEST
 
-START_TEST (flush_closer_test_core_on_post_write_server) {
+START_TEST (flush_closer_test_core_on_write_server) {
 
     SelectorEvent *event =  malloc(sizeof(*event));
 
@@ -209,7 +209,7 @@ START_TEST (flush_closer_test_core_on_post_write_server) {
     event->s = selector;
     event->data = socks5_p;
 
-    unsigned state = flush_closer_on_post_write(event);
+    unsigned state = flush_closer_on_write(event);
 
     ck_assert_uint_eq(state, FLUSH_CLOSER);
 
@@ -220,7 +220,7 @@ START_TEST (flush_closer_test_core_on_post_write_server) {
 }
 END_TEST
 
-START_TEST (flush_closer_test_core_on_post_write_client) {
+START_TEST (flush_closer_test_core_on_write_client) {
 
     SelectorEvent *event =  malloc(sizeof(*event));
 
@@ -270,7 +270,7 @@ START_TEST (flush_closer_test_core_on_post_write_client) {
     event->s = selector;
     event->data = socks5_p;
 
-    unsigned state = flush_closer_on_post_write(event);
+    unsigned state = flush_closer_on_write(event);
 
     ck_assert_uint_eq(state, FLUSH_CLOSER);
 
@@ -286,11 +286,11 @@ Suite * flush_closer_test_suite(void) {
     Suite *s   = suite_create("flushCloser");
     TCase *tc  = tcase_create("core");
 
-    tcase_add_test(tc, flush_closer_test_core_on_post_read_flush_closing);
-    tcase_add_test(tc, flush_closer_test_core_on_post_read_server);
-    tcase_add_test(tc, flush_closer_test_core_on_post_read_client);
-    tcase_add_test(tc, flush_closer_test_core_on_post_write_server);
-    tcase_add_test(tc, flush_closer_test_core_on_post_write_client);
+    tcase_add_test(tc, flush_closer_test_core_on_read_flush_closing);
+    tcase_add_test(tc, flush_closer_test_core_on_read_server);
+    tcase_add_test(tc, flush_closer_test_core_on_read_client);
+    tcase_add_test(tc, flush_closer_test_core_on_write_server);
+    tcase_add_test(tc, flush_closer_test_core_on_write_client);
     
 
     suite_add_tcase(s, tc);
