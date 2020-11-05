@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 #include "selector/selector.h"
 #include "buffer/buffer.h"
@@ -96,6 +97,8 @@ typedef struct SessionHandler {
     ClientInfo clientInfo;
     
     SocksHeaders socksHeader;
+
+    time_t lastInteraction;
     
 } SessionHandler;
 

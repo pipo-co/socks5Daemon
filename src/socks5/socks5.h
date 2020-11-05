@@ -7,13 +7,15 @@
 #include "socks5/socks5SessionDefinition.h"
 #include "argsHandler/argsHandler.h"
 
-void socks5_init(Socks5Args * args);
+void socks5_init(Socks5Args *argsParam, double maxSessionInactivityParam);
 
 void socks5_passive_accept_ipv4(SelectorEvent *event);
 
 void socks5_passive_accept_ipv6(SelectorEvent *event);
 
 void socks5_register_server(FdSelector s, SessionHandlerP socks5_p);
+
+void socks5_cleanup_session(SelectorEvent *event);
 
 void socks5_register_dns(FdSelector s, SessionHandlerP socks5_p);
 

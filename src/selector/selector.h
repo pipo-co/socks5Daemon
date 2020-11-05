@@ -197,6 +197,12 @@ SelectorStatus
 selector_notify_block(FdSelector s,
                  const int   fd);
 
+void 
+selector_update_timeout(FdSelector s, time_t timeout);
+
+void
+selector_fd_cleanup(FdSelector s, void (*cleanup_function)(SelectorEvent *));
+
 #endif
 
 

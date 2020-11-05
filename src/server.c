@@ -34,6 +34,9 @@
 
 #define SERVER_BACKLOG 20
 
+#define DEFAULT_SELECT_TIMEOUT 7
+#define DEFAULT_MAX_SESSION_INACTIVITY 7
+
 static int generate_new_socket(struct sockaddr *addr, socklen_t addrLen,char ** errorMessage);
 static void sigterm_handler(const int signal);
 static int generate_register_ipv4_socket(FdSelector selector, char **errorMessage);
@@ -55,6 +58,8 @@ typedef struct ServerHandler {
 static Socks5Args args;
 static ServerHandler serverHandler;
 static bool done = false;
+
+static double cleanupInterval;
 
 int main(const int argc, char **argv) {
 
@@ -93,11 +98,22 @@ int main(const int argc, char **argv) {
 
     initialize_users();
 
-    socks5_init(&args);
+    socks5_init(&args, DEFAULT_MAX_SESSION_INACTIVITY);
+
+    cleanupInterval = DEFAULT_SELECT_TIMEOUT;
+
+    time_t lastFdCleanup = time(NULL);
 
     while(!done) {
         err_msg = NULL;
         ss = selector_select(selector);
+
+        // Cleanup selector sockets every cleanupInterval seconds
+        if(difftime(time(NULL), lastFdCleanup) >= cleanupInterval) {
+            fprintf(stdout, "Initializing Selector Cleanup\n");
+            selector_fd_cleanup(selector, socks5_cleanup_session);
+            lastFdCleanup = time(NULL);
+        }
 
         // statistics_print(); For logs every iteration
 
@@ -147,7 +163,7 @@ static FdSelector initialize_selector(char ** errorMessage) {
     const struct selector_init conf = {
         .signal = SIGALRM,
         .select_timeout = {
-            .tv_sec  = 10,
+            .tv_sec  = DEFAULT_SELECT_TIMEOUT,
             .tv_nsec = 0,
         },
     };
