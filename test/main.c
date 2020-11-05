@@ -34,7 +34,9 @@ typedef Suite *(*suiteSupplier)(void);
 #include "tests/stateMachineBuilderTest.c"
 #include "tests/dnsParserTest.c"
 #include "tests/httpDnsParserTest.c"
-//#include "tests/stateMachineTest.c"
+#include "tests/argsHandlerTest.c"
+#include "tests/userHandlerTest.c"
+#include "tests/statisticsTest.c"
 
 
 // Tests being exercised
