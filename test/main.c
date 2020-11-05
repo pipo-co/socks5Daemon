@@ -32,6 +32,7 @@ typedef Suite *(*suiteSupplier)(void);
 #include "tests/socks5Test.c"
 #include "tests/stateMachineTest.c"
 #include "tests/stateMachineBuilderTest.c"
+#include "tests/dnsParserTest.c"
 //#include "tests/stateMachineTest.c"
 
 
@@ -54,6 +55,7 @@ static const suiteSupplier suiteSuppliers[] = {
     forwarding_test_suite,
     flush_closer_test_suite,
     flush_closy_test_suite,
+    response_dns_parser_test_suite,
 };
 
 SRunner * test_srunner_init(void) {

@@ -202,3 +202,16 @@ struct sockaddr_in get_ipv4_sockaddr(const char * addr, uint16_t port) {
 
     return sockaddr;
 }
+
+//give credits https://stackoverflow.com/questions/3727421/expand-an-ipv6-address-so-i-can-print-it-to-stdout
+void ipv6_to_str_unexpanded(char * str, const struct in6_addr * addr) {
+   sprintf(str, "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
+                 (int)addr->s6_addr[0], (int)addr->s6_addr[1],
+                 (int)addr->s6_addr[2], (int)addr->s6_addr[3],
+                 (int)addr->s6_addr[4], (int)addr->s6_addr[5],
+                 (int)addr->s6_addr[6], (int)addr->s6_addr[7],
+                 (int)addr->s6_addr[8], (int)addr->s6_addr[9],
+                 (int)addr->s6_addr[10], (int)addr->s6_addr[11],
+                 (int)addr->s6_addr[12], (int)addr->s6_addr[13],
+                 (int)addr->s6_addr[14], (int)addr->s6_addr[15]);
+}
