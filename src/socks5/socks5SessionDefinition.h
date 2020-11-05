@@ -11,6 +11,7 @@
 
 #include "parsers/hello/helloParser.h"
 #include "parsers/authRequest/authRequestParser.h"
+#include "parsers/dns/dnsParser.h"
 #include "parsers/request/requestParser.h"
 
 typedef enum SessionState {
@@ -24,6 +25,8 @@ typedef enum SessionState {
     REQUEST_ERROR,
     IP_CONNECT,
     GENERATE_DNS_QUERY,
+    RESPONSE_DNS,
+    DNS_ERROR,
     REQUEST_SUCCESSFUL,
     FORWARDING,
     FLUSH_CLOSER,
@@ -61,6 +64,11 @@ typedef struct AuthRequestHeader{
     size_t bytes;
 } AuthRequestHeader;
 
+typedef struct DnsHeader{
+    ResponseDnsParser parser;
+    size_t bytes;
+} DnsHeader;
+
 typedef struct RequestHeader{
     RequestParser parser;
     size_t bytes;
@@ -70,7 +78,8 @@ typedef struct RequestHeader{
 typedef union SocksHeaders{
     HelloHeader helloHeader;    
     AuthRequestHeader authRequestHeader;
-    RequestHeader requestHeader;   
+    DnsHeader dnsHeader;   
+    RequestHeader requestHeader;
 } SocksHeaders;
 
 typedef struct SessionHandler {
