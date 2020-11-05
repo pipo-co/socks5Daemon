@@ -85,7 +85,7 @@ enum RequestParserState request_parser_feed(RequestParser *p, uint8_t b) {
 
             if(p->addressRemaining == 0){
                 p->address.ipv4.s_addr = htonl(p->address.ipv4.s_addr);
-               p->currentState = REQUEST_PARSER_PORT_HIGH;
+                p->currentState = REQUEST_PARSER_PORT_HIGH;
             }
             
         break;
