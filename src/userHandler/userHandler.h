@@ -2,13 +2,16 @@
 #define USER_HANDLER_H_a7f0b7011d5bc49decb646a7852c4531c07e17b5
 
 #include <stdbool.h>
+#include <stdint.h>
 
-#define ANONYMOUS_USER_CREDENTIALS "anon"
+#define ANONYMOUS_USER_CREDENTIALS "anonymous"
 
 typedef struct UserInfo {
 
     char *username;
     char *password;
+
+    uint64_t connectionCount; 
 
 } UserInfo;
 

@@ -1,5 +1,7 @@
 #include "authSuccessful.h"
 
+#include "statistics/statistics.h"
+
 #define AUTH_REPLY_SIZE 2
 
 static void auth_marshall(Buffer *b, size_t *bytes);

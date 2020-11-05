@@ -30,6 +30,7 @@
 #include "netutils/netutils.h"
 #include "socks5/socks5.h"
 #include "userHandler/userHandler.h"
+#include "statistics/statistics.h"
 
 #define SERVER_BACKLOG 20
 
@@ -88,6 +89,8 @@ int main(const int argc, char **argv) {
          goto finally;
     }
 
+    statistics_init();
+
     initialize_users();
 
     socks5_init(&args);
@@ -95,6 +98,9 @@ int main(const int argc, char **argv) {
     while(!done) {
         err_msg = NULL;
         ss = selector_select(selector);
+
+        // statistics_print(); For logs every iteration
+
         if(ss != SELECTOR_SUCCESS) {
             err_msg = "serving";
             goto finally;
@@ -222,6 +228,7 @@ static int generate_new_socket(struct sockaddr *addr, socklen_t addrLen,char ** 
 
     // man 7 ip. no importa reportar nada si falla.
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
+
     if(bind(fd, addr, addrLen) < 0) {
         *errorMessage = "Unable to bind socket";
         return -1;

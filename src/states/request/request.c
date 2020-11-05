@@ -10,12 +10,21 @@
 #include "socks5/socks5.h"
 #include "parsers/request/requestParser.h"
 #include "netutils/netutils.h"
+#include "statistics/statistics.h"
 
 static void request_on_arrival (SelectorEvent *event);
 static unsigned request_on_read(SelectorEvent *event);
 
 static void request_on_arrival (SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
+
+    statistics_inc_current_connection();
+
+    if(session->clientInfo.user->connectionCount == 0) {
+        statistics_inc_current_user_count();
+    }
+
+    session->clientInfo.user->connectionCount++;
 
     request_parser_init(&session->socksHeader.requestHeader.parser);
 
