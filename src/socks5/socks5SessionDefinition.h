@@ -44,7 +44,7 @@ typedef enum SocketState {
 
 typedef struct Connection {
     int fd;
-    struct sockaddr *addr;
+    struct sockaddr_storage addr;
     char *domainName;
     SocketState state;
 } Connection;

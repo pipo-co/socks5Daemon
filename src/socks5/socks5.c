@@ -497,23 +497,6 @@ static SessionHandlerP socks5_session_init(void) {
         return NULL;
     }
 
-    session->clientConnection.addr = malloc(ADDR_MAX_SIZE);
-    if(session->clientConnection.addr == NULL){
-        free(session);
-        free(inputBuffer);
-        free(outputBuffer);
-        return NULL;
-    }
-
-    session->serverConnection.addr = malloc(ADDR_MAX_SIZE);
-    if(session->serverConnection.addr == NULL){
-        free(session);
-        free(inputBuffer);
-        free(outputBuffer);
-        free(session->serverConnection.addr);
-        return NULL;
-    }
-    
     buffer_init(&session->input, sessionInputBufferSize, inputBuffer);
     buffer_init(&session->output, sessionOutputBufferSize, outputBuffer);
 
@@ -546,10 +529,6 @@ static void socks5_server_close(SelectorEvent *event) {
 }
 
 static void socks5_dns_close(SelectorEvent *event) {
-    
-    SessionHandler *session = event->data;
-    
-    free(session->dnsConnection.addr);
 
     close(event->fd);
 }

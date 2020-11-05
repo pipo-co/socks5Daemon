@@ -71,12 +71,12 @@ static unsigned request_on_read(SelectorEvent *event) {
         if (inet_pton(AF_INET, args->doh.ip, &ipv4addr)) {
             session->dnsConnection.state = OPEN;
             session->dnsConnection.fd = 
-                new_ipv4_socket(ipv4addr, htons(args->doh.port), session->dnsConnection.addr);
+                new_ipv4_socket(ipv4addr, htons(args->doh.port), (struct sockaddr *)&session->dnsConnection.addr);
 
         } else if (inet_pton(AF_INET6, args->doh.ip, &ipv6addr)) {
             session->dnsConnection.state = OPEN;
             session->dnsConnection.fd = 
-                new_ipv6_socket(ipv6addr, htons(args->doh.port), session->dnsConnection.addr);
+                new_ipv6_socket(ipv6addr, htons(args->doh.port), (struct sockaddr *)&session->dnsConnection.addr);
         } else {
             return REQUEST_ERROR;
         }
@@ -92,13 +92,13 @@ static unsigned request_on_read(SelectorEvent *event) {
     if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP4){
         session->serverConnection.fd = 
                 new_ipv4_socket(session->socksHeader.requestHeader.parser.address.ipv4,
-                        session->socksHeader.requestHeader.parser.port, session->serverConnection.addr);
+                        session->socksHeader.requestHeader.parser.port, (struct sockaddr *)&session->serverConnection.addr);
     }
 
     else if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP6){
         session->serverConnection.fd = 
                 new_ipv6_socket(session->socksHeader.requestHeader.parser.address.ipv6,
-                        session->socksHeader.requestHeader.parser.port, session->serverConnection.addr);
+                        session->socksHeader.requestHeader.parser.port, (struct sockaddr *)&session->serverConnection.addr);
     }
 
     else {

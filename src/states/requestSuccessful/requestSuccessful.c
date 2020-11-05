@@ -75,10 +75,10 @@ static void log_user_access(SessionHandlerP session) {
 
     strftime(date, 30, "%FT%TZ", nowTm);
 
-    sockaddr_to_human(clientAddress, SOCKADDR_TO_HUMAN_MIN, &session->clientConnection.addr);
+    sockaddr_to_human(clientAddress, SOCKADDR_TO_HUMAN_MIN, (struct sockaddr *)&session->clientConnection.addr);
 
     if(session->clientInfo.addressTypeSelected == SOCKS_5_ADD_TYPE_IP4 || session->clientInfo.addressTypeSelected == SOCKS_5_ADD_TYPE_IP6) {
-        sockaddr_to_human(serverAddress, SOCKADDR_TO_HUMAN_MIN, &session->serverConnection.addr);
+        sockaddr_to_human(serverAddress, SOCKADDR_TO_HUMAN_MIN, (struct sockaddr *)&session->serverConnection.addr);
         printableServerAddres = serverAddress;
     }
 
