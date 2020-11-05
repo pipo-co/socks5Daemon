@@ -2,6 +2,7 @@
 #define ARGS_H_VelRDAxzvnuFmwyaR0ftrkIinkT
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define MAX_USERS 10
 
@@ -10,12 +11,19 @@ struct users {
     char *pass;
 };
 
+typedef enum HttpMethod{
+    GET,
+    POST,
+} HttpMethod;
+
 struct doh {
     char           *host;
     char           *ip;
-    unsigned short  port;
+    uint16_t        port;
     char           *path;
     char           *query;
+    char           *httpVersion;
+    HttpMethod method;
 };
 
 typedef struct Socks5Args {
