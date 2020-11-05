@@ -65,7 +65,7 @@ START_TEST (request_parser_test_domain_name_feed) {
 
     ck_assert_uint_eq(REQUEST_PARSER_DOMAIN_LENGTH, p->currentState);
 
-    ck_assert_uint_eq(REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME, p->addressType);
+    ck_assert_uint_eq(SOCKS_5_ADD_TYPE_DOMAIN_NAME, p->addressType);
 
     uint8_t domainNameLength = input[4];
 
@@ -155,7 +155,7 @@ START_TEST (request_parser_test_domain_name_consume) {
     ck_assert(!errored);
 
     // Final Parser Check
-    ck_assert_uint_eq(REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME, p->addressType);
+    ck_assert_uint_eq(SOCKS_5_ADD_TYPE_DOMAIN_NAME, p->addressType);
 
     ck_assert_uint_eq(strlen(domainName), p->addressLength);
 
@@ -200,7 +200,7 @@ START_TEST (request_parser_test_ipv4_consume) {
 
     ck_assert_uint_eq(SOCKS_VERSION, p->version);
 
-    ck_assert_uint_eq(REQUEST_PARSER_ADD_TYPE_IP4, p->addressType);
+    ck_assert_uint_eq(SOCKS_5_ADD_TYPE_IP4, p->addressType);
 
     ck_assert_uint_eq(0, p->addressRemaining);
 
@@ -239,7 +239,7 @@ START_TEST (request_parser_test_ipv6_consume) {
 
     // Final Parser Check
 
-    ck_assert_uint_eq(REQUEST_PARSER_ADD_TYPE_IP6, p->addressType);
+    ck_assert_uint_eq(SOCKS_5_ADD_TYPE_IP6, p->addressType);
 
     ck_assert_uint_eq(REQUEST_PARSER_COMMAND_CONNECT, p->cmd);
 

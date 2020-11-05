@@ -44,13 +44,14 @@ typedef enum SocketState {
 typedef struct Connection {
     int fd;
     struct sockaddr addr;
+    char *domainName;
     SocketState state;
 } Connection;
 
-// Esto seguramente no vaya aca
 typedef struct ClientInfo {
   uint8_t authMethod;
-  uint32_t identifier;
+  uint8_t addressTypeSelected;
+  UserInfoP user;
 } ClientInfo;
 
 typedef struct HelloHeader{
@@ -94,8 +95,6 @@ typedef struct SessionHandler {
     ClientInfo clientInfo;
     
     SocksHeaders socksHeader;
-
-    UserInfoP user;
     
 } SessionHandler;
 

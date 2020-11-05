@@ -28,62 +28,62 @@ DoHHeader doh = {
 };
 size_t build_dns_query(char * domain, uint8_t *buffer, size_t size) ;
 uint8_t *convert_domain(char * domain, size_t *nbytes);
-int main() {
+// int main() {
 
-    uint8_t query[BUFSIZE];
-    char message[BUFSIZE];
-    size_t size = 0;
-    // size_t querySize = build_dns_query("google.com", query, BUFSIZE);
-    size_t querySize = build_dns_query("www.example.com", query, BUFSIZE);
+//     uint8_t query[BUFSIZE];
+//     char message[BUFSIZE];
+//     size_t size = 0;
+//     // size_t querySize = build_dns_query("google.com", query, BUFSIZE);
+//     size_t querySize = build_dns_query("www.example.com", query, BUFSIZE);
 
-    memcpy(message + size, method, strlen(method));
-    size += strlen(method);
-    memcpy(message + size, doh.path, strlen(doh.path));
-    size += strlen(doh.path);
-    memcpy(message + size, doh.httpVersion, strlen(doh.httpVersion));
-    size += strlen(doh.httpVersion);
-    memcpy(message + size, crlf, strlen(crlf));
-    size += strlen(crlf);
+//     memcpy(message + size, method, strlen(method));
+//     size += strlen(method);
+//     memcpy(message + size, doh.path, strlen(doh.path));
+//     size += strlen(doh.path);
+//     memcpy(message + size, doh.httpVersion, strlen(doh.httpVersion));
+//     size += strlen(doh.httpVersion);
+//     memcpy(message + size, crlf, strlen(crlf));
+//     size += strlen(crlf);
 
-    memcpy(message + size, acceptMessage, strlen(acceptMessage));
-    size += strlen(acceptMessage);
-    memcpy(message + size, crlf, strlen(crlf));
-    size += strlen(crlf);
+//     memcpy(message + size, acceptMessage, strlen(acceptMessage));
+//     size += strlen(acceptMessage);
+//     memcpy(message + size, crlf, strlen(crlf));
+//     size += strlen(crlf);
 
-    memcpy(message + size, contentType, strlen(contentType));
-    size += strlen(contentType);
-    memcpy(message + size, crlf, strlen(crlf));
-    size += strlen(crlf);
+//     memcpy(message + size, contentType, strlen(contentType));
+//     size += strlen(contentType);
+//     memcpy(message + size, crlf, strlen(crlf));
+//     size += strlen(crlf);
 
-    memcpy(message + size, contentLength, strlen(contentLength));
-    size += strlen(contentLength);
-    size += sprintf(message + size, "%zu", querySize);
-     //Length del mensaje
-    memcpy(message + size, crlf, strlen(crlf));
-    size += strlen(crlf);
-    memcpy(message + size, crlf, strlen(crlf));
-    size += strlen(crlf);
+//     memcpy(message + size, contentLength, strlen(contentLength));
+//     size += strlen(contentLength);
+//     size += sprintf(message + size, "%zu", querySize);
+//      //Length del mensaje
+//     memcpy(message + size, crlf, strlen(crlf));
+//     size += strlen(crlf);
+//     memcpy(message + size, crlf, strlen(crlf));
+//     size += strlen(crlf);
 
-    memcpy(message + size, query, querySize);
-    size += querySize;
+//     memcpy(message + size, query, querySize);
+//     size += querySize;
 
     
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
-    struct sockaddr_in a;
-    memset(&a, 0, sizeof(a));
-    a.sin_family = AF_INET;
-    a.sin_port = htons(8080);
-    inet_pton(AF_INET, "127.0.0.1", &a.sin_addr);
-    // inet_pton(AF_INET, "1.1.1.1", &a.sin_addr);
-    connect(fd, (struct sockaddr *)&a, sizeof(a));
-    send(fd, message, size, 0);
+//     int fd = socket(AF_INET, SOCK_STREAM, 0);
+//     struct sockaddr_in a;
+//     memset(&a, 0, sizeof(a));
+//     a.sin_family = AF_INET;
+//     a.sin_port = htons(8080);
+//     inet_pton(AF_INET, "127.0.0.1", &a.sin_addr);
+//     // inet_pton(AF_INET, "1.1.1.1", &a.sin_addr);
+//     connect(fd, (struct sockaddr *)&a, sizeof(a));
+//     send(fd, message, size, 0);
 
-    // sendto(fd, query, querySize, 0, (struct sockaddr*)&a, sizeof(a));
+//     // sendto(fd, query, querySize, 0, (struct sockaddr*)&a, sizeof(a));
 
 
 
-    return 0;
-}
+//     return 0;
+// }
 
 #define QR_QUERY 0
 #define OPCODE_QUERY 0
