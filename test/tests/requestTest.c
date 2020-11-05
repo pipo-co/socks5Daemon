@@ -56,18 +56,30 @@ START_TEST (request_test_core_on_arrival) {
 
     SelectorEvent * key = malloc(sizeof(*key));
 
-    SessionHandlerP socks5_p =  malloc(sizeof(*socks5_p));
+    SessionHandlerP session =  malloc(sizeof(*session));
 
-    key->data = socks5_p;
+    ClientInfo clientInfo;
+    UserInfo * user = malloc(sizeof(*user));
 
+    user->connectionCount = 0;
+    
+    clientInfo.user = user;
+
+    session->clientInfo = clientInfo;
+    
+    key->data = session;
+    
+    statistics_init();
+    
     request_on_arrival(key);
 
-    socks5_p = (SessionHandlerP) key->data;
+    session = (SessionHandlerP) key->data;
 
-    ck_assert_uint_eq(socks5_p->socksHeader.requestHeader.rep, SUCCESSFUL);
+    ck_assert_uint_eq(session->socksHeader.requestHeader.rep, SUCCESSFUL);
 
+    free(user);
     free(key);
-    free(socks5_p);
+    free(session);
 
 }
 END_TEST

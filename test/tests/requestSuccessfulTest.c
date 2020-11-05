@@ -50,16 +50,16 @@ START_TEST (request_successful_test_core_on_write_success) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
 
-    SessionHandlerP socks5_p = malloc(sizeof(*socks5_p));
+    SessionHandlerP session = malloc(sizeof(*session));
 
     SelectorStateMachine stm;
     stm.current = REQUEST_SUCCESSFUL;
-    socks5_p->sessionStateMachine = stm;
+    session->sessionStateMachine = stm;
 
     RequestHeader requestHeader;
     requestHeader.bytes = REPLY_SIZE;
     
-    socks5_p->socksHeader.requestHeader = requestHeader;
+    session->socksHeader.requestHeader = requestHeader;
 
     const int server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
@@ -83,16 +83,32 @@ START_TEST (request_successful_test_core_on_write_success) {
 
     selector_register(selector, server, &socksv5, OP_READ, NULL);
 
+    ClientInfo clientInfo;
+    Connection serverConnection;
+    UserInfo * user = malloc(sizeof(*user));
+
+    char buffer[10];
+    user->username = buffer;
+    user->connectionCount = 0;
+    memcpy(user->username, "tobi", sizeof("tobi"));
+    
+    clientInfo.user = user;
+
+    session->clientInfo = clientInfo;
+    session->serverConnection = serverConnection;
+    
     key->s = selector;
-    key->data = socks5_p;
+    key->data = session;
 
     unsigned state = request_successful_on_write(key);
 
     ck_assert_uint_eq(state, FORWARDING);
 
     selector_destroy(selector);
+    
+    free(user);
     free(key);
-    free(socks5_p);
+    free(session);
 
     
 }
