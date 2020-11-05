@@ -27,8 +27,6 @@ enum DnsQueryParserQueryFlags {
     NOT_TRUNCATE = 0,
     RECURSIVE_QUERY = 1,
     QUESTIONS_COUNT = 1,
-    AAAA = 28,
-    A = 1,
     IN = 1,
 };
 
@@ -71,32 +69,44 @@ struct dns_header header = {
 
 static size_t build_dns_query(char * domain, uint16_t qtype, uint8_t *buffer, size_t size) ;
 static uint8_t *convert_domain(char * domain, size_t *nbytes);
-static void add_header_value(char *buff, size_t *size, char *header, char *value);
-static void add_request_line(char *buff, size_t *size, char *method, char *path, char *version);
-
-extern struct doh * doh;
+static void add_header_value(uint8_t *buff, size_t *size, char *header, char *value);
+static void add_request_line(uint8_t *buff, size_t *size, char *method, char *path, char *version);
 
 void doh_builder_build(Buffer * buff, char * domain, uint16_t qtype) {
 
-    char *method = doh->method == GET ? "GET" : "POST";
-
     Socks5Args * args = socks5_get_args();
     struct doh *doh = &args->doh;
+    char *method = doh->method == GET ? "GET" : "POST";
+
+    if(qtype == AF_INET){
+        qtype = A;
+    } else if(qtype == AF_INET6) {
+        qtype = AAAA;
+    } else {
+        //Error
+    }
+
 
     size_t size = 0;
-    char *dohQuery = malloc(MAX_DOH_QUERY_SIZE);
+    uint8_t *dohQuery = malloc(MAX_DOH_QUERY_SIZE);
     
     uint8_t dnsQuery[MAX_DNS_QUERY_SIZE];
-    size_t querySize = build_dns_query(domain, dnsQuery, qtype, MAX_DNS_QUERY_SIZE);
+    size_t querySize = build_dns_query(domain, qtype, dnsQuery, MAX_DNS_QUERY_SIZE);
     
     char path[MAX_PATH_SIZE];
+    memset(path, '\0', MAX_PATH_SIZE);
     strcpy(path, doh->path);
     
-    if(method == GET) {
+    if(doh->method == GET) {
         size_t b64Lenght;
         char * b64Query = base64_encode(dnsQuery, querySize, &b64Lenght);
         strcat(path, doh->query);
-        strcat(path, b64Query);
+        strncat(path, b64Query, b64Lenght);
+        size_t pathLen = strlen(path);
+        for (size_t i = 0; path[pathLen - i - 1] == '=' ; i++) {
+            path[pathLen - i - 1] = '\0';
+        }
+        
     }
 
     add_request_line(dohQuery, &size, method, path, doh->httpVersion);
@@ -105,7 +115,7 @@ void doh_builder_build(Buffer * buff, char * domain, uint16_t qtype) {
 
     add_header_value(dohQuery,&size, hostName, doh->host);
 
-    if(method == POST) {
+    if(doh->method == POST) {
         add_header_value(dohQuery,&size, contentType, NULL);
 
         char querySizeBuff[MAX_QUERY_SIZE];
@@ -118,7 +128,7 @@ void doh_builder_build(Buffer * buff, char * domain, uint16_t qtype) {
     memcpy(dohQuery + size, crlf, strlen(crlf));
     size += strlen(crlf);
 
-    if(method == POST) {
+    if(doh->method == POST) {
         memcpy(dohQuery + size, dnsQuery, querySize);
         size += querySize;
     }
@@ -165,7 +175,6 @@ static size_t build_dns_query(char * domain, uint16_t qtype, uint8_t *buffer, si
 static uint8_t *convert_domain(char * domain, size_t *nbytes) {
     uint8_t *ans = malloc(MAX_DOMAIN_NAME);
     uint8_t size = 0;
-    size_t length = strlen(domain);
     
     if(*domain == '.') {
         goto finally;
@@ -196,7 +205,7 @@ finally:
     return ans;
 }
 
-static void add_header_value(char *buff, size_t *size, char *header, char *value) {
+static void add_header_value(uint8_t *buff, size_t *size, char *header, char *value) {
     
     memcpy(buff + *size, header, strlen(header));
     *size += strlen(header);
@@ -210,7 +219,7 @@ static void add_header_value(char *buff, size_t *size, char *header, char *value
     *size += strlen(crlf);
 }
 
-static void add_request_line(char *buff, size_t *size, char *method, char *path, char *version) {
+static void add_request_line(uint8_t *buff, size_t *size, char *method, char *path, char *version) {
     
     memcpy(buff + *size, method, strlen(method));
     *size += strlen(method);

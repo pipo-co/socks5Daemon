@@ -31,18 +31,21 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     }
     if (errored == true){
         //loggear ( response_dns_parser_error_message();)
-        return DNS_ERROR;
+        return REQUEST_ERROR;
+        // return DNS_ERROR;
     }
 
     if (session->socksHeader.dnsHeader.parser.totalQuestions == 0){
         //loggear ("dnsResponse: No questions received!")
         session->socksHeader.requestHeader.rep = COMMAND_NOT_SUPPORTED;
-         return DNS_ERROR;
+         return REQUEST_ERROR;
+        //  return DNS_ERROR;
     }
 
     if (session->socksHeader.dnsHeader.parser.currentAnswers == 0){
         //loggear ("dnsResponse: No answers received!")
-        return DNS_ERROR;
+        return REQUEST_ERROR;
+        // return DNS_ERROR;
     }
 
     return IP_CONNECT;

@@ -26,7 +26,7 @@ typedef enum SessionState {
     IP_CONNECT,
     GENERATE_DNS_QUERY,
     RESPONSE_DNS,
-    DNS_ERROR,
+    // DNS_ERROR,
     REQUEST_SUCCESSFUL,
     FORWARDING,
     FLUSH_CLOSER,
@@ -65,6 +65,7 @@ typedef struct AuthRequestHeader{
 } AuthRequestHeader;
 
 typedef struct DnsHeader{
+    Buffer buffer;
     ResponseDnsParser parser;
     size_t bytes;
 } DnsHeader;
@@ -78,8 +79,8 @@ typedef struct RequestHeader{
 typedef union SocksHeaders{
     HelloHeader helloHeader;    
     AuthRequestHeader authRequestHeader;
-    DnsHeader dnsHeader;   
     RequestHeader requestHeader;
+    DnsHeader dnsHeader;   
 } SocksHeaders;
 
 typedef struct SessionHandler {

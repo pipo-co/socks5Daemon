@@ -3,7 +3,7 @@ include Makefile.inc
 
 INCLUDE= -I$(PWD)
 
-SERVER=server
+SERVER=socks5d
 CLIENT=client
 
 # SOURCE_FILES = $(wildcard $(SOURCE_PATHS)/*.c)
@@ -16,7 +16,7 @@ clean:
 	rm -rf $(OBJECTS) $(SERVER) $(CLIENT)
 
 $(SERVER): server.c $(OBJECTS)
-	$(CC) $(CFLAGS) $^ -o socks5d
+	$(CC) $(CFLAGS) $^ -o $@
 
 $(CLIENT): client.c
 	$(CC) $(CFLAGS) $^ -o $@ 

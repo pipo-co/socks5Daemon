@@ -9,7 +9,7 @@
 #define RSV 0x00
 #define ATYP 0x01
 
-#define DOMAIN_NAME_MAX_LENGTH 255
+#define DOMAIN_NAME_MAX_LENGTH 256
 #define IP4_LENGTH 4
 #define IP6_LENGTH 16 // 4 * 8 + 7
 

@@ -12,7 +12,7 @@
 #define A 0x01
 #define AAAA 0x1c
 
-enum ResponseDnsParserState {
+typedef enum ResponseDnsParserState {
     RESPONSE_DNS_TRANSACTION_STATE,
     RESPONSE_DNS_FLAGS_STATE,
     RESPONSE_DNS_QUESTIONS_HIGH,
@@ -40,7 +40,7 @@ enum ResponseDnsParserState {
     RESPONSE_DNS_DONE,
     RESPONSE_DNS_ERROR,
 
-}ResponseDnsParserState;
+} ResponseDnsParserState;
 
 struct IpAddress{
     uint8_t ipType;

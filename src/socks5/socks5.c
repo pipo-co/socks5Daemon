@@ -40,6 +40,9 @@ static SessionHandlerP socks5_session_init(void);
 static void socks5_server_read(SelectorEvent *event);
 static void socks5_server_write(SelectorEvent *event);
 static void socks5_server_close(SelectorEvent *event);
+static void socks5_dns_read(SelectorEvent *event);
+static void socks5_dns_write(SelectorEvent *event);
+static void socks5_dns_close(SelectorEvent *event);
 static void socks5_client_read(SelectorEvent *event);
 static void socks5_client_write(SelectorEvent *event);
 static void socks5_client_close(SelectorEvent *event);
@@ -67,10 +70,10 @@ void socks5_init(Socks5Args *argsParam) {
     serverHandler.handle_close = socks5_server_close;
     serverHandler.handle_block = NULL;
 
-    // serverHandler.handle_read = socks5_dns_read;
-    // serverHandler.handle_write = socks5_dns_write;
-    // serverHandler.handle_close = NULL;
-    // serverHandler.handle_block = NULL;
+    DNSHandler.handle_read = socks5_dns_read;
+    DNSHandler.handle_write = socks5_dns_write;
+    DNSHandler.handle_close = socks5_dns_close;
+    DNSHandler.handle_block = NULL;
 
     socks5_session_state_machine_builder_init();
 
@@ -365,6 +368,107 @@ static void socks5_client_write(SelectorEvent *event){
     }
 }
 
+static void socks5_dns_read(SelectorEvent *event){
+    
+    SessionHandlerP session = (SessionHandlerP) event->data;
+
+    Buffer * buffer = &session->socksHeader.dnsHeader.buffer;
+    unsigned state;
+
+    if(!buffer_can_write(buffer)) {
+        fprintf(stderr, "ERROR: Read dns socket %d was registered on pselect, but there was no space in buffer\n", event->fd);
+
+        socks5_close_session(event);
+        return;
+    }
+
+    ssize_t readBytes;
+    size_t nbytes;
+    uint8_t * writePtr = buffer_write_ptr(buffer, &nbytes);
+
+    if(readBytes = recv(event->fd, writePtr, nbytes, MSG_NOSIGNAL), readBytes >= 0) {
+        buffer_write_adv(buffer, readBytes);
+
+        if(readBytes == 0) {
+
+            if(selector_state_machine_state(&session->sessionStateMachine) < FORWARDING) {
+                fprintf(stderr, "ERROR: Unexpected Dns Closing %d\n", session->clientConnection.fd);
+                socks5_close_session(event);
+                return;
+            }
+
+            session->serverConnection.state = CLOSING;
+        }
+
+        statistics_add_bytes_received(readBytes);
+            
+        if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
+            socks5_close_session(event);
+
+        fprintf(stderr, "%d: Dns Read, State %ud\n", stateLogCount, state);
+        stateLogCount++;
+    }
+
+    else {
+        if(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
+            perror("Dns Recv failed");
+            socks5_close_session(event);
+        }
+    }
+}
+
+static void socks5_dns_write(SelectorEvent *event){
+    
+    SessionHandlerP session = (SessionHandlerP) event->data;
+
+    Buffer * buffer = &session->socksHeader.dnsHeader.buffer;
+    unsigned state;
+
+    if(!buffer_can_read(buffer)) {
+        fprintf(stderr, "Write dns socket %d was registered on pselect, but there was nothing on buffer\n", event->fd);
+
+        if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
+            socks5_close_session(event);
+
+        fprintf(stderr, "%d: Dns Write, State %ud\n", stateLogCount, state);
+        stateLogCount++;
+
+        return;
+    }
+    
+    ssize_t writeBytes;
+    size_t nbytes;
+    uint8_t * readPtr = buffer_read_ptr(buffer, &nbytes);
+    
+    if(writeBytes = send(event->fd, readPtr, nbytes, MSG_NOSIGNAL), writeBytes > 0) {
+        buffer_read_adv(buffer, writeBytes);
+
+        statistics_add_bytes_sent(writeBytes);
+
+        if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
+            socks5_close_session(event);
+
+        fprintf(stderr, "%d: Dns Write, State %ud\n", stateLogCount, state);
+        stateLogCount++;
+    }
+
+    else if (writeBytes == 0){
+        fprintf(stderr, "%d wrote 0 bytes\n", session->serverConnection.fd);
+    }
+
+    else {
+        if(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
+
+            if(errno == EPIPE) {
+                fprintf(stderr, "Cierre forzoso de parte de dns\n");
+            }
+
+            perror("Sns Send failed");
+            socks5_close_session(event);
+        }
+    }
+}
+
 static SessionHandlerP socks5_session_init(void) {
 
     SessionHandlerP session = calloc(1, sizeof(*session));
@@ -428,6 +532,15 @@ static void socks5_client_close(SelectorEvent *event){
 }
 
 static void socks5_server_close(SelectorEvent *event) {
+    close(event->fd);
+}
+
+static void socks5_dns_close(SelectorEvent *event) {
+    
+    SessionHandler *session = event->data;
+    
+    free(session->dnsConnection.addr);
+
     close(event->fd);
 }
 

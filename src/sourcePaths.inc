@@ -19,7 +19,8 @@ STATES_PATH=states/*
 ERROR_STATES_PATH=states/errorStates/*
 CLOSE=states/close/*
 
-UTILITIES=utilities
+UTILITIES=utilities utilities/*
+
 
 USER_HANDLER=userHandler
 
