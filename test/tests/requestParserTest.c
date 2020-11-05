@@ -3,22 +3,23 @@
 #include <arpa/inet.h>
 
 // Archivo testeado
+#include "socksDefs.h"
 #include "parsers/request/requestParser.c"
 
 uint8_t request_parser_test_input_domain_success[] = {
-    SOCKS_VERSION, REQUEST_PARSER_COMMAND_CONNECT, 0x00, REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME,
+    SOCKS_VERSION, REQUEST_PARSER_COMMAND_CONNECT, 0x00, SOCKS_5_ADD_TYPE_DOMAIN_NAME,
     /* google.com */ 0x0a, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d,
     /* Port: 592 */ 0x02, 0x50,
 };
 
 uint8_t request_parser_test_input_ipv4_success[] = {
-    SOCKS_VERSION, REQUEST_PARSER_COMMAND_CONNECT, 0x00, REQUEST_PARSER_ADD_TYPE_IP4,
+    SOCKS_VERSION, REQUEST_PARSER_COMMAND_CONNECT, 0x00, SOCKS_5_ADD_TYPE_IP4,
     /* 172.217.173.14 */ 0xac, 0xd9, 0xad, 0x0e,
     /* Port: 592 */ 0x02, 0x50,
 };
 
 uint8_t request_parser_test_input_ipv6_success[] = {
-    SOCKS_VERSION, REQUEST_PARSER_COMMAND_CONNECT, 0x00, REQUEST_PARSER_ADD_TYPE_IP6,
+    SOCKS_VERSION, REQUEST_PARSER_COMMAND_CONNECT, 0x00, SOCKS_5_ADD_TYPE_IP6,
     /*2800:3f0:4002:809::200e*/ 0x28, 0x00, 0x03, 0xf0, 0x40, 0x02, 0x08, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x0e,
     /* Port: 592 */ 0x02, 0x50,
 };

@@ -3,7 +3,6 @@
 #include <arpa/inet.h>
 
 // Archivo testeado
-#include "netutils/netutils.h"
 #include "parsers/dns/dnsParser.c"
 
 uint8_t request_dns_parser_test_input_success[] = {
@@ -742,11 +741,11 @@ START_TEST (response_dns_test_parser_feed_success_ipv6) {
     response_dns_parser_feed(p, request_dns_parser_test_input_success_ipv6[pos++]);
     ck_assert(p->currentState == RESPONSE_DNS_DONE);
     ck_assert_uint_eq(p->currentAnswers, 1);
-    char buff[100];
+    char buffer[100];
 
-    inet_ntop(AF_INET6, &p->addresses[p->currentAnswers-1].addr.ipv6, buff, 100);
-    
-    ck_assert(!strcmp(buff,"2800:3f0:4002:800::200e"));
+    inet_ntop(AF_INET6, &p->addresses[p->currentAnswers-1].addr.ipv6, buffer, 100);
+
+    ck_assert(!strcmp(buffer,"2800:3f0:4002:800::200e"));
     
     free(p->addresses);
     free(p);

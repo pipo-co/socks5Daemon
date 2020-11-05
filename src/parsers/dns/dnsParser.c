@@ -66,6 +66,7 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
         case RESPONSE_DNS_ANSWERS_LOW:
             
             p->totalAnswers += b;
+            p->addresses = calloc(p->totalAnswers, sizeof(struct IpAddress));
             p->currentState = RESPONSE_DNS_AUTHORITY;
 
         break;
@@ -232,7 +233,7 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
             
             if(p->dataLenght == 4){
                 if(p->currentType == A){
-                    p->addresses = realloc(p->addresses, (1 + p->currentAnswers)*sizeof(struct IpAddress));
+                    
                     p->addresses[p->currentAnswers].ipType = IPV4;
                     p->addressRemaining = 4;
                     p->currentState = RESPONSE_DNS_IPV4_ADDRESS;
@@ -244,7 +245,7 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
             }
             else if (p->dataLenght == 16){
                 if(p->currentType == AAAA){
-                    p->addresses = realloc(p->addresses, (1 + p->currentAnswers)*sizeof(struct IpAddress));
+    
                     p->addresses[p->currentAnswers].ipType = IPV6;
                     p->addressRemaining = p->dataLenght;
                     p->currentState = RESPONSE_DNS_IPV6_ADDRESS;
