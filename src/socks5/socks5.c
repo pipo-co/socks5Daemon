@@ -32,7 +32,7 @@ static int sessionInputBufferSize;
 static int sessionOutputBufferSize;
 static int dnsBufferSize;
 
-static char *dnsServerIp;
+static double maxSessionInactivity;
 
 static int stateLogCount;
 
@@ -45,17 +45,17 @@ static void socks5_client_write(SelectorEvent *event);
 static void socks5_client_close(SelectorEvent *event);
 static void socks5_close_session(SelectorEvent *event);
 static int socks5_accept_connection(int passiveFd, struct sockaddr *cli_addr, socklen_t *clilen);
+static void socks5_close_session_util(SelectorEvent *event, bool byInactivity);
 
-void socks5_init(Socks5Args *argsParam) {
+void socks5_init(Socks5Args *argsParam, double maxSessionInactivityParam) {
 
     args = argsParam;
     stateLogCount = 0;
+    maxSessionInactivity = maxSessionInactivityParam;
 
     sessionInputBufferSize = DEFAULT_INPUT_BUFFER_SIZE;
     sessionOutputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
     dnsBufferSize = dnsBufferSize;
-
-    dnsServerIp = dnsServerIp;
 
     clientHandler.handle_read = socks5_client_read;
     clientHandler.handle_write = socks5_client_write;
@@ -149,6 +149,8 @@ void socks5_register_server(FdSelector s, SessionHandlerP socks5_p){
 static void socks5_server_read(SelectorEvent *event){
     SessionHandlerP session = (SessionHandlerP) event->data;
 
+    session->lastInteraction = time(NULL);
+
     Buffer * buffer = &session->output;
     unsigned state;
 
@@ -197,6 +199,8 @@ static void socks5_server_read(SelectorEvent *event){
 
 static void socks5_server_write(SelectorEvent *event){
     SessionHandlerP session = (SessionHandlerP) event->data;
+
+    session->lastInteraction = time(NULL);
 
     Buffer * buffer = &session->input;
     unsigned state;
@@ -249,6 +253,8 @@ static void socks5_server_write(SelectorEvent *event){
 static void socks5_client_read(SelectorEvent *event){
     SessionHandlerP session = (SessionHandlerP) event->data;
 
+    session->lastInteraction = time(NULL);
+
     Buffer * buffer = &session->input;
     unsigned state;
 
@@ -297,6 +303,8 @@ static void socks5_client_read(SelectorEvent *event){
 
 static void socks5_client_write(SelectorEvent *event){
     SessionHandlerP session = (SessionHandlerP) event->data;
+
+    session->lastInteraction = time(NULL);
 
     Buffer * buffer = &session->output;
     unsigned state;
@@ -363,6 +371,7 @@ static SessionHandlerP socks5_session_init(void) {
 
     session->clientConnection.state = OPEN;
     session->serverConnection.state = INVALID;
+    session->lastInteraction = time(NULL);
 
     return session;
 }
@@ -385,10 +394,29 @@ static void socks5_server_close(SelectorEvent *event) {
 }
 
 static void socks5_close_session(SelectorEvent *event) {
+    socks5_close_session_util(event, false);
+}
+
+void socks5_cleanup_session(SelectorEvent *event) {
+
+    // Socket pasivo
+    if(event->data == NULL) {
+        return;
+    }
 
     SessionHandlerP session = (SessionHandlerP) event->data;
 
-    statistics_dec_current_connection(false);
+    if(event->fd == session->clientConnection.fd && difftime(time(NULL), session->lastInteraction) >= maxSessionInactivity) {
+        fprintf(stdout, "Cleaned Up Session of Client Socket %d\n", event->fd);
+        socks5_close_session_util(event, true);
+    }
+}
+
+static void socks5_close_session_util(SelectorEvent *event, bool byInactivity) {
+
+    SessionHandlerP session = (SessionHandlerP) event->data;
+
+    statistics_dec_current_connection(byInactivity);
 
     if(session->clientInfo.user != NULL) {
         session->clientInfo.user->connectionCount--;

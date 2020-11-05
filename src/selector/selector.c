@@ -647,3 +647,26 @@ selector_select(FdSelector s) {
 finally:
     return ret;
 }
+
+void
+selector_fd_cleanup(FdSelector s, void (*cleanup_function)(SelectorEvent *)) {
+    int n = s->max_fd;
+    struct SelectorEvent event = {
+        .s = s,
+    };
+
+    for (int i = 0; i <= n; i++) {
+        struct Item *item = s->fds + i;
+        if(ITEM_USED(item)) {
+            event.fd   = item->fd;
+            event.data = item->data;
+            
+            cleanup_function(&event);
+        }
+    }
+}
+
+void 
+selector_update_timeout(FdSelector s, time_t timeout) {
+    s->master_t.tv_sec = timeout;
+}
