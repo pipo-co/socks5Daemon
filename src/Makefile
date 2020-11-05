@@ -16,7 +16,7 @@ clean:
 	rm -rf $(OBJECTS) $(SERVER) $(CLIENT)
 
 $(SERVER): server.c $(OBJECTS)
-	$(CC) $(CFLAGS) $^ -o main
+	$(CC) $(CFLAGS) $^ -o socks5d
 
 $(CLIENT): client.c
 	$(CC) $(CFLAGS) $^ -o $@ 

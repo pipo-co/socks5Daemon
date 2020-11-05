@@ -248,9 +248,6 @@ static void initialize_users() {
 
     user_handler_init();
 
-    // Anonymous User
-    user_handler_add_user("anon", "anon");
-
     for(int i = 0; i < args.user_count; i++) {
         user_handler_add_user(args.users[i].name, args.users[i].pass);
     }

@@ -21,7 +21,7 @@ static unsigned auth_error_on_write(SelectorEvent *event) {
 
     SessionHandlerP session = (SessionHandlerP) event->data;
 
-    if (session->socksHeader.authRequestHeader.bytes == AUTH_ERROR_REPLY_SIZE && !buffer_can_read(&session->output)) {
+    if(session->socksHeader.authRequestHeader.bytes == AUTH_ERROR_REPLY_SIZE && !buffer_can_read(&session->output)) {
         return FINISH;
     }
     

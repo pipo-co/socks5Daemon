@@ -60,7 +60,9 @@ Thumbs.db
 # Files
 server
 client
+main
 
 
 
 src/request/request_test.c
+src/main

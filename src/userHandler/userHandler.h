@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#define ANONYMOUS_USER_CREDENTIALS "anon"
+
 typedef struct UserInfo {
 
     char *username;

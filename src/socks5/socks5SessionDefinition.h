@@ -7,6 +7,7 @@
 #include "selector/selector.h"
 #include "buffer/buffer.h"
 #include "stateMachine/selectorStateMachine.h"
+#include "userHandler/userHandler.h"
 
 #include "parsers/hello/helloParser.h"
 #include "parsers/authRequest/authRequestParser.h"
@@ -84,6 +85,8 @@ typedef struct SessionHandler {
     ClientInfo clientInfo;
     
     SocksHeaders socksHeader;
+
+    UserInfoP user;
     
 } SessionHandler;
 

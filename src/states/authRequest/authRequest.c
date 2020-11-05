@@ -1,5 +1,7 @@
 #include "authRequest.h"
 
+#include <string.h>
+
 #include "parsers/authRequest/authRequestParser.h"
 
 static void auth_request_on_arrival(SelectorEvent *event);
@@ -31,21 +33,26 @@ static unsigned auth_request_on_read(SelectorEvent *event) {
         return AUTH_ERROR;
     }
 
-    if(h->parser.version != SOCKS_VERSION) {
+    if(h->parser.version != AUTH_VERSION) {
         //loggear ("AuthRequest: Invalid version!")
         return AUTH_ERROR;
     }
 
-    int loginAns = 0; 
-    //TODO falta login
-    // loginAns = login(h->parser.ulen, h->parser.username, h->parser.plen, h->parser.password, &loginError);
-    if(loginAns){
-        
-        return AUTH_SUCCESSFUL;
+    UserInfoP user = user_handler_get_user_by_username(h->parser.username);
+
+    // User does not exist
+    if(user == NULL) {
+        return AUTH_ERROR;
     }
-    
-    // loggear login_error(errored); 
-    return AUTH_ERROR;
+
+    // Password does not match
+    if(strcmp(user->password, h->parser.password) != 0) {
+        return AUTH_ERROR;
+    }
+
+    session->user = user;
+
+    return AUTH_SUCCESSFUL;
 }
 
 SelectorStateDefinition auth_request_state_definition_supplier(void) {

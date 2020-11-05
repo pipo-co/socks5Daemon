@@ -16,6 +16,9 @@ static void user_handler_free_user(UserInfoP user);
 
 void user_handler_init(void) {
     userMap = kh_init(STRING_TO_CHAR_MAP);
+
+    // Anonymous User
+    user_handler_add_user(ANONYMOUS_USER_CREDENTIALS, ANONYMOUS_USER_CREDENTIALS);
 }
 
 bool user_handler_user_exists(char *username) {

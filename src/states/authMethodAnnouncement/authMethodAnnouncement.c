@@ -1,5 +1,10 @@
 #include "authMethodAnnouncement.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "userHandler/userHandler.h"
+
 #define HELLO_REPLY_SIZE 2
 
 static void hello_marshall(Buffer *b, size_t * bytes, uint8_t method);
@@ -23,7 +28,13 @@ static unsigned method_announcement_on_write(SelectorEvent *event) {
     if(session->socksHeader.helloHeader.bytes == HELLO_REPLY_SIZE && !buffer_can_read(&session->output)) {
 
         if(session->clientInfo.authMethod == NO_AUTHENTICATION) {
-            //TODO: cargar credenciales del usuario anonimo
+            
+            session->user = user_handler_get_user_by_username(ANONYMOUS_USER_CREDENTIALS);
+            if(session->user == NULL) {
+                fprintf(stderr, "No anonymous user found. Aborting\n");
+                abort();
+            }
+
             return REQUEST;
         }
         else {
