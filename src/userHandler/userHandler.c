@@ -68,7 +68,10 @@ bool user_handler_delete_user(char *username) {
     khiter_t iter = kh_get(STRING_TO_CHAR_MAP, userMap, username);
 
     if(iter != kh_end(userMap)) {
+
+        user_handler_free_user(kh_value(userMap, iter));
         kh_del(STRING_TO_CHAR_MAP, userMap, iter);
+
         return true;
     }
 
@@ -106,6 +109,7 @@ static UserInfoP user_handler_create_user(char *username, char *password) {
 
     strcpy(newUser->username, username);
     strcpy(newUser->password, password);
+    newUser->connectionCount = 0;
 
     return newUser;
 }
