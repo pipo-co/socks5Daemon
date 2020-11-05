@@ -21,6 +21,8 @@
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 #define ERROR(msg) perror(msg);
 
+static Socks5Args * args;
+
 static FdHandler clientHandler;
 static FdHandler serverHandler;
 // static FdHandler DNSHandler;
@@ -41,8 +43,11 @@ static void socks5_client_read(SelectorEvent *event);
 static void socks5_client_write(SelectorEvent *event);
 static void socks5_client_close(SelectorEvent *event);
 static void socks5_close_session(SelectorEvent *event);
+static int socks5_accept_connection(int passiveFd, struct sockaddr *cli_addr, socklen_t *clilen);
 
-void socks5_init(char *dnsServerIp) {
+void socks5_init(Socks5Args *argsParam) {
+
+    args = argsParam;
     stateLogCount = 0;
 
     sessionInputBufferSize = DEFAULT_INPUT_BUFFER_SIZE;
@@ -67,6 +72,24 @@ void socks5_init(char *dnsServerIp) {
     // serverHandler.handle_block = NULL;
 
     socks5_session_state_machine_builder_init();
+
+    // Load Parsers
+    auth_request_parser_load();
+}
+
+static int socks5_accept_connection(int passiveFd, struct sockaddr *cli_addr, socklen_t *clilen) {
+
+    int fd;
+
+    do {
+        fd = accept(passiveFd, cli_addr, clilen);
+    } while(fd < 0 && (errno == EINTR));
+    
+    if(fd < 0 ) {
+        perror("Accept new client connection aborted");
+    }
+
+    return fd;
 }
 
 //tendría que haber otro passive accept para ipv6
@@ -75,11 +98,11 @@ void socks5_passive_accept_ipv4(SelectorEvent *event){
     struct sockaddr_in cli_addr;
     socklen_t clilen = sizeof(cli_addr);
 
-    // TODO: Verify connection
-    int fd = accept(event->fd,(struct sockaddr *)&cli_addr, &clilen);
-    
-    if (fd < 0 ){}
-       //logger stderr(errno)
+    int fd = socks5_accept_connection(event->fd, (struct sockaddr *)&cli_addr, &clilen);
+
+    if(fd < 0) {
+        return;
+    }
 
     SessionHandlerP session = socks5_session_init();
 
@@ -98,10 +121,11 @@ void socks5_passive_accept_ipv6(SelectorEvent *event){
     struct sockaddr_in6 cli_addr;
     socklen_t clilen = sizeof(cli_addr);
 
-    int fd = accept(event->fd, (struct sockaddr *)&cli_addr, &clilen);
-    
-    if (fd < 0 ){}
-       //logger stderr(errno)
+    int fd = socks5_accept_connection(event->fd, (struct sockaddr *)&cli_addr, &clilen);
+
+    if(fd < 0) {
+        return;
+    }
 
     SessionHandlerP session = socks5_session_init();
 
@@ -128,14 +152,9 @@ static void socks5_server_read(SelectorEvent *event){
     unsigned state;
 
     if(!buffer_can_write(buffer)) {
-        fprintf(stderr, "Read server socket %d was registered on pselect, but there was no space in buffer", event->fd);
+        fprintf(stderr, "ERROR: Read server socket %d was registered on pselect, but there was no space in buffer\n", event->fd);
 
-        if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
-            socks5_close_session(event);
-
-        fprintf(stderr, "%d: Server Read, State %ud\n", stateLogCount, state);
-        stateLogCount++;
-
+        socks5_close_session(event);
         return;
     }
 
@@ -147,9 +166,17 @@ static void socks5_server_read(SelectorEvent *event){
     if(readBytes = recv(event->fd, writePtr, nbytes, MSG_NOSIGNAL), readBytes >= 0) {
         buffer_write_adv(buffer, readBytes);
 
-        if(readBytes == 0)
-            session->serverConnection.state = CLOSING;
+        if(readBytes == 0) {
 
+            if(selector_state_machine_state(&session->sessionStateMachine) < FORWARDING) {
+                fprintf(stderr, "ERROR: Unexpected Server Closing %d\n", session->clientConnection.fd);
+                socks5_close_session(event);
+                return;
+            }
+
+            session->serverConnection.state = CLOSING;
+        }
+            
         if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
 
@@ -158,10 +185,11 @@ static void socks5_server_read(SelectorEvent *event){
     }
 
     else {
-        //cerrar conexion
-        //logger stderr(errno)
+        if(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
+            perror("Server Recv failed");
+            socks5_close_session(event);
+        }
     }
-      
 }
 
 static void socks5_server_write(SelectorEvent *event){
@@ -171,7 +199,7 @@ static void socks5_server_write(SelectorEvent *event){
     unsigned state;
 
     if(!buffer_can_read(buffer)) {
-        fprintf(stderr, "Write server socket %d was registered on pselect, but there was nothing on buffer", event->fd);
+        fprintf(stderr, "Write server socket %d was registered on pselect, but there was nothing on buffer\n", event->fd);
 
         if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
@@ -195,18 +223,22 @@ static void socks5_server_write(SelectorEvent *event){
         fprintf(stderr, "%d: Server Write, State %ud\n", stateLogCount, state);
         stateLogCount++;
     }
+
     else if (writeBytes == 0){
-        fprintf(stderr, "%d wrote 0 bytes", session->serverConnection.fd);
+        fprintf(stderr, "%d wrote 0 bytes\n", session->serverConnection.fd);
     }
-    else
-    {
-        if(errno == EPIPE) {
-            fprintf(stderr, "EPIPE on server write fd %d state %u", session->serverConnection.fd, session->serverConnection.state);
+
+    else {
+        if(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
+
+            if(errno == EPIPE) {
+                fprintf(stderr, "Cierre forzoso de parte de server\n");
+            }
+
+            perror("Server Send failed");
+            socks5_close_session(event);
         }
-        //cerrar conexion
-        //logger stderr(errno)
     }
-    
 }
 
 static void socks5_client_read(SelectorEvent *event){
@@ -216,11 +248,9 @@ static void socks5_client_read(SelectorEvent *event){
     unsigned state;
 
     if(!buffer_can_write(buffer)) {
-        fprintf(stderr, "Read client socket %d was registered on pselect, but there was no space in buffer", event->fd);
+        fprintf(stderr, "ERROR: Read client socket %d was registered on pselect, but there was no space in buffer\n", event->fd);
 
-        if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
-            socks5_close_session(event);
-
+        socks5_close_session(event);
         return;
     }
 
@@ -231,8 +261,16 @@ static void socks5_client_read(SelectorEvent *event){
     if(readBytes = recv(event->fd, writePtr, nbytes, MSG_NOSIGNAL), readBytes >= 0) {
         buffer_write_adv(buffer, readBytes);
 
-        if(readBytes == 0)
+        if(readBytes == 0) {
+
+            if(selector_state_machine_state(&session->sessionStateMachine) < FORWARDING) {
+                fprintf(stderr, "Unexpected Client Closing %d\n", session->clientConnection.fd);
+                socks5_close_session(event);
+                return;
+            }
+
             session->clientConnection.state = CLOSING;
+        }
 
         if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
@@ -242,8 +280,10 @@ static void socks5_client_read(SelectorEvent *event){
     }
 
     else {
-        //cerrar conexion
-        //logger stderr(errno)
+        if(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
+            perror("Client Recv failed");
+            socks5_close_session(event);
+        }
     }
    
 }
@@ -255,7 +295,7 @@ static void socks5_client_write(SelectorEvent *event){
     unsigned state;
 
     if(!buffer_can_read(buffer)) {
-        fprintf(stderr, "Write client socket %d was registered on pselect, but there was no space in buffer", event->fd);
+        fprintf(stderr, "Write client socket %d was registered on pselect, but there was no space in buffer\n", event->fd);
 
         if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
@@ -281,11 +321,15 @@ static void socks5_client_write(SelectorEvent *event){
     }
     else
     {
-        if(errno == EPIPE) {
-            fprintf(stderr, "EPIPE on server write fd %d state %u", session->serverConnection.fd, session->serverConnection.state);
+        if(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
+
+            if(errno == EPIPE) {
+                fprintf(stderr, "Cierre forzoso de parte de client\n");
+            }
+
+            perror("Client Send failed");
+            socks5_close_session(event);
         }
-        //cerrar conexion
-        //logger stderr(errno)
     }
 }
 

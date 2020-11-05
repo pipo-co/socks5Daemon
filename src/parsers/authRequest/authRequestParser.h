@@ -5,34 +5,49 @@
 #include <stdbool.h>
 
 #include "buffer/buffer.h"
-#define PARAMETER_MAX_SIZE 255
 
-enum AuthRequestParserState {
+#define CREDENTIAL_MAX_SIZE 255
+
+typedef enum AuthRequestParserState {
     AUTH_REQUEST_PARSER_VERSION,
     AUTH_REQUEST_PARSER_ULEN,
     AUTH_REQUEST_PARSER_UNAME,
     AUTH_REQUEST_PARSER_PLEN,
     AUTH_REQUEST_PARSER_PASSWORD,
+    AUTH_REQUEST_PARSER_SUCCESS,
     AUTH_REQUEST_PARSER_INVALID_STATE,
-};
+} AuthRequestParserState;
+
+typedef enum AuthRequestErrorType {
+    AUTH_REQUEST_VALID,
+    AUTH_REQUEST_INVALID_VERSION,
+    AUTH_REQUEST_INVALID_ULEN,
+    AUTH_REQUEST_INVALID_PLEN,
+} AuthRequestErrorType;
 
 typedef struct AuthRequestParser {
 
-    void *data;
-
     uint8_t version;
+
+    AuthRequestErrorType errorType;
 
     uint8_t ulen;
 
-    char username[PARAMETER_MAX_SIZE];
+    char username[CREDENTIAL_MAX_SIZE + 1];
 
     uint8_t plen;
 
-    char password[PARAMETER_MAX_SIZE];
+    char password[CREDENTIAL_MAX_SIZE + 1];
 
-    enum AuthRequestParserState current_state;
+//  --- PRIVATE ---
+
+    AuthRequestParserState currentState;
+
+    uint8_t credentialCharPointer;
 
 }AuthRequestParser;
+
+void auth_request_parser_load(void);
 
 void auth_request_parser_init(AuthRequestParser *p);
 
@@ -42,6 +57,6 @@ bool auth_request_parser_consume(Buffer *buffer, AuthRequestParser *p, bool *err
 
 bool auth_request_parser_is_done(enum AuthRequestParserState state, bool *errored);
 
-char * auth_request_parser_error_message(enum AuthRequestParserState state);
+char * auth_request_parser_error_message(AuthRequestParser *p);
 
 #endif

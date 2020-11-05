@@ -25,10 +25,11 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
+#include "argsHandler/argsHandler.h"
 #include "selector/selector.h"
 #include "netutils/netutils.h"
 #include "socks5/socks5.h"
-//#include "socks5nio.h"
+#include "userHandler/userHandler.h"
 
 #define SERVER_BACKLOG 20
 
@@ -37,42 +38,28 @@ static void sigterm_handler(const int signal);
 static int generate_register_ipv4_socket(FdSelector selector, char **errorMessage);
 static int generate_register_ipv6_socket(FdSelector selector, char **errorMessage);
 static FdSelector initialize_selector(char ** errorMessage);
+static void initialize_users();
 
 
-struct ServerHandler {
+typedef struct ServerHandler {
     struct in_addr ipv4addr;
     struct in6_addr ipv6addr;
     in_port_t port;
-    struct FdHandler ipv6Handler;
-    struct FdHandler ipv4Handler;
+    FdHandler ipv6Handler;
+    FdHandler ipv4Handler;
     int ipv4Fd;
     int ipv6Fd;
-};
+} ServerHandler;
 
-static struct ServerHandler serverHandler;
+static Socks5Args args;
+static ServerHandler serverHandler;
 static bool done = false;
 
-int main(const int argc, const char **argv) {
+int main(const int argc, char **argv) {
+
+    parse_args(argc, argv, &args);
     
-    serverHandler.port = htons(1080);
-
-    if(argc == 1) {
-        // utilizamos el default
-    } else if(argc == 2) {
-        char *end     = 0;
-        const long sl = strtol(argv[1], &end, 10);
-
-        if (end == argv[1]|| '\0' != *end 
-           || ((LONG_MIN == sl || LONG_MAX == sl) && ERANGE == errno)
-           || sl < 0 || sl > USHRT_MAX) {
-            fprintf(stderr, "port should be an integer: %s\n", argv[1]);
-            return 1;
-        }
-        serverHandler.port = htons(sl);
-    } else {
-        fprintf(stderr, "Usage: %s <port>\n", argv[0]);
-        return 1;
-    }
+    serverHandler.port = htons(args.socks_port);
 
     // no tenemos nada que leer de stdin
     close(STDIN_FILENO);
@@ -91,7 +78,7 @@ int main(const int argc, const char **argv) {
 
     serverHandler.ipv4addr.s_addr = htonl(INADDR_ANY);
     
-    if(generate_register_ipv4_socket(selector, &err_msg) != 0 ) {
+    if(generate_register_ipv4_socket(selector, &err_msg) != 0) {
          goto finally;
     }
     
@@ -101,7 +88,9 @@ int main(const int argc, const char **argv) {
          goto finally;
     }
 
-    socks5_init("8.8.8.8");
+    initialize_users();
+
+    socks5_init(&args);
 
     while(!done) {
         err_msg = NULL;
@@ -133,6 +122,7 @@ finally:
     }
     selector_close();
 
+    user_handler_destroy();
     // socksv5_pool_destroy();
 
     if(serverHandler.ipv4Fd >= 0) {
@@ -237,7 +227,7 @@ static int generate_new_socket(struct sockaddr *addr, socklen_t addrLen,char ** 
         return -1;
     }
 
-    if (listen(fd, SERVER_BACKLOG) < 0) {
+    if(listen(fd, SERVER_BACKLOG) < 0) {
         *errorMessage = "Unable to listen";
         return -1;
     }
@@ -252,4 +242,16 @@ static int generate_new_socket(struct sockaddr *addr, socklen_t addrLen,char ** 
 static void sigterm_handler(const int signal) {
     printf("signal %d, cleaning up and exiting\n", signal);
     done = true;
+}
+
+static void initialize_users() {
+
+    user_handler_init();
+
+    // Anonymous User
+    user_handler_add_user("anon", "anon");
+
+    for(int i = 0; i < args.user_count; i++) {
+        user_handler_add_user(args.users[i].name, args.users[i].pass);
+    }
 }

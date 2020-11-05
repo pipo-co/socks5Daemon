@@ -5,8 +5,9 @@
 #include "buffer/buffer.h"
 #include "stateMachine/selectorStateMachine.h"
 #include "socks5/socks5SessionDefinition.h"
+#include "argsHandler/argsHandler.h"
 
-void socks5_init(char *dnsServerIp);
+void socks5_init(Socks5Args * args);
 
 void socks5_passive_accept_ipv4(SelectorEvent *event);
 
