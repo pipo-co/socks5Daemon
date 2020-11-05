@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 
 // Archivo testeado
+#include "netutils/netutils.h"
 #include "parsers/dns/dnsParser.c"
 
 uint8_t request_dns_parser_test_input_success[] = {
@@ -49,7 +50,7 @@ START_TEST (response_dns_test_parser_init) {
     response_dns_parser_init(p);
 
     ck_assert_uint_eq(p->currentState, RESPONSE_DNS_TRANSACTION_STATE);
-    ck_assert_uint_eq(p->addresses, NULL);
+    //ck_assert_uint_eq(p->addresses, NULL);
     ck_assert_uint_eq(p->totalQuestions, 0);
     ck_assert_uint_eq(p->totalAnswers, 0);
     ck_assert_uint_eq(p->currentAnswers, 0);
@@ -242,7 +243,6 @@ START_TEST (response_dns_test_parser_consume) {
     ResponseDnsParser * p = malloc(sizeof(*p));
     response_dns_parser_init(p);
 
-    uint8_t method;
     bool errored;
 
     Buffer *b = malloc(sizeof(*b));
@@ -485,9 +485,9 @@ START_TEST (response_dns_test_parser_feed_multiple_success) {
     response_dns_parser_feed(p, request_dns_parser_test_input_multiple_success[pos++]);
     ck_assert(p->currentState == RESPONSE_DNS_ANSWERS_NAME_FIRST_BYTE);
     ck_assert_uint_eq(p->currentAnswers, 2);
-    char buffer2[50];
-    inet_ntop(AF_INET, &p->addresses[p->currentAnswers-1].addr.ipv4, buffer2,50);
-    ck_assert(!strcmp(buffer2, "205.251.242.103"));
+
+    inet_ntop(AF_INET, &p->addresses[p->currentAnswers-1].addr.ipv4, buffer,50);
+    ck_assert(!strcmp(buffer, "205.251.242.103"));
 
     response_dns_parser_feed(p, request_dns_parser_test_input_multiple_success[pos++]);
     ck_assert(p->currentState == RESPONSE_DNS_REFERENCE_SECOND_BYTE);
@@ -537,9 +537,9 @@ START_TEST (response_dns_test_parser_feed_multiple_success) {
     response_dns_parser_feed(p, request_dns_parser_test_input_multiple_success[pos++]);
     ck_assert(p->currentState == RESPONSE_DNS_DONE);
     ck_assert_uint_eq(p->currentAnswers, 3);
-    char buffer3[50];
-    inet_ntop(AF_INET, &p->addresses[p->currentAnswers-1].addr.ipv4, buffer2,50);
-    ck_assert(!strcmp(buffer2, "176.32.103.205"));
+    
+    inet_ntop(AF_INET, &p->addresses[p->currentAnswers-1].addr.ipv4, buffer,50);
+    ck_assert(!strcmp(buffer, "176.32.103.205"));
 
     free(p->addresses);
     free(p);
@@ -552,7 +552,6 @@ START_TEST (response_dns_test_parser_consume_multiple_success) {
     ResponseDnsParser * p = malloc(sizeof(*p));
     response_dns_parser_init(p);
 
-    uint8_t method;
     bool errored;
 
     Buffer *b = malloc(sizeof(*b));
@@ -743,11 +742,11 @@ START_TEST (response_dns_test_parser_feed_success_ipv6) {
     response_dns_parser_feed(p, request_dns_parser_test_input_success_ipv6[pos++]);
     ck_assert(p->currentState == RESPONSE_DNS_DONE);
     ck_assert_uint_eq(p->currentAnswers, 1);
-    char buffer[100];
+    char buff[100];
 
-    ipv6_to_str_unexpanded(buffer, &p->addresses[p->currentAnswers-1].addr.ipv6.__in6_u);
-
-    ck_assert(!strcmp(buffer,"2800:03f0:4002:0800:0000:0000:0000:200e"));
+    inet_ntop(AF_INET6, &p->addresses[p->currentAnswers-1].addr.ipv6, buff, 100);
+    
+    ck_assert(!strcmp(buff,"2800:3f0:4002:800::200e"));
     
     free(p->addresses);
     free(p);
