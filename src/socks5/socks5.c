@@ -11,7 +11,7 @@
 #include <netinet/tcp.h>
 
 #include "socks5.h"
-
+#include "netutils/netutils.h"
 #include "stateMachineBuilder/stateMachineBuilder.h"
 #include "statistics/statistics.h"
 
@@ -26,7 +26,7 @@ static Socks5Args * args;
 
 static FdHandler clientHandler;
 static FdHandler serverHandler;
-// static FdHandler DNSHandler;
+static FdHandler DNSHandler;
 
 static int sessionInputBufferSize;
 static int sessionOutputBufferSize;
@@ -106,6 +106,11 @@ void socks5_passive_accept_ipv4(SelectorEvent *event){
     }
 
     SessionHandlerP session = socks5_session_init();
+    if(session == NULL) {
+        close(fd);
+        fprintf(stderr, "Session initialization failed: Not enough memory.\n");
+        return;
+    }
 
     session->clientConnection.fd = fd;
 
@@ -129,6 +134,11 @@ void socks5_passive_accept_ipv6(SelectorEvent *event){
     }
 
     SessionHandlerP session = socks5_session_init();
+    if(session == NULL) {
+        close(fd);
+        fprintf(stderr, "Session initialization failed: Not enough memory.\n");
+        return;
+    }
 
     session->clientConnection.fd = fd;
 
@@ -144,6 +154,19 @@ void socks5_register_server(FdSelector s, SessionHandlerP socks5_p){
     selector_register(s, socks5_p->serverConnection.fd, &serverHandler, OP_WRITE, socks5_p);
 
     fprintf(stderr, "Registered new server %d\n", socks5_p->serverConnection.fd);
+}
+
+void socks5_register_dns(FdSelector s, SessionHandlerP socks5_p){
+
+    socks5_p->dnsConnection.state = OPEN;
+
+    selector_register(s, socks5_p->dnsConnection.fd, &DNSHandler, OP_WRITE, socks5_p);
+
+    fprintf(stderr, "Registered new dns %d\n", socks5_p->dnsConnection.fd);
+}
+
+Socks5Args *socks5_get_args(void){
+    return args;
 }
 
 static void socks5_server_read(SelectorEvent *event){
@@ -353,17 +376,40 @@ static void socks5_client_write(SelectorEvent *event){
 static SessionHandlerP socks5_session_init(void) {
 
     SessionHandlerP session = calloc(1, sizeof(*session));
-    if(session == NULL)
+    if(session == NULL){
         return NULL;
+    }
 
     uint8_t *inputBuffer = malloc(sessionInputBufferSize*sizeof(*inputBuffer));
-    if(inputBuffer == NULL)
+    if(inputBuffer == NULL){
+        free(session);
         return NULL;
+    }
         
     uint8_t *outputBuffer = malloc(sessionOutputBufferSize*sizeof(*outputBuffer));
-    if(outputBuffer == NULL)
+    if(outputBuffer == NULL){
+        free(session);
+        free(inputBuffer);
         return NULL;
+    }
 
+    session->clientConnection.addr = malloc(ADDR_MAX_SIZE);
+    if(session->clientConnection.addr == NULL){
+        free(session);
+        free(inputBuffer);
+        free(outputBuffer);
+        return NULL;
+    }
+
+    session->serverConnection.addr = malloc(ADDR_MAX_SIZE);
+    if(session->serverConnection.addr == NULL){
+        free(session);
+        free(inputBuffer);
+        free(outputBuffer);
+        free(session->serverConnection.addr);
+        return NULL;
+    }
+    
     buffer_init(&session->input, sessionInputBufferSize, inputBuffer);
     buffer_init(&session->output, sessionOutputBufferSize, outputBuffer);
 
@@ -371,6 +417,8 @@ static SessionHandlerP socks5_session_init(void) {
 
     session->clientConnection.state = OPEN;
     session->serverConnection.state = INVALID;
+    session->dnsConnection.state = INVALID;
+
     session->lastInteraction = time(NULL);
 
     return session;

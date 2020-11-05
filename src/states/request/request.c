@@ -6,6 +6,10 @@
 #include <errno.h>
 #include <string.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
 #include "buffer/buffer.h"
 #include "socks5/socks5.h"
 #include "parsers/request/requestParser.h"
@@ -59,25 +63,42 @@ static unsigned request_on_read(SelectorEvent *event) {
         return REQUEST_ERROR;
     }
     
-    if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_DOMAIN_NAME) {
-        
-        // TODO: add domain name to session->clientInfo.domainName
+    if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_DOMAIN_NAME){
+        Socks5Args * args = socks5_get_args(); 
+        struct in_addr ipv4addr;
+        struct in6_addr ipv6addr;
 
-        // connectDoh(socks5_p)
-        //registrar al selector el fd del dns
-        return FINISH; // TODO: GENERATE_DNS_QUERY; 
+        if (inet_pton(AF_INET, args->doh.ip, &ipv4addr)) {
+            session->dnsConnection.state = OPEN;
+            session->dnsConnection.fd = 
+                new_ipv4_socket(ipv4addr, htons(args->doh.port), session->dnsConnection.addr);
+
+        } else if (inet_pton(AF_INET6, args->doh.ip, &ipv6addr)) {
+            session->dnsConnection.state = OPEN;
+            session->dnsConnection.fd = 
+                new_ipv6_socket(ipv6addr, htons(args->doh.port), session->dnsConnection.addr);
+        } else {
+            return REQUEST_ERROR;
+        }
+        
+        if (session->dnsConnection.fd  == -1) {
+            return REQUEST_ERROR;      
+        }
+
+        socks5_register_server(event->s, session);
+        return GENERATE_DNS_QUERY; // TODO: GENERATE_DNS_QUERY; 
     }
     
     if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP4){
         session->serverConnection.fd = 
                 new_ipv4_socket(session->socksHeader.requestHeader.parser.address.ipv4,
-                        session->socksHeader.requestHeader.parser.port, &session->serverConnection.addr);
+                        session->socksHeader.requestHeader.parser.port, session->serverConnection.addr);
     }
 
     else if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP6){
         session->serverConnection.fd = 
                 new_ipv6_socket(session->socksHeader.requestHeader.parser.address.ipv6,
-                        session->socksHeader.requestHeader.parser.port, &session->serverConnection.addr);
+                        session->socksHeader.requestHeader.parser.port, session->serverConnection.addr);
     }
 
     else {

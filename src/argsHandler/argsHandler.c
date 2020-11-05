@@ -72,6 +72,7 @@ void
 parse_args(const int argc, char **argv, Socks5Args *args) {
     memset(args, 0, sizeof(*args)); // sobre todo para setear en null los punteros de users
 
+    // Default values
     args->socks_addr = "0.0.0.0";
     args->socks_port = 1080;
 
@@ -85,6 +86,8 @@ parse_args(const int argc, char **argv, Socks5Args *args) {
     args->doh.port = 8053;
     args->doh.path = "/getnsrecord";
     args->doh.query = "?dns=";
+    args->doh.method = GET;
+    args->doh.httpVersion = "HTTP/1.0";
 
     args->user_count = 0;
 
