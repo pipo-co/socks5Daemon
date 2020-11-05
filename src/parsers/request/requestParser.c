@@ -37,14 +37,14 @@ enum RequestParserState request_parser_feed(RequestParser *p, uint8_t b) {
 
             p->addressType = b;
 
-            if(b == REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME){
+            if(b == SOCKS_5_ADD_TYPE_DOMAIN_NAME){
                 p->currentState = REQUEST_PARSER_DOMAIN_LENGTH;
             } 
-            else if(b == REQUEST_PARSER_ADD_TYPE_IP4) {
+            else if(b == SOCKS_5_ADD_TYPE_IP4) {
                 p->addressRemaining = IP4_LENGTH;
                 p->currentState = REQUEST_PARSER_IPV4_ADDRESS;
             } 
-            else if (b == REQUEST_PARSER_ADD_TYPE_IP6) {
+            else if (b == SOCKS_5_ADD_TYPE_IP6) {
                 p->addressRemaining = p->addressLength = IP6_LENGTH;
                 p->currentState = REQUEST_PARSER_IPV6_ADDRESS;
             }

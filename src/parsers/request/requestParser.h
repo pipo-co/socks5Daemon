@@ -6,26 +6,14 @@
 #include <netinet/in.h>
 
 #include "buffer/buffer.h"
-
-#define DOMAIN_NAME_MAX_LENGTH 255
-#define IP4_LENGTH 4
-#define IP6_LENGTH 16 // 4 * 8 + 7
+#include "socksDefs.h"
 
 #define REQUEST_ADDRESS_MAX_LENGTH (DOMAIN_NAME_MAX_LENGTH + 1)
-
-#define SOCKS_VERSION 0x05
 
 // Valid Commands
 #define REQUEST_PARSER_COMMAND_CONNECT 0x01
 
-// Valid Address Type
-typedef enum { 
-    REQUEST_PARSER_ADD_TYPE_IP4 = 0x01, 
-    REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME = 0x03 , 
-    REQUEST_PARSER_ADD_TYPE_IP6 = 0x04
-}RequestIpEnum;
-
-enum RequestParserState {
+typedef enum RequestParserState {
     REQUEST_PARSER_VERSION,
     REQUEST_PARSER_COMMAND,
     REQUEST_PARSER_RESERVED,
@@ -36,10 +24,10 @@ enum RequestParserState {
     REQUEST_PARSER_IPV6_ADDRESS,
     REQUEST_PARSER_PORT_HIGH,
     REQUEST_PARSER_PORT_LOW,
-    REQUEST_PARSER_DONE, //DONE=???
+    REQUEST_PARSER_DONE,
     REQUEST_PARSER_ERROR_UNSUPPORTED_ADD_TYPE,
     REQUEST_PARSER_ERROR_INVALID_STATE,
-};
+} RequestParserState;
 
 typedef union RequestParserAddress {
 

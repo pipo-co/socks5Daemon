@@ -14,12 +14,21 @@
 #include "socks5/socks5.h"
 #include "parsers/request/requestParser.h"
 #include "netutils/netutils.h"
+#include "statistics/statistics.h"
 
 static void request_on_arrival (SelectorEvent *event);
 static unsigned request_on_read(SelectorEvent *event);
 
 static void request_on_arrival (SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
+
+    statistics_inc_current_connection();
+
+    if(session->clientInfo.user->connectionCount == 0) {
+        statistics_inc_current_user_count();
+    }
+
+    session->clientInfo.user->connectionCount++;
 
     request_parser_init(&session->socksHeader.requestHeader.parser);
 
@@ -54,7 +63,7 @@ static unsigned request_on_read(SelectorEvent *event) {
         return REQUEST_ERROR;
     }
     
-    if(session->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME){
+    if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_DOMAIN_NAME){
         Socks5Args * args = socks5_get_args(); 
         struct in_addr ipv4addr;
         struct in6_addr ipv6addr;
@@ -80,13 +89,13 @@ static unsigned request_on_read(SelectorEvent *event) {
         return GENERATE_DNS_QUERY; // TODO: GENERATE_DNS_QUERY; 
     }
     
-    if(session->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP4){
+    if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP4){
         session->serverConnection.fd = 
                 new_ipv4_socket(session->socksHeader.requestHeader.parser.address.ipv4,
                         session->socksHeader.requestHeader.parser.port, session->serverConnection.addr);
     }
 
-    else if(session->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP6){
+    else if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP6){
         session->serverConnection.fd = 
                 new_ipv6_socket(session->socksHeader.requestHeader.parser.address.ipv6,
                         session->socksHeader.requestHeader.parser.port, session->serverConnection.addr);
@@ -118,6 +127,7 @@ static unsigned request_on_read(SelectorEvent *event) {
         return REQUEST_ERROR;      
     }
 
+    session->clientInfo.addressTypeSelected = session->socksHeader.requestHeader.parser.addressType;
     socks5_register_server(event->s, session);
 
     return IP_CONNECT;

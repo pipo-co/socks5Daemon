@@ -13,6 +13,7 @@
 #include "socks5.h"
 #include "netutils/netutils.h"
 #include "stateMachineBuilder/stateMachineBuilder.h"
+#include "statistics/statistics.h"
 
 #define DEFAULT_INPUT_BUFFER_SIZE 512
 #define DEFAULT_OUTPUT_BUFFER_SIZE 512
@@ -199,6 +200,8 @@ static void socks5_server_read(SelectorEvent *event){
 
             session->serverConnection.state = CLOSING;
         }
+
+        statistics_add_bytes_received(readBytes);
             
         if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
@@ -239,6 +242,8 @@ static void socks5_server_write(SelectorEvent *event){
     
     if(writeBytes = send(event->fd, readPtr, nbytes, MSG_NOSIGNAL), writeBytes > 0) {
         buffer_read_adv(buffer, writeBytes);
+
+        statistics_add_bytes_sent(writeBytes);
 
         if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
@@ -295,6 +300,8 @@ static void socks5_client_read(SelectorEvent *event){
             session->clientConnection.state = CLOSING;
         }
 
+        statistics_add_bytes_received(readBytes);
+
         if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
 
@@ -332,6 +339,8 @@ static void socks5_client_write(SelectorEvent *event){
     
     if(writeBytes = send(event->fd, readPtr, nbytes, MSG_NOSIGNAL), writeBytes > 0){
         buffer_read_adv(buffer, writeBytes);
+
+        statistics_add_bytes_sent(writeBytes);
 
         if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
@@ -425,6 +434,16 @@ static void socks5_server_close(SelectorEvent *event) {
 static void socks5_close_session(SelectorEvent *event) {
 
     SessionHandlerP session = (SessionHandlerP) event->data;
+
+    statistics_dec_current_connection(false);
+
+    if(session->clientInfo.user != NULL) {
+        session->clientInfo.user->connectionCount--;
+
+        if(session->clientInfo.user->connectionCount == 0) {
+            statistics_dec_current_user_count();
+        }
+    }
 
     if(session->serverConnection.fd != INVALID) {
         selector_unregister_fd(event->s, session->serverConnection.fd);

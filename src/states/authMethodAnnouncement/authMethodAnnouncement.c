@@ -29,8 +29,8 @@ static unsigned method_announcement_on_write(SelectorEvent *event) {
 
         if(session->clientInfo.authMethod == NO_AUTHENTICATION) {
             
-            session->user = user_handler_get_user_by_username(ANONYMOUS_USER_CREDENTIALS);
-            if(session->user == NULL) {
+            session->clientInfo.user = user_handler_get_user_by_username(ANONYMOUS_USER_CREDENTIALS);
+            if(session->clientInfo.user == NULL) {
                 fprintf(stderr, "No anonymous user found. Aborting\n");
                 abort();
             }
