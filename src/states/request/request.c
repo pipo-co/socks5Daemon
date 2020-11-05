@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 
 #include "buffer/buffer.h"
 #include "socks5/socks5.h"
@@ -85,7 +86,14 @@ static unsigned request_on_read(SelectorEvent *event) {
             return REQUEST_ERROR;      
         }
 
-        socks5_register_server(event->s, session);
+        session->clientConnection.domainName = malloc(DOMAIN_NAME_MAX_LENGTH);
+        if(session->clientConnection.domainName == NULL){
+            return REQUEST_ERROR;
+        }
+        strcpy(session->clientConnection.domainName, (char *) session->socksHeader.requestHeader.parser.address.domainName);
+
+        socks5_register_dns(event->s, session);
+
         return GENERATE_DNS_QUERY; // TODO: GENERATE_DNS_QUERY; 
     }
     

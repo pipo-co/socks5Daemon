@@ -18,7 +18,7 @@ static void response_dns_on_arrival (SelectorEvent *event) {
 
     response_dns_parser_init(&session->socksHeader.dnsHeader.parser);
 
-    selector_set_interest(event->s, session->clientConnection.fd, OP_READ);
+    selector_set_interest(event->s, session->dnsConnection.fd, OP_READ);
 }
 
 static unsigned response_dns_on_read(SelectorEvent *event) {
@@ -26,7 +26,7 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
     bool errored;
 
-    if(!response_dns_parser_consume(&session->input, &session->socksHeader.dnsHeader.parser, &errored)){
+    if(!response_dns_parser_consume(&session->socksHeader.dnsHeader.buffer, &session->socksHeader.dnsHeader.parser, &errored)){
         return session->sessionStateMachine.current;
     }
     if (errored == true){

@@ -69,6 +69,7 @@ typedef struct DnsHeader{
     Buffer buffer;
     ResponseDnsParser parser;
     size_t bytes;
+    bool loadedBuffer;
 } DnsHeader;
 
 typedef struct RequestHeader{
