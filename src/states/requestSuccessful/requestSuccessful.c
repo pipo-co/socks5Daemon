@@ -66,7 +66,9 @@ static void log_user_access(SessionHandlerP session) {
 
     char date[30];
     char clientAddress[SOCKADDR_TO_HUMAN_MIN];
-    char serverAddress[SOCKADDR_TO_HUMAN_MIN];
+    char serverAddress[DOMAIN_NAME_MAX_LENGTH + 1];
+
+    char *printableServerAddres;
     
     time_t now = time(NULL);
     struct tm *nowTm = localtime(&now);
@@ -75,12 +77,19 @@ static void log_user_access(SessionHandlerP session) {
 
     sockaddr_to_human(clientAddress, SOCKADDR_TO_HUMAN_MIN, &session->clientConnection.addr);
 
-    // TODO: If(session->FQDN == NULL)
-    sockaddr_to_human(serverAddress, SOCKADDR_TO_HUMAN_MIN, &session->serverConnection.addr);
+    if(session->clientInfo.addressTypeSelected == SOCKS_5_ADD_TYPE_IP4 || session->clientInfo.addressTypeSelected == SOCKS_5_ADD_TYPE_IP6) {
+        sockaddr_to_human(serverAddress, SOCKADDR_TO_HUMAN_MIN, &session->serverConnection.addr);
+        printableServerAddres = serverAddress;
+    }
+
+    // Domain Name
+    else {
+        printableServerAddres = session->serverConnection.domainName;
+    }
 
     int status = 0; // TODO: ???
 
-    printf("%s\t%s\tA\t%s\t%s\t%d\n", date, session->user->username, clientAddress, serverAddress, status);
+    printf("%s\t%s\tA\t%s\t%s\t%d\n", date, session->clientInfo.user->username, clientAddress, printableServerAddres, status);
 }
 
 SelectorStateDefinition request_successful_state_definition_supplier(void) {

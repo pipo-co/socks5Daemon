@@ -50,19 +50,22 @@ static unsigned request_on_read(SelectorEvent *event) {
         return REQUEST_ERROR;
     }
     
-    if(session->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_DOMAIN_NAME){
+    if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_DOMAIN_NAME) {
+        
+        // TODO: add domain name to session->clientInfo.domainName
+
         // connectDoh(socks5_p)
         //registrar al selector el fd del dns
         return FINISH; // TODO: GENERATE_DNS_QUERY; 
     }
     
-    if(session->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP4){
+    if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP4){
         session->serverConnection.fd = 
                 new_ipv4_socket(session->socksHeader.requestHeader.parser.address.ipv4,
                         session->socksHeader.requestHeader.parser.port, &session->serverConnection.addr);
     }
 
-    else if(session->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP6){
+    else if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP6){
         session->serverConnection.fd = 
                 new_ipv6_socket(session->socksHeader.requestHeader.parser.address.ipv6,
                         session->socksHeader.requestHeader.parser.port, &session->serverConnection.addr);
@@ -94,6 +97,7 @@ static unsigned request_on_read(SelectorEvent *event) {
         return REQUEST_ERROR;      
     }
 
+    session->clientInfo.addressTypeSelected = session->socksHeader.requestHeader.parser.addressType;
     socks5_register_server(event->s, session);
 
     return IP_CONNECT;

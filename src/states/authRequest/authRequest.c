@@ -50,7 +50,7 @@ static unsigned auth_request_on_read(SelectorEvent *event) {
         return AUTH_ERROR;
     }
 
-    session->user = user;
+    session->clientInfo.user = user;
 
     return AUTH_SUCCESSFUL;
 }
