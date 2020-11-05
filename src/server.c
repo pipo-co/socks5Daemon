@@ -109,7 +109,7 @@ int main(const int argc, char **argv) {
         ss = selector_select(selector);
 
         // Cleanup selector sockets every cleanupInterval seconds
-        if(difftime(time(NULL), lastFdCleanup) >= cleanupInterval) {
+        if(!args.debugEnable && difftime(time(NULL), lastFdCleanup) >= cleanupInterval) {
             fprintf(stdout, "Initializing Selector Cleanup\n");
             selector_fd_cleanup(selector, socks5_cleanup_session);
             lastFdCleanup = time(NULL);

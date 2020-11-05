@@ -34,6 +34,7 @@ typedef struct Socks5Args {
     unsigned short  mng_port;
 
     bool            disectors_enabled;
+    bool            debugEnable;
 
     struct doh      doh;
 
