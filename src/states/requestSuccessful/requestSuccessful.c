@@ -1,10 +1,16 @@
 #include "requestSuccessful.h"
 
+#include <time.h>
+#include <stdio.h>
+
+#include "netutils/netutils.h"
+
 #define REPLY_SIZE 10
 
 static void request_marshall(Buffer *b, size_t *bytes);
 static void request_successful_on_arrival(SelectorEvent *event);
 static unsigned request_successful_on_write(SelectorEvent *event);
+static void log_user_access(SessionHandlerP session);
 
 static void request_successful_on_arrival(SelectorEvent *event) {
     
@@ -23,6 +29,9 @@ static unsigned request_successful_on_write(SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
 
     if(session->socksHeader.requestHeader.bytes == REPLY_SIZE && !buffer_can_read(&session->output)) {
+
+        log_user_access(session);
+
         return FORWARDING;
     }
 
@@ -52,6 +61,27 @@ static void request_marshall(Buffer *b, size_t *bytes) {
             (*bytes)++;
         }
     }
+
+static void log_user_access(SessionHandlerP session) {
+
+    char date[30];
+    char clientAddress[SOCKADDR_TO_HUMAN_MIN];
+    char serverAddress[SOCKADDR_TO_HUMAN_MIN];
+    
+    time_t now = time(NULL);
+    struct tm *nowTm = localtime(&now);
+
+    strftime(date, 30, "%FT%TZ", nowTm);
+
+    sockaddr_to_human(clientAddress, SOCKADDR_TO_HUMAN_MIN, &session->clientConnection.addr);
+
+    // TODO: If(session->FQDN == NULL)
+    sockaddr_to_human(serverAddress, SOCKADDR_TO_HUMAN_MIN, &session->serverConnection.addr);
+
+    int status = 0; // TODO: ???
+
+    printf("%s\t%s\tA\t%s\t%s\t%d\n", date, session->user->username, clientAddress, serverAddress, status);
+}
 
 SelectorStateDefinition request_successful_state_definition_supplier(void) {
 

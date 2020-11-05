@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <string.h>
 
 #include "buffer/buffer.h"
 #include "socks5/socks5.h"
@@ -56,11 +57,17 @@ static unsigned request_on_read(SelectorEvent *event) {
     }
     
     if(session->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP4){
-        session->serverConnection.fd = new_ipv4_socket(session->socksHeader.requestHeader.parser.address.ipv4, session->socksHeader.requestHeader.parser.port);    
+        session->serverConnection.fd = 
+                new_ipv4_socket(session->socksHeader.requestHeader.parser.address.ipv4,
+                        session->socksHeader.requestHeader.parser.port, &session->serverConnection.addr);
     }
+
     else if(session->socksHeader.requestHeader.parser.addressType == REQUEST_PARSER_ADD_TYPE_IP6){
-        session->serverConnection.fd = new_ipv6_socket(session->socksHeader.requestHeader.parser.address.ipv6, session->socksHeader.requestHeader.parser.port);
+        session->serverConnection.fd = 
+                new_ipv6_socket(session->socksHeader.requestHeader.parser.address.ipv6,
+                        session->socksHeader.requestHeader.parser.port, &session->serverConnection.addr);
     }
+
     else {
         session->socksHeader.requestHeader.rep = ADDRESS_TYPE_NOT_SUPPORTED;
         return REQUEST_ERROR;

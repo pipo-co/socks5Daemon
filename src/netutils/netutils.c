@@ -43,7 +43,7 @@ sockaddr_to_human(char *buff, const size_t buffsize,
         strncpy(buff, "unknown", buffsize);
     }
 
-    strncat(buff, ":", buffsize);
+    strncat(buff, "\t", buffsize);
     buff[buffsize - 1] = 0;
     const size_t len = strlen(buff);
 
@@ -100,7 +100,7 @@ sock_blocking_copy(const int source, const int dest) {
     return ret;
 }
 
-int new_ipv4_socket(struct in_addr ip, in_port_t port) {
+int new_ipv4_socket(struct in_addr ip, in_port_t port, struct sockaddr *outAddr) {
 	
 	int sock;
 	struct sockaddr_in addr; 
@@ -120,15 +120,21 @@ int new_ipv4_socket(struct in_addr ip, in_port_t port) {
 	addr.sin_addr = ip;
 
 	if (connect(sock, (struct sockaddr*) &addr, sizeof(addr)) != 0) { 
-        if(errno == EINPROGRESS)
+        if(errno == EINPROGRESS) {
+
+            if(outAddr != NULL) {
+                memcpy(outAddr, (struct sockaddr*) &addr, sizeof(addr));
+            }
+
             return sock;
+        }
         return -1;
-    } 
+    }
 
 	return sock;
 }
 
-int new_ipv6_socket(struct in6_addr ip, in_port_t port) {
+int new_ipv6_socket(struct in6_addr ip, in_port_t port, struct sockaddr *outAddr) {
 	
 	int sock;
 	struct sockaddr_in6 addr; 
@@ -148,10 +154,16 @@ int new_ipv6_socket(struct in6_addr ip, in_port_t port) {
 	addr.sin6_addr = ip;
 
 	if (connect(sock, (struct sockaddr*) &addr, sizeof(addr)) != 0) { 
-        if(errno == EINPROGRESS)
+        if(errno == EINPROGRESS) {
+
+            if(outAddr != NULL) {
+                memcpy(outAddr, (struct sockaddr*) &addr, sizeof(addr));
+            }       
+
             return sock;
+        }
         return -1;
-    } 
+    }
 
 	return sock;
 }

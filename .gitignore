@@ -66,3 +66,4 @@ main
 
 src/request/request_test.c
 src/main
+src/socks5d
