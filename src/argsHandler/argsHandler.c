@@ -56,6 +56,7 @@ usage(const char *progname) {
         "   -P <conf port>   Puerto entrante conexiones configuración\n"
         "   -u <name>:<pass> Usuario y contraseña de usuario que puede usar el proxy. Hasta 10.\n"
         "   -v               Imprime información sobre la versión versión y termina.\n"
+        "   -D               Modo debug. Desactiva el servicio de cleanup\n"
         "\n"
         "   --doh-ip    <ip>    \n"
         "   --doh-port  <port>  XXX\n"
@@ -104,7 +105,7 @@ parse_args(const int argc, char **argv, Socks5Args *args) {
             { 0,           0,                 0, 0 }
         };
 
-        c = getopt_long(argc, argv, "hl:L:Np:P:u:v", long_options, &option_index);
+        c = getopt_long(argc, argv, "hl:L:Np:P:u:v:D", long_options, &option_index);
         if (c == -1)
             break;
 
@@ -139,6 +140,9 @@ parse_args(const int argc, char **argv, Socks5Args *args) {
             case 'v':
                 version();
                 exit(0);
+                break;
+            case 'D':
+                args->debugEnable = true;
                 break;
             case 0xD001:
                 args->doh.ip = optarg;
