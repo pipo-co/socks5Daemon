@@ -16,7 +16,7 @@ clean:
 	rm -rf $(OBJECTS) $(SERVER) $(CLIENT)
 
 $(SERVER): server.c $(OBJECTS)
-	$(CC) $(CFLAGS) $^ -o $@ 
+	$(CC) $(CFLAGS) $^ -o main
 
 $(CLIENT): client.c
 	$(CC) $(CFLAGS) $^ -o $@ 

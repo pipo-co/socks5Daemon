@@ -7,6 +7,7 @@
 #define AUTH_UNSUCCESSFUL_MESSAGE 0xFF
 #define RSV 0x00
 #define ATYP 0x01
+#define AUTH_VERSION 0x01
 
 typedef enum AuthMethods {
     NO_AUTHENTICATION       = 0x00, 
