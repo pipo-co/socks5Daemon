@@ -240,7 +240,8 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                 }
                 else
                 {
-                    p->currentState = RESPONSE_DNS_ERROR;
+                    p->totalAnswers--;
+                    p->currentState = RESPONSE_DNS_CNAME;
                 }   
             }
             else if (p->dataLenght == 16){
@@ -252,14 +253,29 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                 }
                 else
                 {
-                    p->currentState = RESPONSE_DNS_ERROR;
+                    p->totalAnswers--;
+                    p->currentState = RESPONSE_DNS_CNAME;
                 }   
             }
             else
             {
-                p->currentState = RESPONSE_DNS_ERROR;
+                p->totalAnswers--;
+                p->currentState = RESPONSE_DNS_CNAME;
             }
         break;
+
+        case RESPONSE_DNS_CNAME:
+            if(p->dataLenght > 0){
+                p->dataLenght--;
+            }
+            else{
+                if (p->currentAnswers != p->totalAnswers){
+                    p->currentState = RESPONSE_DNS_ANSWERS_NAME_FIRST_BYTE;
+                }
+                else{
+                    p->currentState = RESPONSE_DNS_DONE;
+                }
+            }
 
         case RESPONSE_DNS_IPV4_ADDRESS:
             
@@ -282,7 +298,6 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
 
         case RESPONSE_DNS_IPV6_ADDRESS:
             
-        
             p->addresses[p->currentAnswers].addr.ipv6.s6_addr[p->dataLenght - p->addressRemaining] = b;
         
             p->addressRemaining--;
