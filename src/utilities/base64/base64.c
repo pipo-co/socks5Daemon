@@ -1,86 +1,120 @@
-#include <stdint.h>
-#include <stdlib.h>
 #include "base64.h"
 
-static char encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
-                                'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-                                'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-                                'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-                                'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                                'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-                                'w', 'x', 'y', 'z', '0', '1', '2', '3',
-                                '4', '5', '6', '7', '8', '9', '+', '/'};
-static char *decoding_table = NULL;
-static int mod_table[] = {0, 2, 1};
+static char encodingTable[] = {
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+    'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+    'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+    'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+    'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+    'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+    'w', 'x', 'y', 'z', '0', '1', '2', '3',
+    '4', '5', '6', '7', '8', '9', '+', '/'
+};
 
-char *base64_encode(const unsigned char *data, size_t input_length, size_t *output_length) {
+static char decodingTable[128];
 
-    *output_length = 4 * ((input_length + 2) / 3);
+static bool decodingTableBuilt;
 
-    char *encoded_data = malloc(*output_length);
-    if (encoded_data == NULL) return NULL;
+static void build_decoding_table();
 
-    for (size_t i = 0, j = 0; i < input_length;) {
 
-        uint32_t octet_a = i < input_length ? (unsigned char)data[i++] : 0;
-        uint32_t octet_b = i < input_length ? (unsigned char)data[i++] : 0;
-        uint32_t octet_c = i < input_length ? (unsigned char)data[i++] : 0;
+size_t base64_encode(uint8_t in[], size_t len, char out[], bool trail) {
 
-        uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
+    size_t inIter = 0;
+    size_t outIter = 0;
+    int trailingCount = 3 - (len % 3);
 
-        encoded_data[j++] = encoding_table[(triple >> 3 * 6) & 0x3F];
-        encoded_data[j++] = encoding_table[(triple >> 2 * 6) & 0x3F];
-        encoded_data[j++] = encoding_table[(triple >> 1 * 6) & 0x3F];
-        encoded_data[j++] = encoding_table[(triple >> 0 * 6) & 0x3F];
+    if(trailingCount == 3)
+        trailingCount = 0;
+
+    while(inIter + 2 < len) {
+
+        out[outIter++] = encodingTable[(in[inIter] & 0xFC) >> 2];
+        inIter++;
+
+        out[outIter++] = encodingTable[((in[inIter - 1] & 0x03) << 4) | ((in[inIter] & 0xF0) >> 4)];
+        inIter++;
+
+        out[outIter++] = encodingTable[((in[inIter - 1] & 0x0F) << 2) | ((in[inIter] & 0xC0) >> 6)];
+        inIter++;
+
+        out[outIter++] = encodingTable[in[inIter - 1] & 0x3F];
     }
 
-    for (int i = 0; i < mod_table[input_length % 3]; i++)
-        encoded_data[*output_length - 1 - i] = '=';
+    if(inIter < len) {
+        out[outIter++] = encodingTable[(in[inIter] & 0xFC) >> 2];
+        inIter++;
 
-    return encoded_data;
-}
-
-unsigned char *base64_decode(const uint8_t *data, size_t input_length, size_t *output_length) {
-
-    if (decoding_table == NULL) build_decoding_table();
-
-    if (input_length % 4 != 0) return NULL;
-
-    *output_length = input_length / 4 * 3;
-    if (data[input_length - 1] == '=') (*output_length)--;
-    if (data[input_length - 2] == '=') (*output_length)--;
-
-    unsigned char *decoded_data = malloc(*output_length);
-    if (decoded_data == NULL) return NULL;
-
-    for (uint8_t i = 0, j = 0; i < input_length;) {
-
-        uint32_t sextet_a = data[i] == '=' ? 0 & i++ : decoding_table[data[i++]];
-        uint32_t sextet_b = data[i] == '=' ? 0 & i++ : decoding_table[data[i++]];
-        uint32_t sextet_c = data[i] == '=' ? 0 & i++ : decoding_table[data[i++]];
-        uint32_t sextet_d = data[i] == '=' ? 0 & i++ : decoding_table[data[i++]];
-
-        uint32_t triple = (sextet_a << 3 * 6)
-        + (sextet_b << 2 * 6)
-        + (sextet_c << 1 * 6)
-        + (sextet_d << 0 * 6);
-
-        if (j < *output_length) decoded_data[j++] = (triple >> 2 * 8) & 0xFF;
-        if (j < *output_length) decoded_data[j++] = (triple >> 1 * 8) & 0xFF;
-        if (j < *output_length) decoded_data[j++] = (triple >> 0 * 8) & 0xFF;
+        if(inIter < len) {
+            out[outIter++] = encodingTable[((in[inIter - 1] & 0x03) << 4) | ((in[inIter] & 0xF0) >> 4)];
+            out[outIter++] = encodingTable[(in[inIter] & 0x0F) << 2];
+            inIter++;
+        }
+        
+        else
+            out[outIter++] = encodingTable[(in[inIter - 1] & 0x03) << 4];
     }
 
-    return decoded_data;
+    if(trail) {
+        for(int i = 0; i < trailingCount; i++)
+            out[outIter++] = '=';
+    }
+
+    out[outIter] = 0;
+
+    return outIter;
 }
 
-void build_decoding_table() {
+size_t base64_decode(char in[], uint8_t out[]) {
 
-    decoding_table = malloc(256);
+    if(!decodingTableBuilt)
+        build_decoding_table();
+
+    size_t inIter = 0;
+    size_t outIter = 0;
+
+
+    while(in[inIter] != 0 && in[inIter] != '=') {
+
+        out[outIter] = (decodingTable[ (int)in[inIter]] & 0x3F) << 2;
+        inIter++;
+
+        if(in[inIter] == 0 || in[inIter] == '=') {
+            outIter++;
+            break;
+        }
+
+        out[outIter++] |= (decodingTable[ (int)in[inIter]] & 0x30) >> 4;
+
+        out[outIter] = (decodingTable[ (int)in[inIter]] & 0x0F) << 4;
+        inIter++;
+
+        if(in[inIter] == 0 || in[inIter] == '=') {
+            outIter++;
+            break;
+        }
+
+        out[outIter++] |= (decodingTable[ (int)in[inIter]] & 0x3C) >> 2;
+
+        out[outIter] = (decodingTable[ (int)in[inIter]] & 0x03) << 6;
+        inIter++;
+
+        if(in[inIter] == 0 || in[inIter] == '=') {
+            outIter++;
+            break;
+        }
+
+        out[outIter++] |= decodingTable[ (int)in[inIter]] & 0x3F;
+        inIter++;
+    }
+
+    return outIter;
+}
+
+static void build_decoding_table() {
+
+    decodingTableBuilt = true;
 
     for (int i = 0; i < 64; i++)
-        decoding_table[(unsigned char) encoding_table[i]] = i;
-}
-
-void base64_cleanup() {
-    free(decoding_table);
+        decodingTable[(int)encodingTable[i]] = i;
 }

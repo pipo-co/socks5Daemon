@@ -377,6 +377,7 @@ bool response_dns_parser_is_done(enum ResponseDnsParserState state, bool *errore
         case RESPONSE_DNS_ANSWERS_TTL:
         case RESPONSE_DNS_ANSWERS_DATA_LENGTH_HIGH:
         case RESPONSE_DNS_ANSWERS_DATA_LENGTH_LOW:
+        case RESPONSE_DNS_CNAME:
         case RESPONSE_DNS_IPV4_ADDRESS:
         case RESPONSE_DNS_IPV6_ADDRESS:
         
