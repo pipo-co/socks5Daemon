@@ -17,58 +17,80 @@ static unsigned response_dns_on_read(SelectorEvent *event);
 static void response_dns_on_arrival (SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
 
-    http_dns_parser_init(&session->socksHeader.dnsHeader.httpParser);
-    response_dns_parser_init(&session->socksHeader.dnsHeader.parser);
+    if(session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.state == OPEN) {
+        
+        http_dns_parser_init(&session->socksHeader.dnsHeaderContainer.ipv4.httpParser);
+        response_dns_parser_init(&session->socksHeader.dnsHeaderContainer.ipv4.responseParser);
+        selector_set_interest(event->s, session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd, OP_WRITE);
+    }
 
-    selector_set_interest(event->s, session->dnsConnection.fd, OP_READ);
+    if(session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.state == OPEN) {
+        http_dns_parser_init(&session->socksHeader.dnsHeaderContainer.ipv6.httpParser);
+        response_dns_parser_init(&session->socksHeader.dnsHeaderContainer.ipv6.responseParser);
+        selector_set_interest(event->s, session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.fd, OP_WRITE);
+    }
 }
 
 static unsigned response_dns_on_read(SelectorEvent *event) {
      
     SessionHandlerP session = (SessionHandlerP) event->data;
+    DnsHeader *dnsHeaderMe, *dnsHeaderOther;
     bool errored;
 
-    if(!http_dns_parser_consume(&session->socksHeader.dnsHeader.buffer, &session->socksHeader.dnsHeader.httpParser, &errored)){
+    if(session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd == event->fd) {
+        dnsHeaderMe = &session->socksHeader.dnsHeaderContainer.ipv4;
+        dnsHeaderOther = &session->socksHeader.dnsHeaderContainer.ipv6;
+    }
+    else {
+        dnsHeaderMe = &session->socksHeader.dnsHeaderContainer.ipv6;
+        dnsHeaderOther = &session->socksHeader.dnsHeaderContainer.ipv4;
+    }
+
+    if(!http_dns_parser_consume(&dnsHeaderMe->buffer, &dnsHeaderMe->httpParser, &errored)){
         return session->sessionStateMachine.current;
     }
 
     if (errored == true){
-        //loggear ( response_dns_parser_error_message();)
-        return REQUEST_ERROR;
-        // return DNS_ERROR;
+        
+        if(dnsHeaderOther->dnsConnection.state == OPEN){
+            if(response_dns_parser_is_done(dnsHeaderOther->responseParser.currentState, &errored)){
+                return DNS_CONNECT;
+            }
+        }
+        else{
+            return REQUEST_ERROR;
+        }
     }
 
-    if(!response_dns_parser_consume(&session->socksHeader.dnsHeader.buffer, &session->socksHeader.dnsHeader.parser, &errored)){
+    if(!response_dns_parser_consume(&dnsHeaderMe->buffer, &dnsHeaderMe->responseParser, &errored)){
         return session->sessionStateMachine.current;
     }
     if (errored == true){
-        //loggear ( response_dns_parser_error_message();)
         return REQUEST_ERROR;
         // return DNS_ERROR;
     }
 
-    if (session->socksHeader.dnsHeader.parser.totalQuestions == 0){
-        //loggear ("dnsResponse: No questions received!")
+    if (dnsHeaderMe->responseParser.totalQuestions == 0){
         
         return REQUEST_ERROR;
         //  return DNS_ERROR;
     }
 
-    if (session->socksHeader.dnsHeader.parser.currentAnswers == 0){
-        //loggear ("dnsResponse: No answers received!")
+    if (dnsHeaderMe->responseParser.totalAnswers == 0){
+
         return REQUEST_ERROR;
         // return DNS_ERROR;
     }
 
     if(session->socksHeader.dnsHeader.parser.currentType == SOCKS_5_ADD_TYPE_IP4){
         session->serverConnection.fd =
-                new_ipv4_socket(session->socksHeader.dnsHeader.parser.addresses[session->socksHeader.dnsHeader.parser.addressRemaining].addr.ipv4,
+                new_ipv4_socket(session->socksHeader.dnsHeader.parser.addresses[session->socksHeader.dnsHeader.parser.counter].addr.ipv4,
                         session->serverConnection.port, (struct sockaddr *)&session->serverConnection.addr);
     }
 
     else if(session->socksHeader.dnsHeader.parser.currentType == SOCKS_5_ADD_TYPE_IP6){
         session->serverConnection.fd =
-                new_ipv6_socket(session->socksHeader.dnsHeader.parser.addresses[session->socksHeader.dnsHeader.parser.addressRemaining].addr.ipv6,
+                new_ipv6_socket(session->socksHeader.dnsHeader.parser.addresses[session->socksHeader.dnsHeader.parser.counter].addr.ipv6,
                         session->serverConnection.port, (struct sockaddr *)&session->serverConnection.addr);
     }
 
@@ -99,10 +121,29 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     }
 
     session->clientInfo.addressTypeSelected = session->socksHeader.requestHeader.parser.addressType;
-    selector_set_interest(event->s, session->dnsConnection.fd, OP_NOOP);
     socks5_register_server(event->s, session);
 
-    return IP_CONNECT;
+    return DNS_CONNECT;
+}
+
+static unsigned response_dns_on_write(SelectorEvent *event){
+
+    SessionHandlerP session = (SessionHandlerP) event->data;
+    DnsHeader *dnsHeaderMe;
+
+    if(session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd == event->fd) {
+        dnsHeaderMe = &session->socksHeader.dnsHeaderContainer.ipv4;
+    }
+    else
+    {
+        dnsHeaderMe = &session->socksHeader.dnsHeaderContainer.ipv6;
+    }
+
+    if(!buffer_can_read(&dnsHeaderMe->buffer)){
+        selector_set_interest_event(event, OP_READ);
+    }
+
+    return session->sessionStateMachine.current;
 }
 
 SelectorStateDefinition response_dns_state_definition_supplier(void) {

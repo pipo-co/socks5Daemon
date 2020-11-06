@@ -150,22 +150,34 @@ void socks5_passive_accept_ipv6(SelectorEvent *event){
     selector_register(event->s, session->clientConnection.fd, &clientHandler, OP_READ, session);
 }
 
-void socks5_register_server(FdSelector s, SessionHandlerP socks5_p){
+void socks5_register_server(FdSelector s, SessionHandlerP session){
 
-    socks5_p->serverConnection.state = OPEN;
+    session->serverConnection.state = OPEN;
 
-    selector_register(s, socks5_p->serverConnection.fd, &serverHandler, OP_WRITE, socks5_p);
+    selector_register(s, session->serverConnection.fd, &serverHandler, OP_WRITE, session);
 
-    fprintf(stderr, "Registered new server %d\n", socks5_p->serverConnection.fd);
+    fprintf(stderr, "Registered new server %d\n", session->serverConnection.fd);
 }
 
-void socks5_register_dns(FdSelector s, SessionHandlerP socks5_p){
+void socks5_unregister_server(FdSelector s, SessionHandlerP session){
 
-    socks5_p->dnsConnection.state = OPEN;
+    selector_unregister_fd(s, session->serverConnection.fd);
 
-    selector_register(s, socks5_p->dnsConnection.fd, &DNSHandler, OP_WRITE, socks5_p);
+    fprintf(stderr, "Unregistered new server %d\n", session->serverConnection.fd);
+}
 
-    fprintf(stderr, "Registered new dns %d\n", socks5_p->dnsConnection.fd);
+
+void socks5_register_dns(FdSelector s, SessionHandlerP session){
+
+    if(session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.state == OPEN) {
+        selector_register(s, session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd, &DNSHandler, OP_WRITE, session);
+        fprintf(stderr, "Registered new dns %d\n", session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd);
+    }
+
+    if(session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.state == OPEN) {
+        selector_register(s, session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.fd, &DNSHandler, OP_WRITE, session);
+        fprintf(stderr, "Registered new dns %d\n", session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.fd);
+    }
 }
 
 Socks5Args *socks5_get_args(void){

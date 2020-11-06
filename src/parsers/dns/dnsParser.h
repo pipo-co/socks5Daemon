@@ -67,7 +67,7 @@ typedef struct ResponseDnsParser {
 
     uint8_t dataLenght;
 
-    uint8_t addressRemaining;
+    uint8_t counter;
     
     enum ResponseDnsParserState currentState;
 

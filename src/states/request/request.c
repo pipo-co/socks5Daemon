@@ -19,6 +19,8 @@
 
 static void request_on_arrival (SelectorEvent *event);
 static unsigned request_on_read(SelectorEvent *event);
+static unsigned dns_connection_handling (SelectorEvent * event);
+static unsigned ip_connection_handling(SelectorEvent * event);
 
 static void request_on_arrival (SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
@@ -65,40 +67,76 @@ static unsigned request_on_read(SelectorEvent *event) {
     }
     
     if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_DOMAIN_NAME){
-        Socks5Args * args = socks5_get_args(); 
-        struct in_addr ipv4addr;
-        struct in6_addr ipv6addr;
+        return dns_connection_handling(event);
+    }
+    else{
+        return ip_connection_handling(event);
+    }   
+}
 
-        if (inet_pton(AF_INET, args->doh.ip, &ipv4addr)) {
-            session->dnsConnection.state = OPEN;
-            session->dnsConnection.fd = 
-                new_ipv4_socket(ipv4addr, htons(args->doh.port), (struct sockaddr *)&session->dnsConnection.addr);
+static unsigned dns_connection_handling (SelectorEvent * event){
 
-        } else if (inet_pton(AF_INET6, args->doh.ip, &ipv6addr)) {
-            session->dnsConnection.state = OPEN;
-            session->dnsConnection.fd = 
-                new_ipv6_socket(ipv6addr, htons(args->doh.port), (struct sockaddr *)&session->dnsConnection.addr);
-        } else {
-            return REQUEST_ERROR;
-        }
+    SessionHandlerP session = (SessionHandlerP) event->data;
+    Socks5Args * args = socks5_get_args(); 
+    struct in_addr ipv4addr;
+    struct in6_addr ipv6addr;
+    int errno4, errno6;
+
+    if (inet_pton(AF_INET, args->doh.ip, &ipv4addr)) {
+        session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.state = OPEN;
+        session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd = 
+            new_ipv4_socket(ipv4addr, htons(args->doh.port), (struct sockaddr *)&session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.addr);
         
-        if (session->dnsConnection.fd  == -1) {
-            return REQUEST_ERROR;      
-        }
+        session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.state = OPEN;
+        session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.fd =
+            new_ipv4_socket(ipv4addr, htons(args->doh.port), (struct sockaddr *)&session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.addr); 
 
-        session->clientConnection.domainName = malloc(DOMAIN_NAME_MAX_LENGTH);
-        if(session->clientConnection.domainName == NULL){
-            return REQUEST_ERROR;
-        }
-        strcpy(session->clientConnection.domainName, (char *) session->socksHeader.requestHeader.parser.address.domainName);
+    } else if (inet_pton(AF_INET6, args->doh.ip, &ipv6addr)) {
+        session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.state = OPEN;
+        session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd = 
+            new_ipv6_socket(ipv6addr, htons(args->doh.port), (struct sockaddr *)&session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.addr);
+        errno4 = errno;
 
-        socks5_register_dns(event->s, session);
+        session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.state = OPEN;
+        session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.fd = 
+            new_ipv6_socket(ipv6addr, htons(args->doh.port), (struct sockaddr *)&session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.addr);
+        errno6 = errno;
 
-        session->serverConnection.port = session->socksHeader.requestHeader.parser.port;
+    } else {
+        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+        return REQUEST_ERROR;
+    }
 
-        return GENERATE_DNS_QUERY; // TODO: GENERATE_DNS_QUERY; 
+    if(session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd == -1){
+        session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.state = CLOSED;
     }
     
+    if(session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.fd == -1){
+        session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.state = CLOSED;
+    }  
+    
+    if (session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd  == -1 && session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.fd == -1) {
+        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+        return REQUEST_ERROR;      
+    }
+
+    session->clientConnection.domainName = malloc(DOMAIN_NAME_MAX_LENGTH);
+    if(session->clientConnection.domainName == NULL){
+        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+        return REQUEST_ERROR;
+    }
+    strcpy(session->clientConnection.domainName, (char *) session->socksHeader.requestHeader.parser.address.domainName);
+
+    socks5_register_dns(event->s, session);
+
+    session->serverConnection.port = session->socksHeader.requestHeader.parser.port;
+
+    return GENERATE_DNS_QUERY; 
+}
+
+static unsigned ip_connection_handling(SelectorEvent * event){
+    SessionHandlerP session = (SessionHandlerP) event->data;
+
     if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP4){
         session->serverConnection.fd = 
                 new_ipv4_socket(session->socksHeader.requestHeader.parser.address.ipv4,
@@ -141,6 +179,7 @@ static unsigned request_on_read(SelectorEvent *event) {
     socks5_register_server(event->s, session);
 
     return IP_CONNECT;
+
 }
 
 SelectorStateDefinition request_state_definition_supplier(void) {

@@ -55,7 +55,7 @@ START_TEST (response_dns_test_parser_init) {
     ck_assert_uint_eq(p->currentAnswers, 0);
     ck_assert_uint_eq(p->bytesWritten, 0);
     ck_assert_uint_eq(p->currentType, 0);
-    ck_assert_uint_eq(p->addressRemaining, 0);
+    ck_assert_uint_eq(p->counter, 0);
 
     free(p);
 }
@@ -216,9 +216,9 @@ START_TEST (response_dns_test_parser_feed_success) {
     ck_assert(p->currentState == RESPONSE_DNS_IPV4_ADDRESS);
     ck_assert_uint_eq(p->dataLenght, 4);
     ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, IPV4);
-    ck_assert_uint_eq(p->addressRemaining, 4);
+    ck_assert_uint_eq(p->counter, 4);
 
-    while (p->addressRemaining > 1)
+    while (p->counter > 1)
     {   
         response_dns_parser_feed(p, request_dns_parser_test_input_success[pos++]);
         ck_assert(p->currentState == RESPONSE_DNS_IPV4_ADDRESS);
@@ -421,9 +421,9 @@ START_TEST (response_dns_test_parser_feed_multiple_success) {
     ck_assert(p->currentState == RESPONSE_DNS_IPV4_ADDRESS);
     ck_assert_uint_eq(p->dataLenght, 4);
     ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, IPV4);
-    ck_assert_uint_eq(p->addressRemaining, 4);
+    ck_assert_uint_eq(p->counter, 4);
 
-    while (p->addressRemaining > 1)
+    while (p->counter > 1)
     {   
         response_dns_parser_feed(p, request_dns_parser_test_input_multiple_success[pos++]);
         ck_assert(p->currentState == RESPONSE_DNS_IPV4_ADDRESS);
@@ -473,9 +473,9 @@ START_TEST (response_dns_test_parser_feed_multiple_success) {
     ck_assert(p->currentState == RESPONSE_DNS_IPV4_ADDRESS);
     ck_assert_uint_eq(p->dataLenght, 4);
     ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, IPV4);
-    ck_assert_uint_eq(p->addressRemaining, 4);
+    ck_assert_uint_eq(p->counter, 4);
 
-    while (p->addressRemaining > 1)
+    while (p->counter > 1)
     {   
         response_dns_parser_feed(p, request_dns_parser_test_input_multiple_success[pos++]);
         ck_assert(p->currentState == RESPONSE_DNS_IPV4_ADDRESS);
@@ -525,9 +525,9 @@ START_TEST (response_dns_test_parser_feed_multiple_success) {
     ck_assert(p->currentState == RESPONSE_DNS_IPV4_ADDRESS);
     ck_assert_uint_eq(p->dataLenght, 4);
     ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, IPV4);
-    ck_assert_uint_eq(p->addressRemaining, 4);
+    ck_assert_uint_eq(p->counter, 4);
 
-    while (p->addressRemaining > 1)
+    while (p->counter > 1)
     {   
         response_dns_parser_feed(p, request_dns_parser_test_input_multiple_success[pos++]);
         ck_assert(p->currentState == RESPONSE_DNS_IPV4_ADDRESS);
@@ -730,9 +730,9 @@ START_TEST (response_dns_test_parser_feed_success_ipv6) {
     ck_assert(p->currentState == RESPONSE_DNS_IPV6_ADDRESS);
     ck_assert_uint_eq(p->dataLenght, 16);
     ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, IPV6);
-    ck_assert_uint_eq(p->addressRemaining, 16);
+    ck_assert_uint_eq(p->counter, 16);
 
-    while (p->addressRemaining > 1)
+    while (p->counter > 1)
     {   
         response_dns_parser_feed(p, request_dns_parser_test_input_success_ipv6[pos++]);
         ck_assert(p->currentState == RESPONSE_DNS_IPV6_ADDRESS);

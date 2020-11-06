@@ -13,11 +13,13 @@ void socks5_passive_accept_ipv4(SelectorEvent *event);
 
 void socks5_passive_accept_ipv6(SelectorEvent *event);
 
-void socks5_register_server(FdSelector s, SessionHandlerP socks5_p);
+void socks5_register_server(FdSelector s, SessionHandlerP session);
+
+void socks5_unregister_server(FdSelector s, SessionHandlerP session);
 
 void socks5_cleanup_session(SelectorEvent *event);
 
-void socks5_register_dns(FdSelector s, SessionHandlerP socks5_p);
+void socks5_register_dns(FdSelector s, SessionHandlerP session);
 
 Socks5Args *socks5_get_args(void); 
 
