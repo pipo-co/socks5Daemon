@@ -28,7 +28,7 @@ typedef enum SessionState {
     IP_CONNECT,
     GENERATE_DNS_QUERY,
     RESPONSE_DNS,
-    // DNS_ERROR,
+    DNS_CONNECT,
     REQUEST_SUCCESSFUL,
     FORWARDING,
     FLUSH_CLOSER,
