@@ -29,25 +29,25 @@ size_t base64_encode(uint8_t in[], size_t len, char out[], bool trail) {
 
     while(inIter + 2 < len) {
 
-        out[outIter++] = encodingTable[in[inIter++]] & 0xFC >> 2;
+        out[outIter++] = encodingTable[in[inIter++] & 0xFC >> 2];
 
-        out[outIter++] = (encodingTable[in[inIter - 1]] & 0x03 << 4) | (encodingTable[in[inIter++]] & 0xF0 >> 4);
+        out[outIter++] = encodingTable[(in[inIter - 1] & 0x03 << 4) | (in[inIter++] & 0xF0 >> 4)];
 
-        out[outIter++] = (encodingTable[in[inIter - 1]] & 0x0F << 2) | (encodingTable[in[inIter++]] & 0xC0 >> 6);
+        out[outIter++] = encodingTable[(in[inIter - 1] & 0x0F << 2) | (in[inIter++] & 0xC0 >> 6)];
 
-        out[outIter++] = encodingTable[in[inIter - 1]] & 0x3F;
+        out[outIter++] = encodingTable[in[inIter - 1] & 0x3F];
     }
 
     if(inIter < len) {
         out[outIter++] = encodingTable[in[inIter++] & 0xFC >> 2];
 
         if(inIter < len) {
-            out[outIter++] = (encodingTable[in[inIter - 1]] & 0x03 << 4) | (encodingTable[in[inIter++]] & 0xF0 >> 4);
-            out[outIter++] = encodingTable[in[inIter - 1]] & 0x0F << 2;
+            out[outIter++] = encodingTable[(in[inIter - 1] & 0x03 << 4) | (in[inIter++] & 0xF0 >> 4)];
+            out[outIter++] = encodingTable[in[inIter - 1] & 0x0F << 2];
         }
         
         else
-            out[outIter++] = encodingTable[in[inIter - 1]] & 0x03 << 4;
+            out[outIter++] = encodingTable[in[inIter - 1] & 0x03 << 4];
     }
 
     if(trail) {
