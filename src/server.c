@@ -42,7 +42,7 @@ static void sigterm_handler(const int signal);
 static int generate_register_ipv4_socket(FdSelector selector, char **errorMessage);
 static int generate_register_ipv6_socket(FdSelector selector, char **errorMessage);
 static FdSelector initialize_selector(char ** errorMessage);
-static void initialize_users();
+static void initialize_users(void);
 
 
 typedef struct ServerHandler {
@@ -59,6 +59,7 @@ static Socks5Args args;
 static ServerHandler serverHandler;
 static bool done = false;
 
+
 static double cleanupInterval;
 
 int main(const int argc, char **argv) {
@@ -73,8 +74,13 @@ int main(const int argc, char **argv) {
     signal(SIGTERM, sigterm_handler);
     signal(SIGINT,  sigterm_handler);
 
+    // Non-Blocking stdout & stderr
+    selector_fd_set_nio(stdout);
+    selector_fd_set_nio(stderr);
+
     char       *err_msg      = NULL;
     SelectorStatus   ss      = SELECTOR_SUCCESS;
+    int passiveSocketErrorCount = 0;
     
     FdSelector selector = initialize_selector(&err_msg);
     
@@ -82,16 +88,49 @@ int main(const int argc, char **argv) {
         goto finally;
     }
 
-    serverHandler.ipv4addr.s_addr = htonl(INADDR_ANY);
-    
-    if(generate_register_ipv4_socket(selector, &err_msg) != 0) {
-         goto finally;
-    }
-    
-    inet_pton(AF_INET6, "::1", &serverHandler.ipv6addr);
+        // Listen to all interfaces
+    if(args.socks_addr == NULL) {
+        serverHandler.ipv6addr = in6addr_any;
 
-    if(generate_register_ipv6_socket(selector, &err_msg) != 0) {
-         goto finally;
+        serverHandler.ipv4addr.s_addr = htonl(INADDR_ANY);
+
+        if(generate_register_ipv4_socket(selector, &err_msg) != 0) {
+            fprintf(stdout, "Error registering IPv4 listening socket\n");
+            perror(err_msg);
+            fprintf(stdout, "Trying with IPv6\n\n");
+            
+            passiveSocketErrorCount++;
+        }
+
+        if(generate_register_ipv6_socket(selector, &err_msg) != 0) {
+            fprintf(stdout, "Error registering IPv6 listening socket\n");
+
+            if(passiveSocketErrorCount == 0) {
+                perror(err_msg);
+                fprintf(stdout, "Continuing with just IPv4\n");
+            }
+            else {
+                goto finally;
+            }
+        }
+    }
+
+    // -l 
+    else if(inet_pton(AF_INET, args.socks_addr, &serverHandler.ipv4addr)) {
+        if(generate_register_ipv4_socket(selector, &err_msg) != 0) {
+            goto finally;
+        }
+    } 
+    
+    else if (inet_pton(AF_INET6, args.socks_addr, &serverHandler.ipv6addr)) {
+        if(generate_register_ipv6_socket(selector, &err_msg) != 0) {
+            goto finally;
+        }
+    } 
+
+    else {
+        err_msg = "Invalid IP in -l parameter";
+        goto finally;
     }
 
     statistics_init();
@@ -145,7 +184,6 @@ finally:
     selector_close();
 
     user_handler_destroy();
-    // socksv5_pool_destroy();
 
     if(serverHandler.ipv4Fd >= 0) {
         close(serverHandler.ipv4Fd);
@@ -245,6 +283,10 @@ static int generate_new_socket(struct sockaddr *addr, socklen_t addrLen,char ** 
     // man 7 ip. no importa reportar nada si falla.
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
 
+    if(addr->sa_family == AF_INET6) {
+        setsockopt(fd, SOL_IPV6, IPV6_V6ONLY, &(int){ 1 }, sizeof(int));
+    }
+
     if(bind(fd, addr, addrLen) < 0) {
         *errorMessage = "Unable to bind socket";
         return -1;
@@ -267,7 +309,7 @@ static void sigterm_handler(const int signal) {
     done = true;
 }
 
-static void initialize_users() {
+static void initialize_users(void) {
 
     user_handler_init();
 
