@@ -1,4 +1,5 @@
 #include "dnsConnect.h"
+#include <errno.h>
 
 #include "socks5/socks5.h"
 #include "netutils/netutils.h"
@@ -10,7 +11,6 @@ static void dns_connect_on_arrival(SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
 
     selector_set_interest(event->s, session->clientConnection.fd, OP_NOOP);
-    selector_set_interest(event->s, session->dnsConnection.fd, OP_NOOP);
     selector_set_interest(event->s, session->serverConnection.fd, OP_WRITE);
 }
 
@@ -19,45 +19,88 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
 
     int error;
     socklen_t len = sizeof(error);
+    DnsHeader *ipv4 = &session->dnsHeaderContainer->ipv4;
+    DnsHeader *ipv6 = &session->dnsHeaderContainer->ipv6;
 
-    if(getsockopt(session->serverConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1) {
-        //logger stderr(errno);
-        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-        return REQUEST_ERROR;
+    if(getsockopt(session->serverConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
         
-    }
+        socks5_unregister_server(event->s, session);
 
-    if(error) {
-        if(session->socksHeader.dnsHeader.parser.counter < session->socksHeader.dnsHeader.parser.totalAnswers){
-            session->socksHeader.dnsHeader.parser.counter++;
+        if(ipv4->responseParser.addresses != NULL && ipv4->responseParser.counter < ipv4->responseParser.totalAnswers){
             
-            socks5_unregister_server(event->s, session);
-
-            if(session->socksHeader.dnsHeader.parser.currentType == SOCKS_5_ADD_TYPE_IP4){
+            do {
                 session->serverConnection.fd =
-                    new_ipv4_socket(session->socksHeader.dnsHeader.parser.addresses[session->socksHeader.dnsHeader.parser.counter].addr.ipv4,
-                            session->serverConnection.port, (struct sockaddr *)&session->serverConnection.addr);
-            }
-
-            else if(session->socksHeader.dnsHeader.parser.currentType == SOCKS_5_ADD_TYPE_IP6){
-                session->serverConnection.fd =
-                        new_ipv6_socket(session->socksHeader.dnsHeader.parser.addresses[session->socksHeader.dnsHeader.parser.counter].addr.ipv6,
-                                session->serverConnection.port, (struct sockaddr *)&session->serverConnection.addr);
-            }
-        
-
-            socks5_register_server(event->s, session);
-            selector_set_interest(event->s, session->serverConnection.fd, OP_WRITE);
+                    new_ipv4_socket(ipv4->responseParser.addresses[ipv4->responseParser.counter++].addr.ipv4,
+                            session->socksHeader.requestHeader.parser.port, (struct sockaddr *)&session->serverConnection.addr);
             
-            return DNS_CONNECT;
+                if (session->serverConnection.fd  == -1) {
+                    if(errno == ENETUNREACH){
+                        session->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
+                    }
+
+                    else if(errno = EHOSTUNREACH) {
+                        session->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
+                    }
+
+                    else if(errno = ECONNREFUSED) {
+                        session->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
+                    }
+
+                    else {
+                        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+                    } 
+                }
+            } while(session->serverConnection.fd  == -1 && ipv4->responseParser.counter < ipv4->responseParser.totalAnswers);
+                        
+            if(session->serverConnection.fd != -1) {
+                socks5_register_server(event, session);
+                return session->sessionStateMachine.current;
+            }
         }
-        else
-        {
-            session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-            return REQUEST_ERROR;
-        } 
-    }
 
+        if(ipv6->responseParser.addresses != NULL && ipv6->responseParser.counter < ipv6->responseParser.totalAnswers){
+            
+            do {
+                session->serverConnection.fd =
+                    new_ipv6_socket(ipv6->responseParser.addresses[ipv6->responseParser.counter++].addr.ipv6,
+                            session->socksHeader.requestHeader.parser.port, (struct sockaddr *)&session->serverConnection.addr);
+
+                if (session->serverConnection.fd  == -1) {
+                    if(errno == ENETUNREACH){
+                        session->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
+                    }
+
+                    else if(errno = EHOSTUNREACH) {
+                        session->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
+                    }
+
+                    else if(errno = ECONNREFUSED) {
+                        session->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
+                    }
+
+                    else {
+                        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+                    } 
+                }
+            } while(session->serverConnection.fd  == -1 && ipv6->responseParser.counter < ipv6->responseParser.totalAnswers);
+                        
+            if(session->serverConnection.fd != -1) {
+                socks5_register_server(event, session);
+                return session->sessionStateMachine.current;
+            }
+        }
+        
+        free(session->dnsHeaderContainer->ipv4.responseParser.addresses);
+        free(session->dnsHeaderContainer->ipv6.responseParser.addresses);
+        return REQUEST_ERROR;
+    }
+    
+    // Para llegar a este estado se cerraron los fds y se liberaron los buffer
+    // Se liberan las estructuras restantes y por ultimo todo el container.
+
+    free(session->dnsHeaderContainer->ipv4.responseParser.addresses);
+    free(session->dnsHeaderContainer->ipv6.responseParser.addresses);
+    free(session->dnsHeaderContainer);
     return REQUEST_SUCCESSFUL;
 }
 

@@ -5,20 +5,19 @@
 static void generate_dns_query_on_arrival(SelectorEvent *event);
 static unsigned generate_dns_query_on_write(SelectorEvent *event);
 
-
 static void generate_dns_query_on_arrival(SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
     
-    if(session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.state == OPEN) {
-        buffer_init(&session->socksHeader.dnsHeaderContainer.ipv4.buffer, 0, NULL);
-        session->socksHeader.dnsHeaderContainer.ipv4.connected = false;
-        selector_set_interest(event->s, session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd, OP_WRITE);
+    if(session->dnsHeaderContainer->ipv4.dnsConnection.state == OPEN) {
+        buffer_init(&session->dnsHeaderContainer->ipv4.buffer, 0, NULL);
+        session->dnsHeaderContainer->ipv4.connected = false;
+        selector_set_interest(event->s, session->dnsHeaderContainer->ipv4.dnsConnection.fd, OP_WRITE);
     }
 
-    if(session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.state == OPEN) {
-        buffer_init(&session->socksHeader.dnsHeaderContainer.ipv6.buffer, 0, NULL);
-        session->socksHeader.dnsHeaderContainer.ipv6.connected = false;
-        selector_set_interest(event->s, session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.fd, OP_WRITE);
+    if(session->dnsHeaderContainer->ipv6.dnsConnection.state == OPEN) {
+        buffer_init(&session->dnsHeaderContainer->ipv6.buffer, 0, NULL);
+        session->dnsHeaderContainer->ipv6.connected = false;
+        selector_set_interest(event->s, session->dnsHeaderContainer->ipv6.dnsConnection.fd, OP_WRITE);
     }
 
     selector_set_interest(event->s, session->clientConnection.fd, OP_NOOP);
@@ -32,33 +31,42 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
     int error = 0;
     socklen_t len = sizeof(error);
 
-    
-    if(session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd == event->fd) {
-        dnsHeaderMe = &session->socksHeader.dnsHeaderContainer.ipv4;
-        dnsHeaderOther = &session->socksHeader.dnsHeaderContainer.ipv6;
+    if(session->dnsHeaderContainer->ipv4.dnsConnection.fd == event->fd) {
+        dnsHeaderMe = &session->dnsHeaderContainer->ipv4;
+        dnsHeaderOther = &session->dnsHeaderContainer->ipv6;
         family = AF_INET;
     }
-    else
-    {
-        dnsHeaderMe = &session->socksHeader.dnsHeaderContainer.ipv6;
-        dnsHeaderOther = &session->socksHeader.dnsHeaderContainer.ipv4;
+    else {
+        dnsHeaderMe = &session->dnsHeaderContainer->ipv6;
+        dnsHeaderOther = &session->dnsHeaderContainer->ipv4;
         family = AF_INET6;
     }
     
     if(getsockopt(dnsHeaderMe->dnsConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
-        dnsHeaderMe->dnsConnection.state == CLOSING;
         
-        if(dnsHeaderOther->dnsConnection.state == CLOSED){
+        // Cerramos el Fd de la conexion que salio mal
+        dnsHeaderMe->dnsConnection.state == INVALID;
+        selector_unregister_fd(event->s, event->fd);
+
+        if(dnsHeaderOther->dnsConnection.state == INVALID){
+            free(session->dnsHeaderContainer);
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
         }
         goto finally;    
     }
 
-    if(!doh_builder_build(&dnsHeaderMe->buffer, session->clientConnection.domainName, family, socks5_get_args())) {
-        dnsHeaderMe->dnsConnection.state == CLOSED;
+    if(!doh_builder_build(&dnsHeaderMe->buffer, session->socksHeader.requestHeader.parser.address.domainName, family, socks5_get_args())) {
         
-        if(dnsHeaderOther->dnsConnection.state == CLOSED){
+        free(dnsHeaderMe->buffer.data);
+        dnsHeaderMe->buffer.data = NULL;
+
+        // Cerramos el Fd
+        dnsHeaderMe->dnsConnection.state == INVALID;
+        selector_unregister_fd(event->s, event->fd);
+        
+        if(dnsHeaderOther->dnsConnection.state == INVALID){
+            free(session->dnsHeaderContainer);
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
         }
@@ -66,10 +74,9 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
     }
 
     dnsHeaderMe->connected = true;
+    selector_add_interest_event(event, OP_NOOP);
 
 finally:
-
-    selector_add_interest_event(event, OP_NOOP);
 
     if(dnsHeaderOther->dnsConnection.state == OPEN && !dnsHeaderOther->connected){
         return session->sessionStateMachine.current;

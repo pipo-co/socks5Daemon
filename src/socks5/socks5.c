@@ -166,7 +166,6 @@ void socks5_unregister_server(FdSelector s, SessionHandlerP session){
     fprintf(stderr, "Unregistered new server %d\n", session->serverConnection.fd);
 }
 
-
 void socks5_register_dns(FdSelector s, SessionHandlerP session){
 
     if(session->dnsHeaderContainer->ipv4.dnsConnection.state == OPEN) {
@@ -441,7 +440,12 @@ static void socks5_dns_read(SelectorEvent *event){
      
     if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == DNS_CONNECT || state == REQUEST_ERROR) {
         
+        // Si salimos pr DNS_CONNECT es que venimos bien.
+        // Limpiamos fd y buffer que ya no es necesario
+        // Falta limpiar lista de addresses
+
         if(session->dnsHeaderContainer->ipv4.dnsConnection.state != INVALID) {
+            session->dnsHeaderContainer->ipv4.dnsConnection.state = INVALID;
             selector_unregister_fd(event->s, session->dnsHeaderContainer->ipv4.dnsConnection.fd);
 
             if(state == DNS_CONNECT) {
@@ -449,8 +453,9 @@ static void socks5_dns_read(SelectorEvent *event){
                 session->dnsHeaderContainer->ipv4.buffer.data = NULL;
             }
         }
-
+ 
         if(session->dnsHeaderContainer->ipv6.dnsConnection.state != INVALID) {
+            session->dnsHeaderContainer->ipv4.dnsConnection.state = INVALID;
             selector_unregister_fd(event->s, session->dnsHeaderContainer->ipv6.dnsConnection.fd);
 
             if(state == DNS_CONNECT) {
@@ -478,8 +483,13 @@ static void socks5_dns_write(SelectorEvent *event){
     unsigned state;
 
     if(!buffer_can_read(buffer)) {
+        
+        if(!header->connected){
+            selector_state_machine_proccess_write(&session->sessionStateMachine, event);
+            return;
+        }
+        // Podria no ser necesario
         fprintf(stderr, "ERROR: Write dns socket %d was registered on pselect, but there was nothing on buffer\n", event->fd);
-
         socks5_close_session(event);
         return;
     }
@@ -543,6 +553,8 @@ static SessionHandlerP socks5_session_init(void) {
     buffer_init(&session->output, sessionOutputBufferSize, outputBuffer);
 
     build_socks_session_state_machine(&session->sessionStateMachine);
+
+    session->clientInfo.connectedDomain = NULL;
 
     session->clientConnection.state = OPEN;
     session->serverConnection.state = INVALID;
@@ -615,6 +627,8 @@ static void socks5_close_session_util(SelectorEvent *event, bool byInactivity) {
         if(session->clientInfo.user->connectionCount == 0) {
             statistics_dec_current_user_count();
         }
+
+        free(session->clientInfo.connectedDomain);
     }
 
     if(session->serverConnection.state != INVALID) {

@@ -46,8 +46,6 @@ typedef enum SocketState {
 typedef struct Connection {
     int fd;
     struct sockaddr_storage addr;
-    uint16_t port;
-    char *domainName;
     SocketState state;
 } Connection;
 
@@ -55,6 +53,7 @@ typedef struct ClientInfo {
   uint8_t authMethod;
   uint8_t addressTypeSelected;
   UserInfoP user;
+  char * connectedDomain;
 } ClientInfo;
 
 typedef struct HelloHeader{
