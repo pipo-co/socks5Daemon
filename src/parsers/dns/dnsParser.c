@@ -273,6 +273,7 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                     p->currentState = RESPONSE_DNS_ANSWERS_NAME_FIRST_BYTE;
                 }
                 else{
+                    p->addresses = realloc(p->addresses, p->totalAnswers*sizeof(struct IpAddress));
                     p->currentState = RESPONSE_DNS_DONE;
                 }
             }
@@ -291,6 +292,7 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                     p->currentState = RESPONSE_DNS_ANSWERS_NAME_FIRST_BYTE;
                 }
                 else{
+                    p->addresses = realloc(p->addresses, p->totalAnswers*sizeof(struct IpAddress));
                     p->currentState = RESPONSE_DNS_DONE;
                 }
             }
@@ -309,6 +311,7 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                     p->currentState = RESPONSE_DNS_ANSWERS_NAME_FIRST_BYTE;
                 }
                 else{
+                    p->addresses = realloc(p->addresses, p->totalAnswers*sizeof(struct IpAddress));
                     p->currentState = RESPONSE_DNS_DONE;
                 }
             }
