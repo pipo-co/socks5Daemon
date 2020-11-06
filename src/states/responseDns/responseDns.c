@@ -32,6 +32,12 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
         return session->sessionStateMachine.current;
     }
 
+    if (errored == true){
+        //loggear ( response_dns_parser_error_message();)
+        return REQUEST_ERROR;
+        // return DNS_ERROR;
+    }
+
     if(!response_dns_parser_consume(&session->socksHeader.dnsHeader.buffer, &session->socksHeader.dnsHeader.parser, &errored)){
         return session->sessionStateMachine.current;
     }
@@ -91,6 +97,10 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
         //logger stderr(errno);
         return REQUEST_ERROR;      
     }
+
+    session->clientInfo.addressTypeSelected = session->socksHeader.requestHeader.parser.addressType;
+    selector_set_interest(event->s, session->dnsConnection.fd, OP_NOOP);
+    socks5_register_server(event->s, session);
 
     return IP_CONNECT;
 }
