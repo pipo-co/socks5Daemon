@@ -46,7 +46,7 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
     }
     
     if(getsockopt(dnsHeaderMe->dnsConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
-        dnsHeaderMe->dnsConnection.state == CLOSED;
+        dnsHeaderMe->dnsConnection.state == CLOSING;
         
         if(dnsHeaderOther->dnsConnection.state == CLOSED){
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;

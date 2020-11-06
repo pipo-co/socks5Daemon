@@ -2,22 +2,24 @@
 
 #define REQUEST_ERROR_SIZE 10
 
-static void request_error_marshall(Buffer *b, size_t *bytes, uint8_t rep);
-static void request_error_on_arrival(SelectorEvent *event);
-static unsigned request_error_on_write(SelectorEvent *event);
+static void dns_request_error_marshall(Buffer *b, size_t *bytes, uint8_t rep);
+static void dns_request_error_on_arrival(SelectorEvent *event);
+static unsigned dns_request_error_on_write(SelectorEvent *event);
 
-static void request_error_on_arrival(SelectorEvent *event) {
+static void dns_request_error_on_arrival(SelectorEvent *event) {
     
     SessionHandlerP session = (SessionHandlerP) event->data;
 
-    session->socksHeader.requestHeader.bytes = 0;
+    session->socksHeader.dnsHeaderContainer.errorBytes = 0;
 
-    request_error_marshall(&session->output, &session->socksHeader.requestHeader.bytes, session->socksHeader.requestHeader.rep);  
+    dns_request_error_marshall(&session->output, &session->socksHeader.dnsHeaderContainer.errorBytes, session->socksHeader.dnsHeaderContainer.rep);  
 
     selector_set_interest(event->s, session->clientConnection.fd, OP_WRITE);
+    selector_set_interest(event->s, session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd, OP_NOOP);
+    selector_set_interest(event->s, session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.fd, OP_NOOP);
 }
 
-static unsigned request_error_on_write(SelectorEvent *event) {
+static unsigned dns_request_error_on_write(SelectorEvent *event) {
 
     SessionHandlerP session = (SessionHandlerP) event->data;
 
@@ -30,7 +32,7 @@ static unsigned request_error_on_write(SelectorEvent *event) {
     return session->sessionStateMachine.current;
 }
 
-static void request_error_marshall(Buffer *b, size_t *bytes, uint8_t rep) {
+static void dns_request_error_marshall(Buffer *b, size_t *bytes, uint8_t rep) {
 
         while(*bytes < REQUEST_ERROR_SIZE && buffer_can_write(b)) {
             if(*bytes == 0){
@@ -52,14 +54,14 @@ static void request_error_marshall(Buffer *b, size_t *bytes, uint8_t rep) {
         }
     }
 
-SelectorStateDefinition request_error_state_definition_supplier(void) {
+SelectorStateDefinition dns_request_error_state_definition_supplier(void) {
 
     SelectorStateDefinition stateDefinition = {
 
         .state = REQUEST_ERROR,
-        .on_arrival = request_error_on_arrival,
+        .on_arrival = dns_request_error_on_arrival,
         .on_read = NULL,
-        .on_write = request_error_on_write,
+        .on_write = dns_request_error_on_write,
         .on_block_ready = NULL,
         .on_departure = NULL,
     };

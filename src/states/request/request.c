@@ -95,12 +95,10 @@ static unsigned dns_connection_handling (SelectorEvent * event){
         session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.state = OPEN;
         session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd = 
             new_ipv6_socket(ipv6addr, htons(args->doh.port), (struct sockaddr *)&session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.addr);
-        errno4 = errno;
 
         session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.state = OPEN;
         session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.fd = 
             new_ipv6_socket(ipv6addr, htons(args->doh.port), (struct sockaddr *)&session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.addr);
-        errno6 = errno;
 
     } else {
         session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;

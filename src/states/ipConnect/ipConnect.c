@@ -16,16 +16,9 @@ static unsigned ip_connect_on_write(SelectorEvent *event) {
     int error;
     socklen_t len = sizeof(error);
 
-    if(getsockopt(session->serverConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1) {
-        //logger stderr(errno);
+    if(getsockopt(session->serverConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
         session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
         return REQUEST_ERROR;
-    }
-
-    if(error) {
-        //logger stderr(error)???????????????
-        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-        return REQUEST_ERROR; 
     }
 
     return REQUEST_SUCCESSFUL;

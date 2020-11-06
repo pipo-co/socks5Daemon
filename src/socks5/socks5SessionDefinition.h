@@ -91,7 +91,6 @@ typedef union SocksHeaders{
     HelloHeader helloHeader;    
     AuthRequestHeader authRequestHeader;
     RequestHeader requestHeader;
-    DnsHeaderContainer dnsHeaderContainer;   
 } SocksHeaders;
 
 typedef struct SessionHandler {
@@ -104,6 +103,8 @@ typedef struct SessionHandler {
     Connection serverConnection;
 
     ClientInfo clientInfo;
+
+    DnsHeaderContainer *dnsHeaderContainer;
     
     SocksHeaders socksHeader;
 
