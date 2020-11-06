@@ -140,15 +140,15 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
             }
             else{
                 p->bytesWritten = 0;
-                p->totalQuestions--;
+                // p->totalQuestions--;
 
-                if(p->totalQuestions != 0){
-                    p->currentState = RESPONSE_DNS_QUERIES_NAME_FIRST_BYTE;
-                }
-                else
-                {
+                // if(p->totalQuestions != 0){
+                //     p->currentState = RESPONSE_DNS_QUERIES_NAME_FIRST_BYTE;
+                // }
+                // else
+                // {
                     p->currentState = RESPONSE_DNS_ANSWERS_NAME_FIRST_BYTE;
-                }
+                // }
             }
 
         break;

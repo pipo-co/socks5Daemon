@@ -27,7 +27,7 @@ void http_dns_parser_init(HttpDnsParser *p) {
 
 enum HttpDnsParserState http_dns_parser_feed(HttpDnsParser *p, uint8_t b) {
 
-    struct parser_event * event;
+    const struct parser_event * event;
     switch(p->currentState) {
 
         case HTTP_STATUS_CODE_FIRST:
@@ -130,7 +130,7 @@ bool http_dns_parser_consume(Buffer *buffer, HttpDnsParser *p, bool *errored) {
     return http_dns_parser_is_done(p->currentState, errored);
 }
 
-bool http_dns_parser_destroy(HttpDnsParser *p){
+void http_dns_parser_destroy(HttpDnsParser *p){
 
     parser_destroy(p->statusCodeParser);
     parser_destroy(p->contentLengthParser);
