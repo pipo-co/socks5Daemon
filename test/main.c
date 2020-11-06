@@ -65,6 +65,7 @@ static const suiteSupplier suiteSuppliers[] = {
     response_dns_parser_test_suite,
     http_dns_parser_test_suite,
     base64_test_suite,
+    doh_builder_test_suite,
 };
 
 SRunner * test_srunner_init(void) {

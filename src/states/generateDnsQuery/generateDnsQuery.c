@@ -32,7 +32,11 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR; 
         }
-        doh_builder_build(&session->socksHeader.dnsHeader.buffer, session->clientConnection.domainName, AF_INET);
+        
+        if(!doh_builder_build(&session->socksHeader.dnsHeader.buffer, session->clientConnection.domainName, AF_INET, socks5_get_args())) {
+            return REQUEST_ERROR;
+        }
+
         session->socksHeader.dnsHeader.loadedBuffer = true;
     }
 
