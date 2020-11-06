@@ -278,6 +278,7 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                 }
             }
         break;
+        
         case RESPONSE_DNS_IPV4_ADDRESS:
             
             p->addresses[p->currentAnswers].addr.ipv4.s_addr = (p->addresses[p->currentAnswers].addr.ipv4.s_addr << 8) + b;

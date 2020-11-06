@@ -68,12 +68,18 @@ typedef struct AuthRequestHeader{
 } AuthRequestHeader;
 
 typedef struct DnsHeader{
+    Connection dnsConnection;
     Buffer buffer;
     HttpDnsParser httpParser;
-    ResponseDnsParser parser;
+    ResponseDnsParser responseParser;
     size_t bytes;
-    bool loadedBuffer;
+    bool connected;
 } DnsHeader;
+
+typedef struct DnsHeaderContainer{
+    DnsHeader ipv4;
+    DnsHeader ipv6;
+}DnsHeaderContainer;
 
 typedef struct RequestHeader{
     RequestParser parser;
@@ -85,7 +91,7 @@ typedef union SocksHeaders{
     HelloHeader helloHeader;    
     AuthRequestHeader authRequestHeader;
     RequestHeader requestHeader;
-    DnsHeader dnsHeader;   
+    DnsHeaderContainer dnsHeaderContainer;   
 } SocksHeaders;
 
 typedef struct SessionHandler {
@@ -96,7 +102,6 @@ typedef struct SessionHandler {
 
     Connection clientConnection;
     Connection serverConnection;
-    Connection dnsConnection;
 
     ClientInfo clientInfo;
     

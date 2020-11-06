@@ -169,11 +169,15 @@ void socks5_unregister_server(FdSelector s, SessionHandlerP session){
 
 void socks5_register_dns(FdSelector s, SessionHandlerP session){
 
-    session->dnsConnection.state = OPEN;
+    if(session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.state == OPEN) {
+        selector_register(s, session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd, &DNSHandler, OP_WRITE, session);
+        fprintf(stderr, "Registered new dns %d\n", session->socksHeader.dnsHeaderContainer.ipv4.dnsConnection.fd);
+    }
 
-    selector_register(s, session->dnsConnection.fd, &DNSHandler, OP_WRITE, session);
-
-    fprintf(stderr, "Registered new dns %d\n", session->dnsConnection.fd);
+    if(session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.state == OPEN) {
+        selector_register(s, session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.fd, &DNSHandler, OP_WRITE, session);
+        fprintf(stderr, "Registered new dns %d\n", session->socksHeader.dnsHeaderContainer.ipv6.dnsConnection.fd);
+    }
 }
 
 Socks5Args *socks5_get_args(void){
