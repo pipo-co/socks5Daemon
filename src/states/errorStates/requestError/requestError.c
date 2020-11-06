@@ -13,7 +13,9 @@ static void request_error_on_arrival(SelectorEvent *event) {
     session->socksHeader.requestHeader.bytes = 0;
 
     request_error_marshall(&session->output, &session->socksHeader.requestHeader.bytes, session->socksHeader.requestHeader.rep);  
-    
+    if(session->dnsConnection.state == OPEN) {
+        selector_set_interest(event->s, session->dnsConnection.fd, OP_NOOP);
+    }
     selector_set_interest(event->s, session->clientConnection.fd, OP_WRITE);
 }
 

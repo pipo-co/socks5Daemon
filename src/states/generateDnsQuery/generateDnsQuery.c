@@ -1,5 +1,6 @@
 #include "generateDnsQuery.h"
 #include "parsers/dns/dohBuilder.h"
+#include "socks5/socks5.h"
 
 static void generate_dns_query_on_arrival(SelectorEvent *event);
 static unsigned generate_dns_query_on_write(SelectorEvent *event);
@@ -32,7 +33,7 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR; 
         }
-        
+
         if(!doh_builder_build(&session->socksHeader.dnsHeader.buffer, session->clientConnection.domainName, AF_INET, socks5_get_args())) {
             return REQUEST_ERROR;
         }
