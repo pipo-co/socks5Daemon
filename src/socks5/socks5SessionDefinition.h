@@ -13,6 +13,7 @@
 #include "parsers/hello/helloParser.h"
 #include "parsers/authRequest/authRequestParser.h"
 #include "parsers/dns/dnsParser.h"
+#include "parsers/dns/httpDnsParser.h"
 #include "parsers/request/requestParser.h"
 
 typedef enum SessionState {
@@ -67,6 +68,7 @@ typedef struct AuthRequestHeader{
 
 typedef struct DnsHeader{
     Buffer buffer;
+    HttpDnsParser httpParser;
     ResponseDnsParser parser;
     size_t bytes;
     bool loadedBuffer;

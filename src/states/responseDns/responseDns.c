@@ -7,6 +7,7 @@
 
 #include "buffer/buffer.h"
 #include "socks5/socks5.h"
+#include "parsers/dns/httpDnsParser.h"
 #include "parsers/dns/dnsParser.h"
 #include "netutils/netutils.h"
 
@@ -16,6 +17,7 @@ static unsigned response_dns_on_read(SelectorEvent *event);
 static void response_dns_on_arrival (SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
 
+    http_dns_parser_init(&session->socksHeader.dnsHeader.httpParser);
     response_dns_parser_init(&session->socksHeader.dnsHeader.parser);
 
     selector_set_interest(event->s, session->dnsConnection.fd, OP_READ);
@@ -25,6 +27,10 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
      
     SessionHandlerP session = (SessionHandlerP) event->data;
     bool errored;
+
+    if(!http_dns_parser_consume(&session->socksHeader.dnsHeader.buffer, &session->socksHeader.dnsHeader.httpParser, &errored)){
+        return session->sessionStateMachine.current;
+    }
 
     if(!response_dns_parser_consume(&session->socksHeader.dnsHeader.buffer, &session->socksHeader.dnsHeader.parser, &errored)){
         return session->sessionStateMachine.current;
@@ -37,8 +43,8 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
 
     if (session->socksHeader.dnsHeader.parser.totalQuestions == 0){
         //loggear ("dnsResponse: No questions received!")
-        session->socksHeader.requestHeader.rep = COMMAND_NOT_SUPPORTED;
-         return REQUEST_ERROR;
+        
+        return REQUEST_ERROR;
         //  return DNS_ERROR;
     }
 
@@ -47,6 +53,8 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
         return REQUEST_ERROR;
         // return DNS_ERROR;
     }
+
+    
 
     return IP_CONNECT;
 }
