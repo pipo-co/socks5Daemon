@@ -1,11 +1,16 @@
-#include <stdlib.h>
+#ifndef BASE_64_H_a7f0b7011d5bc49decb646a7852c4531c07e17b5
+#define BASE_64_H_a7f0b7011d5bc49decb646a7852c4531c07e17b5
+
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
-// Source: https://stackoverflow.com/questions/342409/how-do-i-base64-encode-decode-in-c
 
-char *base64_encode(const unsigned char *data, size_t input_length, size_t *output_length);
+#define BASE64_ENCODE_SIZE(len) (4*(len/3) + 4)
 
-unsigned char *base64_decode(const uint8_t *data, size_t input_length, size_t *output_length);
+#define BASE64_DECODE_SIZE(len) (3*(len/4) + 4)
 
-void build_decoding_table();
+size_t base64_encode(uint8_t in[], size_t len, char out[], bool trail);
 
-void base64_cleanup();
+size_t base64_decode(char in[], uint8_t out[]);
+
+#endif
