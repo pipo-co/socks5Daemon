@@ -1,6 +1,5 @@
 #include "base64.h"
 
-
 static char encodingTable[] = {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
     'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -34,7 +33,7 @@ size_t base64_encode(uint8_t in[], size_t len, char out[], bool trail) {
 
         out[outIter++] = (encodingTable[in[inIter - 1]] & 0x03 << 4) | (encodingTable[in[inIter++]] & 0xF0 >> 4);
 
-        out[outIter++] = (encodingTable[in[inIter - 1]] & 0x0F << 2 | (encodingTable[in[inIter++]] & 0xC0 >> 6);
+        out[outIter++] = (encodingTable[in[inIter - 1]] & 0x0F << 2) | (encodingTable[in[inIter++]] & 0xC0 >> 6);
 
         out[outIter++] = encodingTable[in[inIter - 1]] & 0x3F;
     }
@@ -61,29 +60,54 @@ size_t base64_encode(uint8_t in[], size_t len, char out[], bool trail) {
     return outIter;
 }
 
-// size_t base64_decode(char in[], uint8_t out[]) {
+size_t base64_decode(char in[], uint8_t out[]) {
 
-//     if(!decodingTableBuilt)
-//         build_decoding_table();
+    if(!decodingTableBuilt)
+        build_decoding_table();
 
-//     size_t inIter = 0;
-//     size_t outIter = 0;
+    size_t inIter = 0;
+    size_t outIter = 0;
 
 
-//     while() {
+    while(in[inIter] != 0 && in[inIter] != '=') {
 
-//         out[outIter++] = decodingTable[in[inIter++]] & 0x11111100 >> 2;
+        out[outIter] = decodingTable[in[inIter++]] & 0x3F << 2;
 
-//         out[outIter++] = decodingTable[in[inIter - 1]]
+        if(in[inIter] == 0 || in[inIter] == '=') {
+            outIter++;
+            break;
+        }
 
-//     }
-    
-// }
+        out[outIter++] = decodingTable[in[inIter]] & 0x30 >> 4;
 
-// static void build_decoding_table() {
+        out[outIter] = decodingTable[in[inIter++]] & 0x0F << 4;
 
-//     decodingTableBuilt = true;
+        if(in[inIter] == 0 || in[inIter] == '=') {
+            outIter++;
+            break;
+        }
 
-//     for (int i = 0; i < 64; i++)
-//         decodingTable[decodingTable[i]] = i;
-// }
+        out[outIter++] = decodingTable[in[inIter + 1]] & 0x3C >> 2;
+
+        out[outIter] = decodingTable[in[inIter++]] & 0x03 << 6;
+
+        if(in[inIter + 1] == 0 || in[inIter + 1] == '=') {
+            outIter++;
+            break;
+        }
+
+        out[outIter++] = decodingTable[in[inIter + 1]] & 0x3F;
+
+        outIter++;
+    }
+
+    return outIter;
+}
+
+static void build_decoding_table() {
+
+    decodingTableBuilt = true;
+
+    for (int i = 0; i < 64; i++)
+        decodingTable[decodingTable[i]] = i;
+}
