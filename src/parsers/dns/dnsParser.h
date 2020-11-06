@@ -8,7 +8,7 @@
 
 #include "buffer/buffer.h"
 #define IPV4 0x01
-#define IPV6 0x02
+#define IPV6 0x04
 #define A 0x01
 #define AAAA 0x1c
 

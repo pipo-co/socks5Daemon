@@ -94,6 +94,8 @@ static unsigned request_on_read(SelectorEvent *event) {
 
         socks5_register_dns(event->s, session);
 
+        session->serverConnection.port = session->socksHeader.requestHeader.parser.port;
+
         return GENERATE_DNS_QUERY; // TODO: GENERATE_DNS_QUERY; 
     }
     

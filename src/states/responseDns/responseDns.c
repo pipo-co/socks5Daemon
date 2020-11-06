@@ -54,7 +54,43 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
         // return DNS_ERROR;
     }
 
-    
+    if(session->socksHeader.dnsHeader.parser.currentType == SOCKS_5_ADD_TYPE_IP4){
+        session->serverConnection.fd =
+                new_ipv4_socket(session->socksHeader.dnsHeader.parser.addresses[session->socksHeader.dnsHeader.parser.addressRemaining].addr.ipv4,
+                        session->serverConnection.port, (struct sockaddr *)&session->serverConnection.addr);
+    }
+
+    else if(session->socksHeader.dnsHeader.parser.currentType == SOCKS_5_ADD_TYPE_IP6){
+        session->serverConnection.fd =
+                new_ipv6_socket(session->socksHeader.dnsHeader.parser.addresses[session->socksHeader.dnsHeader.parser.addressRemaining].addr.ipv6,
+                        session->serverConnection.port, (struct sockaddr *)&session->serverConnection.addr);
+    }
+
+    else {
+        session->socksHeader.requestHeader.rep = ADDRESS_TYPE_NOT_SUPPORTED;
+        return REQUEST_ERROR;
+    }
+
+    if (session->serverConnection.fd  == -1) {
+        if(errno == ENETUNREACH){
+            session->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
+        }
+
+        else if(errno = EHOSTUNREACH) {
+            session->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
+        }
+
+        else if(errno = ECONNREFUSED) {
+            session->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
+        }
+
+        else {
+            session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+        }
+
+        //logger stderr(errno);
+        return REQUEST_ERROR;      
+    }
 
     return IP_CONNECT;
 }
