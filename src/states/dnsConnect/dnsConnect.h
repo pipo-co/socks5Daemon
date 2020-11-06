@@ -4,6 +4,6 @@
 #include "socksDefs.h"
 #include "socks5/socks5SessionDefinition.h"
 
-SelectorStateDefinition dns_conenct_state_definition_supplier(void);
+SelectorStateDefinition dns_connect_state_definition_supplier(void);
 
 #endif

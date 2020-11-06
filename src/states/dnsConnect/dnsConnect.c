@@ -1,5 +1,8 @@
 #include "dnsConnect.h"
 
+#include "socks5/socks5.h"
+#include "netutils/netutils.h"
+
 static void dns_connect_on_arrival(SelectorEvent *event);
 static unsigned dns_connect_on_write(SelectorEvent *event);
 
@@ -56,6 +59,21 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
     }
 
     return REQUEST_SUCCESSFUL;
+}
+
+SelectorStateDefinition dns_connect_state_definition_supplier(void) {
+
+    SelectorStateDefinition stateDefinition = {
+
+        .state = DNS_CONNECT,
+        .on_arrival = dns_connect_on_arrival,
+        .on_read = NULL,
+        .on_write = dns_connect_on_write,
+        .on_block_ready = NULL,
+        .on_departure = NULL,
+    };
+
+    return stateDefinition;
 }
  
  
