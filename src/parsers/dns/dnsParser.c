@@ -12,7 +12,7 @@ void response_dns_parser_init(ResponseDnsParser *p) {
     p->currentAnswers = 0;
     p->bytesWritten = 0;
     p->currentType = 0;
-    p->addressRemaining = 0;
+    p->counter = 0;
 }
 
 enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8_t b) {
@@ -235,7 +235,7 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                 if(p->currentType == A){
                     
                     p->addresses[p->currentAnswers].ipType = IPV4;
-                    p->addressRemaining = 4;
+                    p->counter = 4;
                     p->currentState = RESPONSE_DNS_IPV4_ADDRESS;
                 }
                 else
@@ -248,7 +248,7 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                 if(p->currentType == AAAA){
     
                     p->addresses[p->currentAnswers].ipType = IPV6;
-                    p->addressRemaining = p->dataLenght;
+                    p->counter = p->dataLenght;
                     p->currentState = RESPONSE_DNS_IPV6_ADDRESS;
                 }
                 else
@@ -282,9 +282,9 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
             
             p->addresses[p->currentAnswers].addr.ipv4.s_addr = (p->addresses[p->currentAnswers].addr.ipv4.s_addr << 8) + b;
         
-            p->addressRemaining--;
+            p->counter--;
 
-            if(p->addressRemaining == 0){
+            if(p->counter == 0){
                 p->addresses[p->currentAnswers].addr.ipv4.s_addr = htonl(p->addresses[p->currentAnswers].addr.ipv4.s_addr);
                 p->currentAnswers++;
                 
@@ -300,11 +300,11 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
 
         case RESPONSE_DNS_IPV6_ADDRESS:
             
-            p->addresses[p->currentAnswers].addr.ipv6.s6_addr[p->dataLenght - p->addressRemaining] = b;
+            p->addresses[p->currentAnswers].addr.ipv6.s6_addr[p->dataLenght - p->counter] = b;
         
-            p->addressRemaining--;
+            p->counter--;
 
-            if(p->addressRemaining == 0){
+            if(p->counter == 0){
                 p->currentAnswers++;
 
                 if(p->currentAnswers != p->totalAnswers){

@@ -62,13 +62,13 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
 
     if(session->socksHeader.dnsHeader.parser.currentType == SOCKS_5_ADD_TYPE_IP4){
         session->serverConnection.fd =
-                new_ipv4_socket(session->socksHeader.dnsHeader.parser.addresses[session->socksHeader.dnsHeader.parser.addressRemaining].addr.ipv4,
+                new_ipv4_socket(session->socksHeader.dnsHeader.parser.addresses[session->socksHeader.dnsHeader.parser.counter].addr.ipv4,
                         session->serverConnection.port, (struct sockaddr *)&session->serverConnection.addr);
     }
 
     else if(session->socksHeader.dnsHeader.parser.currentType == SOCKS_5_ADD_TYPE_IP6){
         session->serverConnection.fd =
-                new_ipv6_socket(session->socksHeader.dnsHeader.parser.addresses[session->socksHeader.dnsHeader.parser.addressRemaining].addr.ipv6,
+                new_ipv6_socket(session->socksHeader.dnsHeader.parser.addresses[session->socksHeader.dnsHeader.parser.counter].addr.ipv6,
                         session->serverConnection.port, (struct sockaddr *)&session->serverConnection.addr);
     }
 
@@ -99,10 +99,9 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     }
 
     session->clientInfo.addressTypeSelected = session->socksHeader.requestHeader.parser.addressType;
-    selector_set_interest(event->s, session->dnsConnection.fd, OP_NOOP);
     socks5_register_server(event->s, session);
 
-    return IP_CONNECT;
+    return DNS_CONNECT;
 }
 
 SelectorStateDefinition response_dns_state_definition_supplier(void) {

@@ -11,8 +11,9 @@
 #include "states/errorStates/requestError/requestError.h"           // REQUEST_ERROR
 #include "states/ipConnect/ipConnect.h"                             // IP_CONNECT
 // #include DNS
-#include "states/generateDnsQuery/generateDnsQuery.h"
-#include "states/responseDns/responseDns.h"
+#include "states/generateDnsQuery/generateDnsQuery.h"               // GENERATE_DNS_QUERY
+#include "states/responseDns/responseDns.h"                         // RESPONSE_DNS
+#include "states/dnsConnect/dnsConnect.h"                           // DNS_CONNECT
 #include "states/requestSuccessful/requestSuccessful.h"             // REQUEST_SUCCESSFUL
 #include "states/forwarding/forwarding.h"                           // FORWARDING
 #include "states/close/flushCloser/flushCloser.h"                   // FLUSH_CLOSER
@@ -52,6 +53,7 @@ void socks5_session_state_machine_builder_init() {
     // sessionStateDefinitions[DNS]                     = dns_state_definition_supplier();
     sessionStateDefinitions[GENERATE_DNS_QUERY]         = generate_dns_query_state_definition_supplier();
     sessionStateDefinitions[RESPONSE_DNS]               = response_dns_state_definition_supplier();
+    sessionStateDefinitions[DNS_CONNECT]                = dns_connect_state_definition_supplier();
     sessionStateDefinitions[REQUEST_SUCCESSFUL]         = request_successful_state_definition_supplier();
     sessionStateDefinitions[FORWARDING]                 = forwarding_state_definition_supplier();
     sessionStateDefinitions[FLUSH_CLOSER]               = flush_closer_state_definition_supplier();
