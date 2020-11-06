@@ -48,6 +48,7 @@ parser_reset(struct parser *p) {
 
 const struct parser_event *
 parser_feed(struct parser *p, const uint8_t c) {
+    
     const unsigned type = p->classes[c];
 
     p->e1.next = p->e2.next = 0;

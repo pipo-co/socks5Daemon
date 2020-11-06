@@ -8,7 +8,7 @@
 
 #include "buffer/buffer.h"
 #define IPV4 0x01
-#define IPV6 0x02
+#define IPV6 0x04
 #define A 0x01
 #define AAAA 0x1c
 
@@ -37,6 +37,7 @@ typedef enum ResponseDnsParserState {
     RESPONSE_DNS_ANSWERS_DATA_LENGTH_LOW,
     RESPONSE_DNS_IPV4_ADDRESS,
     RESPONSE_DNS_IPV6_ADDRESS,
+    RESPONSE_DNS_CNAME,
     RESPONSE_DNS_DONE,
     RESPONSE_DNS_ERROR,
 

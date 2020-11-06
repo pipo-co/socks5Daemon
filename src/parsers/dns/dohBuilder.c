@@ -6,11 +6,11 @@
 #include "parsers/dns/dohBuilder.h"
 #include "socks5/socks5.h"
 
-static char *crlf = "\r\n";
-static char *acceptMessage = "Accept: application/dns-message";
-static char *contentType = "Content-type: application/dns-message";
-static char *contentLength = "Content-length: ";
-static char *hostName = "Host: ";
+static char crlf[] = "\r\n";
+static char acceptMessage[] = "Accept: application/dns-message";
+static char contentType[] = "Content-type: application/dns-message";
+static char contentLength[] = "Content-length: ";
+static char hostName[] = "Host: ";
 
 enum DnsQueryParserBufferSizes {
     MAX_DOH_QUERY_SIZE = 2048, 

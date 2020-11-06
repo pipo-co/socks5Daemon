@@ -8,6 +8,9 @@
 #define STATUS_CODE 3
 
 #include "buffer/buffer.h"
+#include "reference/parser/parser.h"
+#include "reference/parser_utils/parser_utils.h"
+
 
 typedef enum HttpDnsParserState{
     HTTP_STATUS_CODE_FIRST,
@@ -24,6 +27,15 @@ typedef enum HttpDnsParserState{
 typedef struct HttpDnsParser {
 
     uint8_t contentLenght;
+
+    struct parser_definition statusCodeParserDefinition;
+    struct parser_definition contentLengthParserDefinition;
+    struct parser_definition payloadDelimiterParserDefinition;
+
+    struct parser * statusCodeParser;
+    struct parser * contentLengthParser;
+    struct parser * payloadDelimiterParser;
+
     enum HttpDnsParserState currentState;
 
 }HttpDnsParser;
@@ -36,6 +48,9 @@ bool http_dns_parser_consume(Buffer *buffer, HttpDnsParser *p, bool *errored);
 
 bool http_dns_parser_is_done(enum HttpDnsParserState state, bool *errored);
 
+bool http_dns_parser_is_done(enum HttpDnsParserState state, bool *errored);
+
+void http_dns_parser_destroy(HttpDnsParser *p);
 // char * http_dns_parser_error_message(enum HttpDnsParserState state);
 
 #endif

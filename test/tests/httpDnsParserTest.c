@@ -81,13 +81,7 @@ uint8_t http_dns_parser_test_input_success[] = {
     0x3b, 0x20, 0x6d, 0x61, 0x3d, 0x32, 0x35, 0x39, 
     0x32, 0x30, 0x30, 0x30, 0x3b, 0x20, 0x76, 0x3d, 
     0x22, 0x34, 0x36, 0x2c, 0x34, 0x33, 0x22, 0x0d, 
-    0x0a, 0x0d, 0x0a, 0x00, 0x00, 0x81, 0x80, 0x00, 
-    0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x03, 
-    0x77, 0x77, 0x77, 0x07, 0x65, 0x78, 0x61, 0x6d, 
-    0x70, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 
-    0x00, 0x01, 0x00, 0x01, 0xc0, 0x0c, 0x00, 0x01, 
-    0x00, 0x01, 0x00, 0x00, 0x53, 0xbc, 0x00, 0x04, 
-    0x5d, 0xb8, 0xd8, 0x22 };
+    0x0a, 0x0d, 0x0a };
 
 
 START_TEST (http_dns_test_parser_init) {
@@ -98,6 +92,7 @@ START_TEST (http_dns_test_parser_init) {
     ck_assert_uint_eq(p->currentState, HTTP_STATUS_CODE_FIRST);
     ck_assert_uint_eq(p->contentLenght, 0);
 
+    http_dns_parser_destroy(p);
     free(p);
 }
 END_TEST
@@ -115,6 +110,34 @@ START_TEST (http_dns_test_parser_feed_success) {
         http_dns_parser_feed(p, http_dns_parser_test_input_success[pos++]);
     }
 
+    while(p->currentState != HTTP_CONTENT_LENGTH_NUMBER){
+        ck_assert(p->currentState == HTTP_CONTENT_LENGTH);
+        http_dns_parser_feed(p, http_dns_parser_test_input_success[pos++]);
+    }
+
+    while(p->currentState != HTTP_CONTENT_LENGTH_FINISH){
+        ck_assert(p->currentState == HTTP_CONTENT_LENGTH_NUMBER);
+        http_dns_parser_feed(p, http_dns_parser_test_input_success[pos++]);
+    }
+    ck_assert_int_eq(p->contentLenght, 49);
+
+    ck_assert(p->currentState == HTTP_CONTENT_LENGTH_FINISH);
+
+    http_dns_parser_feed(p, http_dns_parser_test_input_success[pos++]);
+    ck_assert(p->currentState == HTTP_SECOND_LINE);
+
+    http_dns_parser_feed(p, http_dns_parser_test_input_success[pos++]);
+    ck_assert(p->currentState == HTTP_PAYLOAD_DELIMITER);
+
+    while(p->currentState != HTTP_DNS_DONE){
+        ck_assert(p->currentState == HTTP_PAYLOAD_DELIMITER);
+        http_dns_parser_feed(p, http_dns_parser_test_input_success[pos++]);
+    }
+
+    ck_assert(p->currentState == HTTP_DNS_DONE);
+    
+    http_dns_parser_destroy(p);
+    free(p);
 }
 END_TEST
 

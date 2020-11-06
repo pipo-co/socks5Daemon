@@ -76,8 +76,12 @@ START_TEST (auth_method_announcement_test_core_on_write_success_no_authenticatio
     key->s = selector;
     key->data = socks5_p;
 
+    user_handler_init();
+
     unsigned state = method_announcement_on_write(key);
 
+    user_handler_destroy();
+    
     ck_assert_uint_eq(state, REQUEST);
 
     selector_destroy(selector);

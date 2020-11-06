@@ -140,15 +140,15 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
             }
             else{
                 p->bytesWritten = 0;
-                p->totalQuestions--;
+                // p->totalQuestions--;
 
-                if(p->totalQuestions != 0){
-                    p->currentState = RESPONSE_DNS_QUERIES_NAME_FIRST_BYTE;
-                }
-                else
-                {
+                // if(p->totalQuestions != 0){
+                //     p->currentState = RESPONSE_DNS_QUERIES_NAME_FIRST_BYTE;
+                // }
+                // else
+                // {
                     p->currentState = RESPONSE_DNS_ANSWERS_NAME_FIRST_BYTE;
-                }
+                // }
             }
 
         break;
@@ -240,7 +240,8 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                 }
                 else
                 {
-                    p->currentState = RESPONSE_DNS_ERROR;
+                    p->totalAnswers--;
+                    p->currentState = RESPONSE_DNS_CNAME;
                 }   
             }
             else if (p->dataLenght == 16){
@@ -252,15 +253,31 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                 }
                 else
                 {
-                    p->currentState = RESPONSE_DNS_ERROR;
+                    p->totalAnswers--;
+                    p->currentState = RESPONSE_DNS_CNAME;
                 }   
             }
             else
             {
-                p->currentState = RESPONSE_DNS_ERROR;
+                p->totalAnswers--;
+                p->currentState = RESPONSE_DNS_CNAME;
             }
         break;
 
+        case RESPONSE_DNS_CNAME:
+            if(p->dataLenght > 1){
+                p->dataLenght--;
+            }
+            else{
+                if (p->currentAnswers != p->totalAnswers){
+                    p->currentState = RESPONSE_DNS_ANSWERS_NAME_FIRST_BYTE;
+                }
+                else{
+                    p->addresses = realloc(p->addresses, p->totalAnswers*sizeof(struct IpAddress));
+                    p->currentState = RESPONSE_DNS_DONE;
+                }
+            }
+        break;
         case RESPONSE_DNS_IPV4_ADDRESS:
             
             p->addresses[p->currentAnswers].addr.ipv4.s_addr = (p->addresses[p->currentAnswers].addr.ipv4.s_addr << 8) + b;
@@ -275,6 +292,7 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                     p->currentState = RESPONSE_DNS_ANSWERS_NAME_FIRST_BYTE;
                 }
                 else{
+                    p->addresses = realloc(p->addresses, p->totalAnswers*sizeof(struct IpAddress));
                     p->currentState = RESPONSE_DNS_DONE;
                 }
             }
@@ -282,7 +300,6 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
 
         case RESPONSE_DNS_IPV6_ADDRESS:
             
-        
             p->addresses[p->currentAnswers].addr.ipv6.s6_addr[p->dataLenght - p->addressRemaining] = b;
         
             p->addressRemaining--;
@@ -294,6 +311,7 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                     p->currentState = RESPONSE_DNS_ANSWERS_NAME_FIRST_BYTE;
                 }
                 else{
+                    p->addresses = realloc(p->addresses, p->totalAnswers*sizeof(struct IpAddress));
                     p->currentState = RESPONSE_DNS_DONE;
                 }
             }
@@ -359,6 +377,7 @@ bool response_dns_parser_is_done(enum ResponseDnsParserState state, bool *errore
         case RESPONSE_DNS_ANSWERS_TTL:
         case RESPONSE_DNS_ANSWERS_DATA_LENGTH_HIGH:
         case RESPONSE_DNS_ANSWERS_DATA_LENGTH_LOW:
+        case RESPONSE_DNS_CNAME:
         case RESPONSE_DNS_IPV4_ADDRESS:
         case RESPONSE_DNS_IPV6_ADDRESS:
         

@@ -33,10 +33,14 @@ typedef Suite *(*suiteSupplier)(void);
 #include "tests/stateMachineTest.c"
 #include "tests/stateMachineBuilderTest.c"
 #include "tests/dnsParserTest.c"
+#include "tests/responseDnsTest.c"
+#include "tests/generateDnsQueryTest.c"
+#include "tests/dohBuilderTest.c"
 #include "tests/httpDnsParserTest.c"
 #include "tests/argsHandlerTest.c"
 #include "tests/userHandlerTest.c"
 #include "tests/statisticsTest.c"
+#include "tests/base64Test.c"
 
 
 // Tests being exercised

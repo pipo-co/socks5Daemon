@@ -2,10 +2,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "reference/parser_utils/parser_utils.h"
 #include "httpDnsParser.h"
 
 void http_dns_parser_init(HttpDnsParser *p) {
+
+    struct parser_definition statusCodeParserDefinition = parser_utils_strcmpi("200 OK");
+    memcpy(&p->statusCodeParserDefinition, &statusCodeParserDefinition, sizeof(statusCodeParserDefinition));
+    p->statusCodeParser = parser_init(parser_no_classes(), &p->statusCodeParserDefinition);
+    
+
+    struct parser_definition contentLengthParserDefinition = parser_utils_strcmpi("Content-Length: ");
+    memcpy(&p->contentLengthParserDefinition, &contentLengthParserDefinition, sizeof(contentLengthParserDefinition));
+    p->contentLengthParser = parser_init(parser_no_classes(), &p->contentLengthParserDefinition);
+    
+
+    struct parser_definition payloadDelimiterParserDefinition = parser_utils_strcmpi("\r\n\r\n");
+    memcpy(&p->payloadDelimiterParserDefinition, &payloadDelimiterParserDefinition, sizeof(payloadDelimiterParserDefinition));
+    p->payloadDelimiterParser = parser_init(parser_no_classes(), &p->payloadDelimiterParserDefinition);
 
     p->currentState = HTTP_STATUS_CODE_FIRST;
     p->contentLenght = 0;
@@ -14,21 +27,12 @@ void http_dns_parser_init(HttpDnsParser *p) {
 
 enum HttpDnsParserState http_dns_parser_feed(HttpDnsParser *p, uint8_t b) {
 
-    struct parser_definition statusCodeParserDefinition = parser_utils_strcmpi("200 OK");
-    struct parser * statusCodeParser = parser_init(parser_no_classes(), &statusCodeParserDefinition);
-
-    struct parser_definition contentLengthParserDefinition = parser_utils_strcmpi("Content-Length: ");
-    struct parser * contentLengthParser = parser_init(parser_no_classes(), &contentLengthParserDefinition);
-
-    struct parser_definition payloadDelimiterParserDefinition = parser_utils_strcmpi("\n\r\n\r");
-    struct parser * payloadDelimiterParser = parser_init(parser_no_classes(), &payloadDelimiterParserDefinition);
-
-    struct parser_event * event = malloc(sizeof(*event));
+    const struct parser_event * event;
     switch(p->currentState) {
 
         case HTTP_STATUS_CODE_FIRST:
-            if(event = parser_feed(statusCodeParser, b), event->type == STRING_CMP_NEQ){
-                parser_reset(statusCodeParser);
+            if(event = parser_feed(p->statusCodeParser, b), event->type == STRING_CMP_NEQ){
+                parser_reset(p->statusCodeParser);
             }
             else if ( event->type == STRING_CMP_EQ ){
                 p->currentState = HTTP_CONTENT_LENGTH;
@@ -37,18 +41,19 @@ enum HttpDnsParserState http_dns_parser_feed(HttpDnsParser *p, uint8_t b) {
         break;
 
         case HTTP_CONTENT_LENGTH:
-            if(event = parser_feed(contentLengthParser, b), event->type == STRING_CMP_NEQ){
-                parser_reset(contentLengthParser);
+            if(event = parser_feed(p->contentLengthParser, b), event->type == STRING_CMP_NEQ){
+                parser_reset(p->contentLengthParser);
             }
             else if ( event->type == STRING_CMP_EQ ){
                 p->currentState = HTTP_CONTENT_LENGTH_NUMBER;
             }
+        
 
         break;
 
         case HTTP_CONTENT_LENGTH_NUMBER:
             if(b != '\r'){
-                p->contentLenght = p->contentLenght*10 + (b - '0');
+                p->contentLenght = p->contentLenght * 10 + (b - '0');
             }
             else
             {
@@ -90,12 +95,13 @@ enum HttpDnsParserState http_dns_parser_feed(HttpDnsParser *p, uint8_t b) {
         break;
 
         case HTTP_PAYLOAD_DELIMITER:
-            if(event = parser_feed(payloadDelimiterParser, b), event->type == STRING_CMP_NEQ){
-                parser_reset(payloadDelimiterParser);
+            if(event = parser_feed(p->payloadDelimiterParser, b), event->type == STRING_CMP_NEQ){
+                parser_reset(p->payloadDelimiterParser);
             }
             else if ( event->type == STRING_CMP_EQ ){
                 p->currentState = HTTP_DNS_DONE;
             }
+            
                 
         break;
 
@@ -108,11 +114,6 @@ enum HttpDnsParserState http_dns_parser_feed(HttpDnsParser *p, uint8_t b) {
             p->currentState = HTTP_DNS_ERROR;
         break;
     }
-    free(event);
-    parser_utils_strcmpi_destroy(&statusCodeParserDefinition);
-    parser_utils_strcmpi_destroy(&contentLengthParserDefinition);
-    parser_utils_strcmpi_destroy(&payloadDelimiterParserDefinition);
-
     return p->currentState;
 }
 
@@ -127,6 +128,16 @@ bool http_dns_parser_consume(Buffer *buffer, HttpDnsParser *p, bool *errored) {
     }
 
     return http_dns_parser_is_done(p->currentState, errored);
+}
+
+void http_dns_parser_destroy(HttpDnsParser *p){
+
+    parser_destroy(p->statusCodeParser);
+    parser_destroy(p->contentLengthParser);
+    parser_destroy(p->payloadDelimiterParser);
+    parser_utils_strcmpi_destroy(&p->statusCodeParserDefinition);
+    parser_utils_strcmpi_destroy(&p->contentLengthParserDefinition);
+    parser_utils_strcmpi_destroy(&p->payloadDelimiterParserDefinition);
 }
 
 bool http_dns_parser_is_done(enum HttpDnsParserState state, bool *errored) {
