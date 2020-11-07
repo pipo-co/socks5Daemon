@@ -82,9 +82,9 @@ static void log_user_access(SessionHandlerP session) {
         printableServerAddres = serverAddress;
     }
 
-    // Domain Name
+    // Domain Name TODO revisar
     else {
-        if(session->clientInfo.connectedDomain != session->clientInfo.connectedDomain) {
+        if(session->clientInfo.connectedDomain != NULL) {
             printableServerAddres = session->clientInfo.connectedDomain;
         }
         else {

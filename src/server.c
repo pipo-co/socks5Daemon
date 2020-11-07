@@ -75,8 +75,8 @@ int main(const int argc, char **argv) {
     signal(SIGINT,  sigterm_handler);
 
     // Non-Blocking stdout & stderr
-    selector_fd_set_nio(stdout);
-    selector_fd_set_nio(stderr);
+    selector_fd_set_nio(STDOUT_FILENO);
+    selector_fd_set_nio(STDERR_FILENO);
 
     char       *err_msg      = NULL;
     SelectorStatus   ss      = SELECTOR_SUCCESS;

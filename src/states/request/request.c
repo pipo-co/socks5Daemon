@@ -128,7 +128,6 @@ static unsigned dns_connection_handling (SelectorEvent * event){
     
     if (session->dnsHeaderContainer->ipv4.dnsConnection.state == INVALID && session->dnsHeaderContainer->ipv6.dnsConnection.state == INVALID) {
         
-        free(session->dnsHeaderContainer);
         session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
         return REQUEST_ERROR;      
     }

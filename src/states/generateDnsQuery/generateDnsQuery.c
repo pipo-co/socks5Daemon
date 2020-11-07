@@ -45,28 +45,26 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
     if(getsockopt(dnsHeaderMe->dnsConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
         
         // Cerramos el Fd de la conexion que salio mal
-        dnsHeaderMe->dnsConnection.state == INVALID;
+        dnsHeaderMe->dnsConnection.state = INVALID;
         selector_unregister_fd(event->s, event->fd);
 
         if(dnsHeaderOther->dnsConnection.state == INVALID){
-            free(session->dnsHeaderContainer);
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
         }
         goto finally;    
     }
 
-    if(!doh_builder_build(&dnsHeaderMe->buffer, session->socksHeader.requestHeader.parser.address.domainName, family, socks5_get_args())) {
+    if(doh_builder_build(&dnsHeaderMe->buffer, (char *)session->socksHeader.requestHeader.parser.address.domainName, family, socks5_get_args()) != 0) {
         
         free(dnsHeaderMe->buffer.data);
         dnsHeaderMe->buffer.data = NULL;
 
         // Cerramos el Fd
-        dnsHeaderMe->dnsConnection.state == INVALID;
+        dnsHeaderMe->dnsConnection.state = INVALID;
         selector_unregister_fd(event->s, event->fd);
         
         if(dnsHeaderOther->dnsConnection.state == INVALID){
-            free(session->dnsHeaderContainer);
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
         }

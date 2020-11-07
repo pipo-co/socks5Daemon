@@ -503,7 +503,7 @@ static void socks5_dns_write(SelectorEvent *event){
 
         statistics_add_bytes_sent(writeBytes);
 
-        selector_state_machine_proccess_write(&session->sessionStateMachine, event);
+        state = selector_state_machine_proccess_write(&session->sessionStateMachine, event);
 
         fprintf(stderr, "%d: Dns Write, State %ud\n", stateLogCount, state);
         stateLogCount++;
@@ -555,6 +555,7 @@ static SessionHandlerP socks5_session_init(void) {
     build_socks_session_state_machine(&session->sessionStateMachine);
 
     session->clientInfo.connectedDomain = NULL;
+    session->dnsHeaderContainer = NULL;
 
     session->clientConnection.state = OPEN;
     session->serverConnection.state = INVALID;
@@ -575,6 +576,8 @@ static void socks5_client_close(SelectorEvent *event){
     free(session->input.data);
     free(session->output.data);
     free(session);
+    //Necesario?
+    event->data = NULL;
 }
 
 static void socks5_server_close(SelectorEvent *event) {
@@ -588,10 +591,10 @@ static void socks5_dns_close(SelectorEvent *event) {
 
     if(session != NULL && session->dnsHeaderContainer != NULL) {
         if(session->dnsHeaderContainer->ipv4.dnsConnection.fd == event->fd) {
-            session->dnsHeaderContainer->ipv4.dnsConnection.state == INVALID;
+            session->dnsHeaderContainer->ipv4.dnsConnection.state = INVALID;
         }
         else {
-            session->dnsHeaderContainer->ipv6.dnsConnection.state == INVALID;
+            session->dnsHeaderContainer->ipv6.dnsConnection.state = INVALID;
         }
     }
 }
@@ -629,7 +632,7 @@ static void socks5_close_session_util(SelectorEvent *event, bool byInactivity) {
         }
 
         free(session->clientInfo.connectedDomain);
-    }
+    }    
 
     if(session->serverConnection.state != INVALID) {
         selector_unregister_fd(event->s, session->serverConnection.fd);
@@ -665,7 +668,7 @@ static void socks5_close_session_util(SelectorEvent *event, bool byInactivity) {
         }
 
         free(session->dnsHeaderContainer);
-        session->dnsHeaderContainer == NULL;
+        session->dnsHeaderContainer = NULL;
     }
 
     selector_unregister_fd(event->s, session->clientConnection.fd);

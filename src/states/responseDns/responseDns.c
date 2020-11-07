@@ -28,7 +28,7 @@ static void response_dns_on_arrival (SelectorEvent *event) {
 
     if(session->dnsHeaderContainer->ipv6.dnsConnection.state == OPEN) {
         
-        session->dnsHeaderContainer->ipv4.connected = false;
+        session->dnsHeaderContainer->ipv6.connected = false;
         http_dns_parser_init(&session->dnsHeaderContainer->ipv6.httpParser);
         response_dns_parser_init(&session->dnsHeaderContainer->ipv6.responseParser);
         selector_set_interest(event->s, session->dnsHeaderContainer->ipv6.dnsConnection.fd, OP_WRITE);
@@ -162,7 +162,7 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
 
     // Todo lo que llega al finally ya no se despierta mas. Esta unregistered o con interest en OP_NOOP
 finally:   
-    if(dnsHeaderOther->dnsConnection.state == OPEN && !response_dns_parser_is_done(&dnsHeaderOther->responseParser, errored)){
+    if(dnsHeaderOther->dnsConnection.state == OPEN && !response_dns_parser_is_done(dnsHeaderOther->responseParser.currentState, &errored)){
         
         return session->sessionStateMachine.current;
     }
@@ -190,7 +190,6 @@ static unsigned response_dns_on_write(SelectorEvent *event) {
     if(dnsHeaderMe->dnsConnection.state == INVALID) {
 
         if(dnsHeaderOther->dnsConnection.state == INVALID) {
-            free(session->dnsHeaderContainer);
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
         }
