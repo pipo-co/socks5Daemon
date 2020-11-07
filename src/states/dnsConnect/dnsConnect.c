@@ -65,11 +65,6 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
             }
         }
         
-        // TODO: free redundante
-        free(session->dnsHeaderContainer->ipv4.responseParser.addresses);
-        session->dnsHeaderContainer->ipv4.responseParser.addresses = NULL;
-        free(session->dnsHeaderContainer->ipv6.responseParser.addresses);
-        session->dnsHeaderContainer->ipv6.responseParser.addresses = NULL;
         return REQUEST_ERROR;
     }
     
