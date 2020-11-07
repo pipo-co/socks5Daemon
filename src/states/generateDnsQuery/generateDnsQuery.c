@@ -46,7 +46,6 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
         
         // Cerramos el Fd de la conexion que salio mal
         if(dnsHeaderMe->dnsConnection.state != INVALID){
-            dnsHeaderMe->dnsConnection.state = INVALID;
             selector_unregister_fd(event->s, event->fd);
         }
 
@@ -63,7 +62,6 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
         dnsHeaderMe->buffer.data = NULL;
 
         // Cerramos el Fd
-        dnsHeaderMe->dnsConnection.state = INVALID;
         selector_unregister_fd(event->s, event->fd);
         
         if(dnsHeaderOther->dnsConnection.state == INVALID){

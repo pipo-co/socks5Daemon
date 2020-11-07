@@ -60,6 +60,8 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
         }
+
+        // TODO: Free buffer y addresses
         
         goto finally;
     }
@@ -72,14 +74,13 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     } 
     else if(!errored && (dnsHeaderMe->responseParser.totalQuestions == 0 || dnsHeaderMe->responseParser.totalAnswers == 0)){   
         errored = true;
-    } 
+    }
     else if(!errored && dnsHeaderMe->responseParser.currentType != SOCKS_5_ADD_TYPE_IP4 && dnsHeaderMe->responseParser.currentType != SOCKS_5_ADD_TYPE_IP6){
         errored = true;
     }
 
     if (errored){
 
-        // dnsHeaderMe->dnsConnection.state = INVALID;
         selector_unregister_fd(event->s, event->fd);
         free(dnsHeaderMe->buffer.data);
         free(dnsHeaderMe->responseParser.addresses);
@@ -94,10 +95,14 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
         goto finally;
     }
 
+    // TODO: Una vez que llegas aca hay free del buffer no? -Tobi
+    // TODO: unregister -Tobi
+
     // response_dns_parser_is_done
     // Terminaste parsing -> Tengo la lista con las IPs posibles
     fprintf(stderr, "Finished parsing. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
+    // TODO: No entiendo esto -Tobi
     if(dnsHeaderOther->dnsConnection.state == OPEN && dnsHeaderOther->connected){
         // Tengo todas las IPs == Haber llegado hasta aca
         // Tengo una IP que paso el primer connect. == Estar connected
@@ -145,7 +150,7 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
 
         fprintf(stderr, "Couldn't connect with any addr. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
-        // dnsHeaderMe->dnsConnection.state = INVALID;
+        // TODO: Funcion Invalidate -Tobi
         selector_unregister_fd(event->s, event->fd);
         free(dnsHeaderMe->buffer.data);
         free(dnsHeaderMe->responseParser.addresses);
@@ -162,6 +167,7 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
 
     socks5_register_server(event->s, session);
     dnsHeaderMe->connected = true;
+
     selector_set_interest_event(event, OP_NOOP);
 
     // Si se llega desde el goto -> Ya sabemos que el otro esta open pero 
@@ -175,8 +181,6 @@ finally:
         return session->sessionStateMachine.current;
     }
 
-    // TODO No deberia hacer falta ahora
-    // session->clientInfo.addressTypeSelected = session->socksHeader.requestHeader.parser.addressType;
     fprintf(stderr, "Leaving to DNS_CONNECT me connected. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
     return DNS_CONNECT;
@@ -202,14 +206,17 @@ static unsigned response_dns_on_write(SelectorEvent *event) {
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
         }
-        goto finally;
+
+        // TODO: Free buffer -Tobi
+        // TODO: No hace falta el finally -Tobi
+
+        return session->sessionStateMachine.current;
     }
 
     if(!buffer_can_read(&dnsHeaderMe->buffer)){
         selector_set_interest_event(event, OP_READ);
     }
 
-finally:
     return session->sessionStateMachine.current;
 }
 

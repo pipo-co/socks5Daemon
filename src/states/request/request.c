@@ -84,7 +84,7 @@ static unsigned dns_connection_handling (SelectorEvent * event){
     // Verificar la IP del servidor DoH. (IPv4 o IPv6)
     if (inet_pton(AF_INET, args->doh.ip, &ipv4addr)) {
         
-        session->dnsHeaderContainer = malloc(sizeof(*session->dnsHeaderContainer));
+        session->dnsHeaderContainer = calloc(sizeof(*session->dnsHeaderContainer), 1);
         
         // Conexion para solicitud A
         session->dnsHeaderContainer->ipv4.dnsConnection.state = OPEN;
@@ -99,7 +99,7 @@ static unsigned dns_connection_handling (SelectorEvent * event){
     } 
     else if (inet_pton(AF_INET6, args->doh.ip, &ipv6addr)) {
         
-        session->dnsHeaderContainer = malloc(sizeof(*session->dnsHeaderContainer));
+        session->dnsHeaderContainer = calloc(sizeof(*session->dnsHeaderContainer), 1);
         
         // Conexion para solicitud A
         session->dnsHeaderContainer->ipv4.dnsConnection.state = OPEN;

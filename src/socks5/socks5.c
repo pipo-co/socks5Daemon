@@ -684,5 +684,6 @@ static void socks5_close_session_util(SelectorEvent *event, bool byInactivity) {
        fprintf(stderr, "DNSContainer was NULL. Client Fd: %d. State: %d\n", session->clientConnection.fd, session->sessionStateMachine.current);
     }
 
+    // TODO: Creo que se hace mal el close -Tobi
     selector_unregister_fd(event->s, session->clientConnection.fd);
 }
