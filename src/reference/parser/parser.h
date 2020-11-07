@@ -13,10 +13,17 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define MAX_STATES 50
+#define TRANSITIONS_PER_STATE 3
+
 /**
  * Evento que retorna el parser.
  * Cada tipo de evento tendrá sus reglas en relación a data.
  */
+
+
+
+
 struct parser_event {
     /** tipo de evento */
     unsigned type;
@@ -41,30 +48,43 @@ struct parser_state_transition {
     void    (*act2)(struct parser_event *ret, const uint8_t c);
 };
 
+struct parser_definition {
+    /** cantidad de estados */
+    unsigned                         states_count;
+    unsigned                         start_state;
+    /** por cada estado, sus transiciones */
+    struct parser_state_transition   states[MAX_STATES][TRANSITIONS_PER_STATE];
+    /** cantidad de estados por transición */
+    size_t                            states_n[MAX_STATES];
+
+    /** estado inicial */
+};
 /** predicado para utilizar en `when' que retorna siempre true */
 #define ANY (1 << 9)
 
 /** declaración completa de una máquina de estados */
-struct parser_definition {
-    /** cantidad de estados */
-    const unsigned                         states_count;
-    /** por cada estado, sus transiciones */
-    const struct parser_state_transition **states;
-    /** cantidad de estados por transición */
-    const size_t                          *states_n;
 
-    /** estado inicial */
-    const unsigned                         start_state;
+struct parser {
+    /** tipificación para cada caracter */
+    const unsigned     *classes;
+    /** definición de estados */
+    struct parser_definition def;
+
+    /* estado actual */
+    unsigned            state;
+
+    /* evento que se retorna */
+    struct parser_event e1;
+    /* evento que se retorna */
+    struct parser_event e2;
 };
-
 /**
  * inicializa el parser.
  *
  * `classes`: caracterización de cada caracter (256 elementos)
  */
 struct parser *
-parser_init    (const unsigned *classes,
-                const struct parser_definition *def);
+parser_init    (struct parser * p, const unsigned *classes, const struct parser_definition *def);
 
 /** destruye el parser */
 void

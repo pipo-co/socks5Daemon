@@ -27,8 +27,8 @@ parser_utils_strcmpi_event(const enum string_cmp_event_types type);
  *
  * Si se recibe el evento `STRING_CMP_NEQ' el texto entrado no matchea.
  */
-struct parser_definition
-parser_utils_strcmpi(const char *s);
+
+struct parser_definition *parser_utils_strcmpi(struct parser_definition *pd, const char *s);
 
 /**
  * libera recursos asociado a una llamada de `parser_utils_strcmpi'

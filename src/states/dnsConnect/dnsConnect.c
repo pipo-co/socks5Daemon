@@ -53,7 +53,7 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
             } while(session->serverConnection.fd  == -1 && ipv4->responseParser.counter < ipv4->responseParser.totalAnswers);
                         
             if(session->serverConnection.fd != -1) {
-                socks5_register_server(event, session);
+                socks5_register_server(event->s, session);
                 return session->sessionStateMachine.current;
             }
         }
@@ -85,13 +85,15 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
             } while(session->serverConnection.fd  == -1 && ipv6->responseParser.counter < ipv6->responseParser.totalAnswers);
                         
             if(session->serverConnection.fd != -1) {
-                socks5_register_server(event, session);
+                socks5_register_server(event->s, session);
                 return session->sessionStateMachine.current;
             }
         }
         
         free(session->dnsHeaderContainer->ipv4.responseParser.addresses);
+        session->dnsHeaderContainer->ipv4.responseParser.addresses = NULL;
         free(session->dnsHeaderContainer->ipv6.responseParser.addresses);
+        session->dnsHeaderContainer->ipv6.responseParser.addresses = NULL;
         return REQUEST_ERROR;
     }
     
@@ -99,8 +101,11 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
     // Se liberan las estructuras restantes y por ultimo todo el container.
 
     free(session->dnsHeaderContainer->ipv4.responseParser.addresses);
+    session->dnsHeaderContainer->ipv4.responseParser.addresses = NULL;
     free(session->dnsHeaderContainer->ipv6.responseParser.addresses);
+    session->dnsHeaderContainer->ipv6.responseParser.addresses = NULL;
     free(session->dnsHeaderContainer);
+    session->dnsHeaderContainer = NULL;
     return REQUEST_SUCCESSFUL;
 }
 

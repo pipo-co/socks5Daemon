@@ -28,13 +28,9 @@ typedef struct HttpDnsParser {
 
     uint8_t contentLenght;
 
-    struct parser_definition statusCodeParserDefinition;
-    struct parser_definition contentLengthParserDefinition;
-    struct parser_definition payloadDelimiterParserDefinition;
-
-    struct parser * statusCodeParser;
-    struct parser * contentLengthParser;
-    struct parser * payloadDelimiterParser;
+    struct parser statusCodeParser;
+    struct parser contentLengthParser;
+    struct parser payloadDelimiterParser;
 
     enum HttpDnsParserState currentState;
 
@@ -50,7 +46,6 @@ bool http_dns_parser_is_done(enum HttpDnsParserState state, bool *errored);
 
 bool http_dns_parser_is_done(enum HttpDnsParserState state, bool *errored);
 
-void http_dns_parser_destroy(HttpDnsParser *p);
 // char * http_dns_parser_error_message(enum HttpDnsParserState state);
 
 #endif
