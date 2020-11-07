@@ -11,6 +11,7 @@
 #include "parsers/dns/httpDnsParser.h"
 #include "parsers/dns/dnsParser.h"
 #include "netutils/netutils.h"
+#include "states/stateUtilities/request/requestUtilities.h"
 
 static void response_dns_on_arrival (SelectorEvent *event);
 static unsigned response_dns_on_read(SelectorEvent *event);
@@ -124,22 +125,7 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
         }
 
         if (session->serverConnection.fd  == -1) {
-
-            if(errno == ENETUNREACH){
-                session->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
-            }
-
-            else if(errno = EHOSTUNREACH) {
-                session->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
-            }
-
-            else if(errno = ECONNREFUSED) {
-                session->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
-            }
-
-            else {
-                session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-            } 
+            session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(errno);
         }
     } while(session->serverConnection.fd  == -1 && dnsHeaderMe->responseParser.counter < dnsHeaderMe->responseParser.totalAnswers);
 

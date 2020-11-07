@@ -43,12 +43,12 @@ sockaddr_to_human(char *buff, const size_t buffsize,
         strncpy(buff, "unknown", buffsize);
     }
 
-    strncat(buff, "\t", buffsize);
+    // strncat(buff, "\t", buffsize);
     buff[buffsize - 1] = 0;
     const size_t len = strlen(buff);
 
     if(handled) {
-        snprintf(buff + len, buffsize - len, "%d", ntohs(port));
+        snprintf(buff + len, buffsize - len, ":%d", ntohs(port));
     }
     buff[buffsize - 1] = 0;
 

@@ -16,6 +16,7 @@
 #include "parsers/request/requestParser.h"
 #include "netutils/netutils.h"
 #include "statistics/statistics.h"
+#include "states/stateUtilities/request/requestUtilities.h"
 
 static void request_on_arrival (SelectorEvent *event);
 static unsigned request_on_read(SelectorEvent *event);
@@ -81,6 +82,14 @@ static unsigned dns_connection_handling (SelectorEvent * event){
     struct in_addr ipv4addr;
     struct in6_addr ipv6addr;
 
+    session->clientInfo.connectedDomain = malloc(DOMAIN_NAME_MAX_LENGTH);
+    if(session->clientInfo.connectedDomain == NULL){
+        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+        return REQUEST_ERROR;
+    }
+    strcpy(session->clientInfo.connectedDomain, (char *) session->socksHeader.requestHeader.parser.address.domainName);
+
+
     // Verificar la IP del servidor DoH. (IPv4 o IPv6)
     if (inet_pton(AF_INET, args->doh.ip, &ipv4addr)) {
         
@@ -132,16 +141,6 @@ static unsigned dns_connection_handling (SelectorEvent * event){
         return REQUEST_ERROR;      
     }
 
-    // TODO Moverlo a RequestSuccesfull
-    // session->clientInfo.connectedDomain = malloc(DOMAIN_NAME_MAX_LENGTH);
-    // if(session->clientConnection.domainName == NULL){
-
-    //     session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-    //     return REQUEST_ERROR;
-    // }
-    // strcpy(session->clientConnection.domainName, (char *) session->socksHeader.requestHeader.parser.address.domainName);
-
-
     socks5_register_dns(event->s, session);
 
     return GENERATE_DNS_QUERY; 
@@ -168,23 +167,8 @@ static unsigned ip_connection_handling(SelectorEvent * event){
     }
 
     if (session->serverConnection.fd  == -1) {
-        if(errno == ENETUNREACH){
-            session->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
-        }
 
-        else if(errno = EHOSTUNREACH) {
-            session->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
-        }
-
-        else if(errno = ECONNREFUSED) {
-            session->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
-        }
-
-        else {
-            session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-        }
-
-        //logger stderr(errno);
+        session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(errno);
         return REQUEST_ERROR;      
     }
 
