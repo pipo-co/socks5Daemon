@@ -2,6 +2,7 @@
 #include <errno.h>
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <errno.h>
 
@@ -78,7 +79,7 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
 
     if (errored){
 
-        dnsHeaderMe->dnsConnection.state = INVALID;
+        // dnsHeaderMe->dnsConnection.state = INVALID;
         selector_unregister_fd(event->s, event->fd);
         free(dnsHeaderMe->buffer.data);
         free(dnsHeaderMe->responseParser.addresses);
@@ -95,10 +96,13 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
 
     // response_dns_parser_is_done
     // Terminaste parsing -> Tengo la lista con las IPs posibles
+    fprintf(stderr, "Finished parsing. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
     if(dnsHeaderOther->dnsConnection.state == OPEN && dnsHeaderOther->connected){
         // Tengo todas las IPs == Haber llegado hasta aca
         // Tengo una IP que paso el primer connect. == Estar connected
+        fprintf(stderr, "Leaving to DNS_CONNECT other connected. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+
         return DNS_CONNECT;
     }
 
@@ -139,7 +143,9 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
 
     if(session->serverConnection.fd  == -1) {
 
-        dnsHeaderMe->dnsConnection.state = INVALID;
+        fprintf(stderr, "Couldn't connect with any addr. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+
+        // dnsHeaderMe->dnsConnection.state = INVALID;
         selector_unregister_fd(event->s, event->fd);
         free(dnsHeaderMe->buffer.data);
         free(dnsHeaderMe->responseParser.addresses);
@@ -152,6 +158,7 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
         }
         goto finally;
     }
+    fprintf(stderr, "Succesfully connected (1st part). Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
     socks5_register_server(event->s, session);
     dnsHeaderMe->connected = true;
@@ -163,12 +170,14 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     // Todo lo que llega al finally ya no se despierta mas. Esta unregistered o con interest en OP_NOOP
 finally:   
     if(dnsHeaderOther->dnsConnection.state == OPEN && !response_dns_parser_is_done(dnsHeaderOther->responseParser.currentState, &errored)){
-        
+        fprintf(stderr, "Connected, waiting for brother. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+
         return session->sessionStateMachine.current;
     }
 
     // TODO No deberia hacer falta ahora
     // session->clientInfo.addressTypeSelected = session->socksHeader.requestHeader.parser.addressType;
+    fprintf(stderr, "Leaving to DNS_CONNECT me connected. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
     return DNS_CONNECT;
 }
