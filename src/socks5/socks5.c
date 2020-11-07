@@ -28,9 +28,9 @@ static FdHandler clientHandler;
 static FdHandler serverHandler;
 static FdHandler DNSHandler;
 
-static int sessionInputBufferSize;
-static int sessionOutputBufferSize;
-static int dnsBufferSize;
+static uint32_t sessionInputBufferSize;
+static uint32_t sessionOutputBufferSize;
+static uint32_t dnsBufferSize;
 
 static double maxSessionInactivity;
 

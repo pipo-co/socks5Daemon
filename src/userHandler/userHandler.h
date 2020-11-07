@@ -6,12 +6,14 @@
 
 #define ANONYMOUS_USER_CREDENTIALS "anonymous"
 
+// Maximo 255 usuarios
+
 typedef struct UserInfo {
 
     char *username;
     char *password;
 
-    uint64_t connectionCount; 
+    uint16_t connectionCount; 
 
 } UserInfo;
 

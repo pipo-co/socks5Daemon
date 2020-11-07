@@ -1,0 +1,533 @@
+                            
+                            
+                        Socks5d Proxy Administration Protocol
+
+Status of this Memo
+
+   This document specifies an Internet standards track protocol for the
+   Internet community, and requests discussion and suggestions for
+   improvements. Distribution of this memo is unlimited.
+
+Acknowledgments
+
+    This memo describes a protocol that was designed for the University Subject
+    'Protocolos de Comunicación'.  The key contributors are:
+    Tobias Brandy, Ignacio Sagues and Faustino Pannunzio.        
+
+1. Introduction
+
+    The goal of this protocol is to provide a mechanism for interacting with the
+    Socks5d server. This will allow to get different configurations and statistics
+    form the server, and also set some configuration parameters.
+    For that an early authentication with the server is needed. Once 
+    authenticated a server listens on a connection for a request, parses each message 
+    received, interprets the message semantics in relation to the identified request
+    target, and responds to that request with the proper response message. 
+    Once the the authentication is done the user might ask for information held by the
+    server such as the list of users or the historic connections amount of the server.
+    Also the user will also be able to modify information and properties of the server
+    such as adding or deleting a user, set up spoofing or changing the timeout for 
+    a session.
+
+2. Connection and Authentication
+
+   2.1. Connection
+        When a SCTP-based client wishes to establish a connection to the socks5d server 
+        it must open a SCTP connection to the appropriate port on the server system. 
+        The socks5d service is conventionally located on port 8080.
+        
+   2.2. Authentication
+        Once the connection with the socks5d server has started, the client produces an
+        authentication request:
+
+                +-----+------+----------+------+----------+
+                | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
+                +-----+------+----------+------+----------+
+                |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
+                +-----+------+----------+------+----------+
+        
+        The Ver field contains the current version of the negotiation, which is X'01'. 
+        The ULEN field contains a 1 byte unsigned integer which represents the length of the UNAME field that follows.
+        The UNAME field contains the username as known to the Server. 
+        The PLEN field contains a 1 byte unsigned integer which represents the length of the PASSWD field that follows. 
+        The PASSWD field contains the password associated with the given UNAME.
+
+        The server verifies the supplied UNAME and PASSWD, and if corresponds to a user
+        with administrator privileges it sends the following response: 
+                
+                                +-----+--------+
+                                | VER | STATUS |
+                                +-----+--------+
+                                |  1  |   1    |
+                                +-----+--------+
+
+        A STATUS field of X'00' indicates the authentication was successful.
+        A STATUS field of X'01' indicates the authentication failed.
+        A STATUS field of X'02' indicates invalid version
+        
+        If the server returns a failure status, it MUST close the connection.
+
+        If the server returns a success status, then the session is fully established.
+
+3. General Requests and Responses Structure
+
+    Once the client is authenticated, the following messages will follow a Request/Response structure.
+    The client sends a Request and the server answers with a corresponding Response message.
+
+    All messages from now on include the fields TYPE and CMD (Commands) which are 1 octet long. 
+    In the Request, this fields are the ones which indicate the server the action it must perform,
+    the other fields are just arguments of that action.
+    In the Responses, the TYPE and CMD fields MUST match the ones from their corresponding Request.
+
+    The values currently defined as TYPE are:
+
+        o   X'00'   Query
+        o   X'01'   Modification
+
+    Each TYPE of Request has a set of Commands associated with it.
+    
+    Commands associated with the Query TYPE are meant as data retrieval Commands,
+    meaning they won't affect the state of the Server. On the other hand, the primary function of Commands
+    associated with the Modification TYPE is to modify the Server configuration.
+
+    The associated Commands (CMD) for the Query TYPE are:
+
+        o   X'00'   List Users
+        o   X'01'   Get Total Historic Connections
+        o   X'02'   Get Current Connections
+        o   X'03'   Get Max. Concurrent Connections
+        o   X'04'   Get Total Sent Bytes
+        o   X'05'   Get Total Received Bytes
+        o   X'06'   Get Number of Users Connected
+        o   X'07'   Get Total User Count     
+        o   X'08'   Get I/O Buffer Sizes
+        o   X'09'   Get Selector Timeout 
+        o   X'10'   Get Connection Timeout
+        o   X'11'   Get User Total Current Connections
+
+
+    The associated Commands (CMD) for the Modification TYPE are:
+
+        o   X'00'   Add User
+        o   X'01'   Remove User
+        o   X'02'   Enable/Disable Password Spoofing
+        o   X'03'   Enable/Disable Connection Clean-up Routine
+        o   X'04'   Set I/O Buffer Sizes
+        o   X'05'   Set Selector Timeout
+        o   X'06'   Set Connection Timeout
+
+
+4. Modification Commands
+
+    4.1. Requests
+
+        4.1.1. Add User
+
+                The use of this Command will create a new user in the Server. 
+                The new user's username, password and privilege level must be included.
+                Only one user per username is allowed.
+                
+                For using it the Client provides the following Request:
+                
+                +------+-----+------+----------+------+----------+--------------+
+                | TYPE | CMD | ULEN |  UNAME   | PLEN |  PASSWD  |  PRIVILEGE   |
+                +------+-----+------+----------+------+----------+--------------+
+                |  1   |  1  |  1   | 1 to 255 |  1   | 1 to 255 |       1      |
+                +------+-----+------+----------+------+----------+--------------+
+
+                The ULEN, UNAME, PLEN, PASSWD fields are defined the same way they were in 2.2.
+
+                The values currently defined as PRIVILEGE are:
+
+                    o   X'00'   Regular User
+                    o   X'01'   Administrator
+
+                A privilege value of X'00' will indicate that the new user will only be able to connect
+                with the proxy server whereas an X'01' value will indicate that the 
+                user is an administrator who will be able to connect with the server via
+                this protocol allowing them to use all it's provided functionalities.
+        
+        4.1.2. Delete User
+
+                The use of this Command will delete a user in the Server which has the provided username
+                associated if it exists.
+                
+                For using it the Client provides the following Request:
+
+                +------+-----+--------+----------+
+                | TYPE | CMD |  ULEN  | USERNAME |
+                +------+-----+--------+----------+
+                |  1   |  1  |    1   |     1    |
+                +------+-----+--------+----------+
+
+                The ULEN, UNAME fields are defined the same way they were in 2.2.
+                
+        4.1.3. Enable/Disable Password Spoofing
+        
+                The use of this command will enable/disable for all connections the spoofing of the
+                passwords sent through the Server once a connection has been established.
+
+                For using it the Client provides the following Request:
+
+                +------+-----+--------+
+                | TYPE | CMD | ACTION |
+                +------+-----+--------+
+                |  1   |  1  |    1   |
+                +------+-----+--------+
+                
+                Where ACTION:
+                        
+                    X'00' Disable
+                    X'01' Enable
+        
+        4.1.4. Enable/Disable Connection Clean-up Routine
+        
+                The use of this command will enable/disable the clean-up routine of inactive connections
+                in the Server.
+                
+                For using it the Client provides the following Request:
+
+                +------+-----+--------+
+                | TYPE | CMD | ACTION |
+                +------+-----+--------+
+                |  1   |  1  |    1   |
+                +------+-----+--------+
+                
+                Where ACTION:
+                        
+                    X'00' Disable
+                    X'01' Enable
+        
+        4.1.5. Set I/O Buffer Sizes
+
+                The use of this command will set the amount of memory for the buffers used by
+                the Server to be 'BUFSIZE'. The BUFSIZE field is a 4 byte long unsigned
+                integer in network byte order. A zero value is considered invalid.
+
+                For using it the Client provides the following Request:
+
+                +------+-----+---------+
+                | TYPE | CMD | BUFSIZE | 
+                +------+-----+---------+
+                |  1   |  1  |    4    |
+                +------+-----+---------+
+
+        4.1.6. Set Selector Timeout
+
+                The use of this command will set the maximum amount of time that the selector is
+                blocked waiting for activity to be of 'TIMEOUT' seconds. The timeout field is a 1
+                byte long unsigned integer. A zero value is considered invalid.
+                
+                For using it the Client provides this request: 
+
+                +------+-----+---------+
+                | TYPE | CMD | TIMEOUT | 
+                +------+-----+---------+
+                |  1   |  1  |    1    |
+                +------+-----+---------+
+        
+        4.1.7. Set Connection timeout 
+
+                The use of this command will set the maximum amount of time that a connection
+                can be blocked to be of 'TIMEOUT' seconds. The timeout field is a 1
+                byte long unsigned integer. A zero value is considered invalid.
+
+                For using it the Client provides this request: 
+
+                +------+-----+---------+
+                | TYPE | CMD | TIMEOUT | 
+                +------+-----+---------+
+                |  1   |  1  |    1    |
+                +------+-----+---------+
+        
+
+    4.2. Responses
+
+        All Responses from Modification TYPE Commands have the following structure:
+
+                +------+-----+--------+
+                | TYPE | CMD | STATUS |
+                +------+-----+--------+
+                |  1   |  1  |    1   |
+                +------+-----+--------+
+
+        TYPE and CMD have the same value as the corresponding Request message.
+
+        The STATUS field possible values are specified by each Command to reflect all the
+        possible outcomes of the modification operation.
+        
+        4.2.1. Add user
+            
+            The possible values for STATUS are:
+            
+                o   X'00'   Succeeded
+                o   X'01'   Username Already Taken
+                o   X'02'   Invalid Parameter
+                o   X'FF'   General Server Error
+
+        4.2.2. Delete user
+
+            The possible values for STATUS are:
+            
+                o   X'00'   Succeeded
+                o   X'01'   Username Doesn't Exist
+                o   X'02'   Invalid Parameter
+                o   X'FF'   General Server Error
+                
+        4.2.3. Enable/Disable Password Spoofing
+                
+            The possible values for STATUS are:
+                
+                o   X'00' Succeeded
+                o   X'FF' General Server Error 
+
+        4.2.4. Enable/Disable Connection Clean-up Routine
+                
+            The possible values for STATUS are:
+
+                o   X'00' Succeeded
+                o   X'FF' General Server Error 
+        
+        4.2.5. Set I/O Buffer Sizes
+            
+            The possible values for STATUS are:
+    
+                o   X'00' Succeeded
+                o   X'01' Unsupported Buffer Size
+                o   X'FF' General Server Error 
+
+        4.2.6. Set Selector timeout
+
+            The possible values for STATUS are:
+                
+                o   X'00' Succeeded
+                o   X'01' Unsupported Timeout
+                o   X'FF' General Server Error 
+
+        4.2.7. Set Connection timeout
+
+            The possible values for STATUS are:
+                
+                o   X'00' Succeded
+                o   X'01' Unsupported Timeout
+                o   X'FF' General Server Error 
+
+5. Query Commands
+
+    5.1. Requests
+
+        All Requests from Query TYPE Commands have the following structure:
+
+            +------+-----+
+            | TYPE | CMD |
+            +------+-----+
+            |  1   |  1  |
+            +------+-----+
+
+        TYPE and CMD fields specify which action the Server must perform (and Response to give).
+
+        5.1.1. List Users
+
+            The use of this Command will provide a list of all the users in the Server. 
+
+        5.1.2. Get Total Historic Connections
+
+            The use of this Command will provide an unsigned integer that indicates the total
+            current connections in the Server. 
+
+        5.1.3. Get Max. Concurrent Connections
+
+            The use of this Command will provide an unsigned integer that indicates the maximum
+            amount of concurrent connections historically held by the Server. 
+                
+        5.1.4. Get Total Sent Bytes
+
+            The use of this Command will provide an unsigned integer that indicates the total amount of
+            bytes sent by the Server. 
+
+        5.1.5. Get Total Received Bytes
+
+            The use of this Command will provide an unsigned integer that indicates the total amount of
+            bytes received by the Server.   
+
+        5.1.6. Get Number of Users Connected
+
+            The use of this Command will provide an unsigned integer that indicates the amount of different
+            users connected to the Server.
+
+        5.1.7. Get Total User Count
+
+            The use of this Command will provide an unsigned integer that indicates the amount of users
+            registered in the Server. 
+
+        5.1.8. Get I/O Buffer Sizes
+
+            The use of this Command will provide an unsigned integer that indicates the size of the
+            I/O buffers used by the Server. 
+        
+        5.1.9. Get Selector Timeout
+
+            The use of this Command will provide an unsigned integer that indicates the maximum
+            amount of seconds a selector is blocked in the Server. 
+
+        5.1.10. Get Connection Timeout
+
+            The use of this Command will provide an unsigned integer that indicates the maximum
+            amount of seconds a connection can be inactive before it is cleaned-up.
+
+        5.1.11. Get User Total Current Connections
+
+            The use of this Command will provide a number that indicates the number of concurrent
+            connections that a user has in the Server. 
+        
+    5.2. Responses
+
+        5.2.1. List Users
+
+            The Server sends the following response:
+
+            +------+-----+----------+--------+-----------+----------+--------+-----------+
+            | TYPE | CMD |  USRLEN  | ULEN_1 |  UNAME_1  |    ...   | ULEN_n |  UNAME_n  |
+            +------+-----+----------+--------+-----------+----------+--------+-----------+
+            |  1   |  1  |     1    |   1    | 1 to 255  |    ...   |   1    | 1 to 255  |
+            +------+-----+----------+--------+-----------+----------+--------+-----------+
+
+            Where USRLEN is a 1 byte long unsigned integer that describes the amount of users listed.
+
+            The message contains that amount of fields ULEN and UNAME, which are the same as
+            those defined in 2.2.
+                
+        5.2.2. Get Total Historic Connections
+
+            The server sends the following response:
+
+                    +------+-----+----------+
+                    | TYPE | CMD | RESPONSE |
+                    +------+-----+----------+
+                    |  1   |  1  |     8    |
+                    +------+-----+----------+
+            
+            Where RESPONSE is an 8 bytes long unsigned integer in network byte order that indicates
+            the total number of connections the server had.
+
+        5.2.3. Get Max. Concurrent Connections
+        
+            The server sends the following response:
+
+                    +------+-----+----------+
+                    | TYPE | CMD | RESPONSE |
+                    +------+-----+----------+
+                    |  1   |  1  |     2    |
+                    +------+-----+----------+
+
+            Where RESPONSE is a 4 bytes long unsigned integer in network byte order that indicates
+            the maximum concurrent connections the Server had.
+                
+        5.2.4. Get Total Sent Bytes
+
+            The server sends the following response:
+
+                    +------+-----+----------+
+                    | TYPE | CMD | RESPONSE |
+                    +------+-----+----------+
+                    |  1   |  1  |     8    |
+                    +------+-----+----------+
+            
+            Where RESPONSE is an 8 bytes long unsigned integer in network byte order that
+            represents the total sent bytes by the Server.
+
+        5.2.5. Get Total Received Bytes
+
+            The server sends the following response:
+
+                    +------+-----+----------+
+                    | TYPE | CMD | RESPONSE |
+                    +------+-----+----------+
+                    |  1   |  1  |     8    |
+                    +------+-----+----------+
+            
+            Where RESPONSE is an 8 bytes long unsigned integer in network byte order that
+            represents the total received bytes by the Server.
+
+        5.2.6. Get Number of Users Connected
+
+            The server sends the following response:
+
+                    +------+-----+----------+
+                    | TYPE | CMD | RESPONSE |
+                    +------+-----+----------+
+                    |  1   |  1  |     8    |
+                    +------+-----+----------+
+            
+            Where RESPONSE is an 8 bytes long unsigned integer in network byte order that
+            represents the number of users connected.
+
+        5.2.7. Get Total User Count
+        
+            The server sends the following response:
+
+                    +------+-----+----------+
+                    | TYPE | CMD | RESPONSE |
+                    +------+-----+----------+
+                    |  1   |  1  |     1    |
+                    +------+-----+----------+
+
+            Where RESPONSE is a 1 byte unsigned integer that indicates the Server's user total count.  
+
+        5.2.8. Get I/O Buffer Sizes
+                
+            The server sends the following response:
+
+                    +------+-----+----------+
+                    | TYPE | CMD | RESPONSE |
+                    +------+-----+----------+
+                    |  1   |  1  |     4    |
+                    +------+-----+----------+
+
+            Where RESPONSE is a 4 bytes long unsigned integer in network byte order that indicates
+            the size of the I/O buffers user by the server.
+        
+        5.2.9. Get Selector Timeout
+                
+            The server sends the following response:
+
+                    +------+-----+----------+
+                    | TYPE | CMD | RESPONSE |
+                    +------+-----+----------+
+                    |  1   |  1  |     1    |
+                    +------+-----+----------+
+
+            Where RESPONSE is a 1 byte long unsigned integer that indicates the amount of seconds
+            a selector can be blocked in the server before being awaken.
+
+        5.2.10. Get Connection Timeout
+        
+            The server sends the following response:
+
+                    +------+-----+----------+
+                    | TYPE | CMD | RESPONSE |
+                    +------+-----+----------+
+                    |  1   |  1  |     1    |
+                    +------+-----+----------+
+
+            Where RESPONSE is 1 byte long unsigned integer that indicates the amount of seconds
+            a connection can be blocked in the server before being removed.
+
+        5.2.11. Get User Total Current Connections
+
+            The server sends the following response:
+
+                    +------+-----+----------+
+                    | TYPE | CMD | RESPONSE |
+                    +------+-----+----------+
+                    |  1   |  1  |     1    |
+                    +------+-----+----------+
+
+            Where RESPONSE is 1 byte long unsigned integer that indicates the amount concurrent
+            connections the the user has currently in server.
+
+6. Pipelining
+
+    A Server implementing this protocol MUST support pipelining (send multiple Requests without waiting
+    for it's Response). The server MUST send the Responses in different messages in the same order that
+    the Requests were received.
