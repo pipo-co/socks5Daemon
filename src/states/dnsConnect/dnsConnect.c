@@ -27,7 +27,7 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
 
     if(getsockopt(session->serverConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
         
-        socks5_unregister_server(event->s, session);
+        selector_unregister_fd(event->s, event->fd);
 
         if(ipv4->responseParser.addresses != NULL && ipv4->responseParser.counter < ipv4->responseParser.totalAnswers){
             

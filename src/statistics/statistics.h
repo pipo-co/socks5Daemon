@@ -5,12 +5,14 @@
 #include <stdbool.h>
 
 typedef struct Socks5Statistics {
-    uint64_t totalConnections;
-    uint64_t maxConcurrentConnections;
+    
     uint64_t bytesSent;
     uint64_t bytesReceived;
-    uint64_t connectionsClearedByInactivity;
+    
+    uint64_t totalConnections;
     uint16_t currentConnections;
+    uint16_t maxConcurrentConnections;  //Record
+    
     uint8_t currentUserCount;
 } Socks5Statistics;
 
@@ -20,7 +22,7 @@ void statistics_init(void);
 
 void statistics_inc_current_connection(void);
 
-void statistics_dec_current_connection(bool byInactivity);
+void statistics_dec_current_connection();
 
 void statistics_add_bytes_sent(uint64_t bytes);
 

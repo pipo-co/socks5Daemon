@@ -24,9 +24,8 @@ static unsigned dns_connection_handling (SelectorEvent * event);
 static unsigned ip_connection_handling(SelectorEvent * event);
 
 static void request_on_arrival (SelectorEvent *event) {
+    
     SessionHandlerP session = (SessionHandlerP) event->data;
-
-    statistics_inc_current_connection();
 
     if(session->clientInfo.user->connectionCount == 0) {
         statistics_inc_current_user_count();
