@@ -13,7 +13,7 @@ typedef struct UserInfo {
 
     bool admin;
 
-    uint64_t connectionCount; 
+    uint16_t connectionCount; 
 
 } UserInfo;
 

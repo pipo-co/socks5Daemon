@@ -113,6 +113,9 @@ int main(const int argc, char **argv) {
                 goto finally;
             }
         }
+        // if(generate_administration_socket(selector, &err_msg) != 0){
+        //     fprintf(stdout, "Error registering Administration listening socket\n");
+        // }
     }
 
     // -l 
@@ -271,6 +274,32 @@ static int generate_register_ipv6_socket(FdSelector selector, char **errorMessag
     serverHandler.ipv6Fd = ipv6Fd;
     return 0;
 }
+
+// static int generate_administration_socket(FdSelector selector, char **errorMessage) {
+     
+//     memset(&serverHandler.ipv6Handler, '\0', sizeof(serverHandler.ipv6Handler));
+
+//     serverHandler.ipv6Handler.handle_read = socks5_passive_accept_ipv6;
+
+//     struct sockaddr_in6 sockaddr6 = {
+//         .sin6_addr = serverHandler.ipv6addr,
+//         .sin6_family = AF_INET6,
+//         .sin6_port = serverHandler.port,
+//     };
+
+//     int ipv6Fd = generate_new_socket((struct sockaddr *)&sockaddr6, sizeof(sockaddr6), errorMessage);
+//     if(ipv6Fd == -1) {
+//         return -1;
+//     }
+
+//     if(selector_register(selector, ipv6Fd, &serverHandler.ipv6Handler, OP_READ, NULL) != SELECTOR_SUCCESS) {
+//         *errorMessage = "Registering fd for ipv6";
+//         return -1;
+//     }
+
+//     serverHandler.ipv6Fd = ipv6Fd;
+//     return 0;
+// }
 
 static int generate_new_socket(struct sockaddr *addr, socklen_t addrLen,char ** errorMessage) {
 
