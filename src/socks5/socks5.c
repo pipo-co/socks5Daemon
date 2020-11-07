@@ -447,6 +447,7 @@ static void socks5_dns_read(SelectorEvent *event){
         if(session->dnsHeaderContainer->ipv4.dnsConnection.state != INVALID) {
             session->dnsHeaderContainer->ipv4.dnsConnection.state = INVALID;
             selector_unregister_fd(event->s, session->dnsHeaderContainer->ipv4.dnsConnection.fd);
+            fprintf(stderr, "Unregistered open dns fd: %d", session->dnsHeaderContainer->ipv4.dnsConnection.fd);
 
             if(state == DNS_CONNECT) {
                 free(session->dnsHeaderContainer->ipv4.buffer.data);
@@ -455,9 +456,10 @@ static void socks5_dns_read(SelectorEvent *event){
         }
  
         if(session->dnsHeaderContainer->ipv6.dnsConnection.state != INVALID) {
-            session->dnsHeaderContainer->ipv4.dnsConnection.state = INVALID;
+            session->dnsHeaderContainer->ipv6.dnsConnection.state = INVALID;
             selector_unregister_fd(event->s, session->dnsHeaderContainer->ipv6.dnsConnection.fd);
-
+            fprintf(stderr, "Unregistered open dns fd: %d", session->dnsHeaderContainer->ipv4.dnsConnection.fd);
+            
             if(state == DNS_CONNECT) {
                 free(session->dnsHeaderContainer->ipv6.buffer.data);
                 session->dnsHeaderContainer->ipv6.buffer.data = NULL;

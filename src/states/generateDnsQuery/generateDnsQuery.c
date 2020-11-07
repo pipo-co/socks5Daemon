@@ -41,12 +41,14 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
         dnsHeaderOther = &session->dnsHeaderContainer->ipv4;
         family = AF_INET6;
     }
-    
-    if(getsockopt(dnsHeaderMe->dnsConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
+
+    if(dnsHeaderMe->dnsConnection.state == INVALID || getsockopt(dnsHeaderMe->dnsConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
         
         // Cerramos el Fd de la conexion que salio mal
-        dnsHeaderMe->dnsConnection.state = INVALID;
-        selector_unregister_fd(event->s, event->fd);
+        if(dnsHeaderMe->dnsConnection.state != INVALID){
+            dnsHeaderMe->dnsConnection.state = INVALID;
+            selector_unregister_fd(event->s, event->fd);
+        }
 
         if(dnsHeaderOther->dnsConnection.state == INVALID){
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
@@ -72,7 +74,7 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
     }
 
     dnsHeaderMe->connected = true;
-    selector_add_interest_event(event, OP_NOOP);
+    selector_set_interest_event(event, OP_NOOP);
 
 finally:
 

@@ -180,11 +180,11 @@ static unsigned response_dns_on_write(SelectorEvent *event) {
 
     if(session->dnsHeaderContainer->ipv4.dnsConnection.fd == event->fd) {
         dnsHeaderMe = &session->dnsHeaderContainer->ipv4;
-        dnsHeaderOther = &session->dnsHeaderContainer->ipv4;
+        dnsHeaderOther = &session->dnsHeaderContainer->ipv6;
     }
     else {
         dnsHeaderMe = &session->dnsHeaderContainer->ipv6;
-        dnsHeaderOther = &session->dnsHeaderContainer->ipv6;
+        dnsHeaderOther = &session->dnsHeaderContainer->ipv4;
     }
 
     if(dnsHeaderMe->dnsConnection.state == INVALID) {
