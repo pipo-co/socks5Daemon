@@ -4,6 +4,8 @@
 
 #include "socks5/socks5.h"
 #include "netutils/netutils.h"
+#include "states/stateUtilities/request/requestUtilities.h"
+
 
 static void dns_connect_on_arrival(SelectorEvent *event);
 static unsigned dns_connect_on_write(SelectorEvent *event);
@@ -35,21 +37,7 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
                             session->socksHeader.requestHeader.parser.port, (struct sockaddr *)&session->serverConnection.addr);
             
                 if (session->serverConnection.fd  == -1) {
-                    if(errno == ENETUNREACH){
-                        session->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
-                    }
-
-                    else if(errno = EHOSTUNREACH) {
-                        session->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
-                    }
-
-                    else if(errno = ECONNREFUSED) {
-                        session->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
-                    }
-
-                    else {
-                        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-                    } 
+                    session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(errno); 
                 }
             } while(session->serverConnection.fd  == -1 && ipv4->responseParser.counter < ipv4->responseParser.totalAnswers);
                         
@@ -67,21 +55,7 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
                             session->socksHeader.requestHeader.parser.port, (struct sockaddr *)&session->serverConnection.addr);
 
                 if (session->serverConnection.fd  == -1) {
-                    if(errno == ENETUNREACH){
-                        session->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
-                    }
-
-                    else if(errno = EHOSTUNREACH) {
-                        session->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
-                    }
-
-                    else if(errno = ECONNREFUSED) {
-                        session->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
-                    }
-
-                    else {
-                        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-                    } 
+                    session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(errno); 
                 }
             } while(session->serverConnection.fd  == -1 && ipv6->responseParser.counter < ipv6->responseParser.totalAnswers);
                         
@@ -91,11 +65,6 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
             }
         }
         
-        // TODO: free redundante
-        free(session->dnsHeaderContainer->ipv4.responseParser.addresses);
-        session->dnsHeaderContainer->ipv4.responseParser.addresses = NULL;
-        free(session->dnsHeaderContainer->ipv6.responseParser.addresses);
-        session->dnsHeaderContainer->ipv6.responseParser.addresses = NULL;
         return REQUEST_ERROR;
     }
     

@@ -48,7 +48,6 @@ static void socks5_client_write(SelectorEvent *event);
 static void socks5_client_close(SelectorEvent *event);
 static void socks5_close_session(SelectorEvent *event);
 static int socks5_accept_connection(int passiveFd, struct sockaddr *cli_addr, socklen_t *clilen);
-static void socks5_close_session_util(SelectorEvent *event, bool byInactivity);
 
 void socks5_init(Socks5Args *argsParam, double maxSessionInactivityParam) {
 
@@ -404,7 +403,8 @@ static void socks5_dns_read(SelectorEvent *event){
     unsigned state;
 
     if(!buffer_can_write(buffer)) {
-        fprintf(stderr, "ERROR: Read dns socket was registered on pselect, but there was no space in buffer. Fd: %d.\n", event->fd);
+        fprintf(stderr, "ERROR: Read dns socket was registered on pselect, but there was no space in buffer. \
+                Fd: %d.\n", event->fd);
 
         socks5_close_session(event);
         return;
@@ -420,50 +420,26 @@ static void socks5_dns_read(SelectorEvent *event){
         buffer_write_adv(buffer, readBytes);
         statistics_add_bytes_received(readBytes);
     }
-    fprintf(stderr, "Dns read, State. Fd: %d. State: %d. Fd.State: %d. ReadBytes. %ld\n", event->fd, session->sessionStateMachine.current, header->dnsConnection.state, readBytes);
+
+    fprintf(stderr, "Dns read, State. \
+            Fd: %d. State: %d. Fd.State: %d. ReadBytes. %ld\n", event->fd, session->sessionStateMachine.current, header->dnsConnection.state, readBytes);
 
     if(readBytes == 0 || (readBytes == -1 && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)) {
 
-        fprintf(stderr, "Read: DNS Connection was unexpectedly closed. Fd: %d. State: %d\n", event->fd, session->sessionStateMachine.current);
+        fprintf(stderr, "Read: DNS Connection was unexpectedly closed. \
+                Fd: %d. State: %d\n", event->fd, session->sessionStateMachine.current);
 
         // Unexpected DNS Close
-        header->dnsConnection.state = INVALID;
         selector_unregister_fd(event->s, event->fd);
-        free(header->buffer.data);
-        free(header->responseParser.addresses);
-        header->buffer.data = NULL;
-        header->responseParser.addresses = NULL;
     }
 
     if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == DNS_CONNECT || state == REQUEST_ERROR) {
         
-        // Si salimos pr DNS_CONNECT es que venimos bien.
-        // Limpiamos fd y buffer que ya no es necesario
-        // Falta limpiar lista de addresses
-        fprintf(stderr, "Leaving dns_read. IPv4. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv4.dnsConnection.fd, session->dnsHeaderContainer->ipv4.dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
-        fprintf(stderr, "Leaving dns_read. IPv6. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv6.dnsConnection.fd, session->dnsHeaderContainer->ipv6.dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
-    
-        if(session->dnsHeaderContainer->ipv4.dnsConnection.state != INVALID) {
-            session->dnsHeaderContainer->ipv4.dnsConnection.state = INVALID;
-            selector_unregister_fd(event->s, session->dnsHeaderContainer->ipv4.dnsConnection.fd);
-            fprintf(stderr, "Unregistered open dns. Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv4.dnsConnection.fd, session->sessionStateMachine.current);
-
-            if(state == DNS_CONNECT) {
-                free(session->dnsHeaderContainer->ipv4.buffer.data);
-                session->dnsHeaderContainer->ipv4.buffer.data = NULL;
-            }
-        }
- 
-        if(session->dnsHeaderContainer->ipv6.dnsConnection.state != INVALID) {
-            session->dnsHeaderContainer->ipv6.dnsConnection.state = INVALID;
-            selector_unregister_fd(event->s, session->dnsHeaderContainer->ipv6.dnsConnection.fd);
-            fprintf(stderr, "Unregistered open dns. Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv6.dnsConnection.fd, session->sessionStateMachine.current);
-            
-            if(state == DNS_CONNECT) {
-                free(session->dnsHeaderContainer->ipv6.buffer.data);
-                session->dnsHeaderContainer->ipv6.buffer.data = NULL;
-            }
-        }
+        fprintf(stderr, "Leaving dns_read. IPv4. \
+                Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv4.dnsConnection.fd, session->dnsHeaderContainer->ipv4.dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+        
+        fprintf(stderr, "Leaving dns_read. IPv6. \
+                Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv6.dnsConnection.fd, session->dnsHeaderContainer->ipv6.dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
     }
 }
 
@@ -483,6 +459,7 @@ static void socks5_dns_write(SelectorEvent *event){
     Buffer * buffer = &header->buffer;
     unsigned state;
 
+    // ! TODO no me gusta este estado
     if(!buffer_can_read(buffer)) {
         
         if(!header->connected){
@@ -490,7 +467,8 @@ static void socks5_dns_write(SelectorEvent *event){
             return;
         }
         // Podria no ser necesario
-        fprintf(stderr, "ERROR: Write dns socket was registered on pselect, but there was nothing on buffer.  Fd: %d. State: %d\n", event->fd, session->sessionStateMachine.current);
+        fprintf(stderr, "ERROR: Write dns socket was registered on pselect, but there was nothing on buffer. \
+                Fd: %d. State: %d\n", event->fd, session->sessionStateMachine.current);
         socks5_close_session(event);
         return;
     }
@@ -522,8 +500,6 @@ static void socks5_dns_write(SelectorEvent *event){
         // Unexpected DNS Close
         // header->dnsConnection.state = INVALID;
         selector_unregister_fd(event->s, event->fd);
-        free(header->buffer.data);
-        header->buffer.data = NULL;
 
         selector_state_machine_proccess_write(&session->sessionStateMachine, event);
         }
@@ -568,74 +544,8 @@ static SessionHandlerP socks5_session_init(void) {
 
 static void socks5_client_close(SelectorEvent *event){
     
-    SessionHandlerP session = (SessionHandlerP) event->data;
-
-    selector_state_machine_close(&session->sessionStateMachine, event);
-
-    close(session->clientConnection.fd);
-
-    free(session->input.data);
-    free(session->output.data);
-    free(session);
-    //Necesario?
-    event->data = NULL;
-}
-
-static void socks5_server_close(SelectorEvent *event) {
-    close(event->fd);
-}
-
-static void socks5_dns_close(SelectorEvent *event) {
-    SessionHandlerP session = (SessionHandlerP) event->data;
-
-    close(event->fd);
-    fprintf(stderr, "DNS closed. Fd: %d. State: %d\n", event->fd, session->sessionStateMachine.current);
-
-    if(session != NULL && session->dnsHeaderContainer != NULL) {
-        if(session->dnsHeaderContainer->ipv4.dnsConnection.fd == event->fd) {
-            session->dnsHeaderContainer->ipv4.dnsConnection.state = INVALID;
-        }
-        else {
-            session->dnsHeaderContainer->ipv6.dnsConnection.state = INVALID;
-        }
-    }
-}
-
-static void socks5_close_session(SelectorEvent *event) {
-    socks5_close_session_util(event, false);
-}
-
-void socks5_cleanup_session(SelectorEvent *event) {
-
-    // Socket pasivo
-    if(event->data == NULL) {
-        return;
-    }
-
-    SessionHandlerP session = (SessionHandlerP) event->data;
-    fprintf(stderr, "Try clean of %d. Session: %p.\n", event->fd, (void *) session);
-    if(event->fd == session->clientConnection.fd && difftime(time(NULL), session->lastInteraction) >= maxSessionInactivity) {
-        fprintf(stderr, "Cleaned Up Session of Client Socket %d\n", event->fd);
-        socks5_close_session_util(event, true);
-    }
-}
-
-static void socks5_close_session_util(SelectorEvent *event, bool byInactivity) {
-
-    SessionHandlerP session = (SessionHandlerP) event->data;
-
-    statistics_dec_current_connection(byInactivity);
-
-    if(session->clientInfo.user != NULL) {
-        session->clientInfo.user->connectionCount--;
-
-        if(session->clientInfo.user->connectionCount == 0) {
-            statistics_dec_current_user_count();
-        }
-
-        free(session->clientInfo.connectedDomain);
-    }    
-
+     SessionHandlerP session = (SessionHandlerP) event->data;
+    
     if(session->serverConnection.state != INVALID) {
         selector_unregister_fd(event->s, session->serverConnection.fd);
     }
@@ -649,7 +559,6 @@ static void socks5_close_session_util(SelectorEvent *event, bool byInactivity) {
             fprintf(stderr, "DNS was already invalid. Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv4.dnsConnection.fd, session->sessionStateMachine.current);
         }
         
-
         if(session->dnsHeaderContainer->ipv6.dnsConnection.state != INVALID) {
             selector_unregister_fd(event->s, session->dnsHeaderContainer->ipv6.dnsConnection.fd);
         }
@@ -682,8 +591,68 @@ static void socks5_close_session_util(SelectorEvent *event, bool byInactivity) {
     }
     else {
        fprintf(stderr, "DNSContainer was NULL. Client Fd: %d. State: %d\n", session->clientConnection.fd, session->sessionStateMachine.current);
+    }   
+
+    selector_state_machine_close(&session->sessionStateMachine, event);
+
+    if(session->clientInfo.user != NULL) {
+        session->clientInfo.user->connectionCount--;
+
+        if(session->clientInfo.user->connectionCount == 0) {
+            statistics_dec_current_user_count();
+        }
+
+        free(session->clientInfo.connectedDomain);
+    } 
+
+    close(session->clientConnection.fd);
+
+    free(session->input.data);
+    free(session->output.data);
+    free(session);
+}
+
+static void socks5_server_close(SelectorEvent *event) {
+    close(event->fd);
+}
+
+static void socks5_dns_close(SelectorEvent *event) {
+    SessionHandlerP session = (SessionHandlerP) event->data;
+
+    close(event->fd);
+    fprintf(stderr, "DNS closed. Fd: %d. State: %d\n", event->fd, session->sessionStateMachine.current);
+
+    if(session != NULL && session->dnsHeaderContainer != NULL) {
+        if(session->dnsHeaderContainer->ipv4.dnsConnection.fd == event->fd) {
+            session->dnsHeaderContainer->ipv4.dnsConnection.state = INVALID;
+        }
+        else {
+            session->dnsHeaderContainer->ipv6.dnsConnection.state = INVALID;
+        }
+    }
+}
+
+static void socks5_close_session(SelectorEvent *event) {
+    
+    SessionHandlerP session = (SessionHandlerP) event->data;
+    
+    selector_unregister_fd(event->s, session->clientConnection.fd);
+}
+
+void socks5_cleanup_session(SelectorEvent *event) {
+
+    // Socket pasivo
+    if(event->data == NULL) {
+        return;
     }
 
-    // TODO: Creo que se hace mal el close -Tobi
-    selector_unregister_fd(event->s, session->clientConnection.fd);
+    SessionHandlerP session = (SessionHandlerP) event->data;
+    fprintf(stderr, "Try clean of %d. Session: %p.\n", event->fd, (void *) session);
+    
+    if(event->fd == session->clientConnection.fd && difftime(time(NULL), session->lastInteraction) >= maxSessionInactivity) {
+        
+        fprintf(stderr, "Cleaned Up Session of Client Socket %d\n", event->fd);
+        statistics_dec_current_connection();
+        selector_unregister_fd(event->s, event->fd);
+    }
 }

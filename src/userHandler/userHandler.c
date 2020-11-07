@@ -11,20 +11,28 @@ static UserMap userMap;
 
 // iter == kh_end(userMap) equivale a decir que el valor no pertenece al mapa
 
-static UserInfoP user_handler_create_user(char *username, char *password);
+static UserInfoP user_handler_create_user(char *username, char *password, bool admin);
 static void user_handler_free_user(UserInfoP user);
 
 void user_handler_init(void) {
     userMap = kh_init(STRING_TO_CHAR_MAP);
 
     // Anonymous User
-    user_handler_add_user(ANONYMOUS_USER_CREDENTIALS, ANONYMOUS_USER_CREDENTIALS);
+    user_handler_add_user(ANONYMOUS_USER_CREDENTIALS, ANONYMOUS_USER_CREDENTIALS, false);
 }
 
-bool user_handler_user_exists(char *username) {
+bool user_handler_user_exists(char *username, bool *admin) {
     khiter_t iter = kh_get(STRING_TO_CHAR_MAP, userMap, username);
+    
+    if(iter != kh_end(userMap)){
+        if(admin != NULL){
+            UserInfoP u = kh_value(userMap, iter);
+            *admin = u->admin;
+        }
+        return true;
+    }
 
-    return iter != kh_end(userMap);
+    return false;
 }
 
 UserInfoP user_handler_get_user_by_username(char *username) {
@@ -35,18 +43,20 @@ UserInfoP user_handler_get_user_by_username(char *username) {
         return kh_value(userMap, iter);
     }
 
-    else {
-        return NULL;
-    }
+    return NULL;
 }   
 
-UserInfoP user_handler_add_user(char *username, char *password) {
+UserInfoP user_handler_add_user(char *username, char *password, bool admin) {
 
-    if(user_handler_user_exists(username)) {
+    if(kh_size(userMap) >= MAX_USER_COUNT){
         return NULL;
     }
 
-    UserInfoP newUser = user_handler_create_user(username, password);
+    if(user_handler_user_exists(username, NULL)) {
+        return NULL;
+    }
+
+    UserInfoP newUser = user_handler_create_user(username, password, admin);
     if(newUser == NULL) {
         return NULL;
     }
@@ -87,7 +97,7 @@ void user_handler_destroy(void) {
     kh_destroy(STRING_TO_CHAR_MAP, userMap);
 }
 
-static UserInfoP user_handler_create_user(char *username, char *password) {
+static UserInfoP user_handler_create_user(char *username, char *password, bool admin) {
 
     UserInfoP newUser = malloc(sizeof(*newUser));
     if(newUser == NULL) {
@@ -110,6 +120,7 @@ static UserInfoP user_handler_create_user(char *username, char *password) {
     strcpy(newUser->username, username);
     strcpy(newUser->password, password);
     newUser->connectionCount = 0;
+    newUser->admin = admin;
 
     return newUser;
 }
