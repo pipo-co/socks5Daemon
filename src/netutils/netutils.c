@@ -119,13 +119,19 @@ int new_ipv4_socket(struct in_addr ip, in_port_t port, struct sockaddr *outAddr)
     addr.sin_port = port; 
 	addr.sin_addr = ip;
 
-	if (connect(sock, (struct sockaddr*) &addr, sizeof(addr)) != 0) { 
+    int ans;
+
+    do{
+        ans = connect(sock, (struct sockaddr*) &addr, sizeof(addr));
+    } while (ans != 0 && errno == EINTR);
+    if(ans != 0){
         if(errno == EINPROGRESS) {
 
             if(outAddr != NULL) {
                 memcpy(outAddr, (struct sockaddr*) &addr, sizeof(addr));
+            } else {
+                return -1;
             }
-
             return sock;
         }
         return -1;
@@ -153,13 +159,19 @@ int new_ipv6_socket(struct in6_addr ip, in_port_t port, struct sockaddr *outAddr
     addr.sin6_port = port; 
 	addr.sin6_addr = ip;
 
-	if (connect(sock, (struct sockaddr*) &addr, sizeof(addr)) != 0) { 
+        int ans;
+
+    do{
+        ans = connect(sock, (struct sockaddr*) &addr, sizeof(addr));
+    } while (ans != 0 && errno == EINTR);
+    if(ans != 0){
         if(errno == EINPROGRESS) {
 
             if(outAddr != NULL) {
                 memcpy(outAddr, (struct sockaddr*) &addr, sizeof(addr));
-            }       
-
+            } else {
+                return -1;
+            }
             return sock;
         }
         return -1;
