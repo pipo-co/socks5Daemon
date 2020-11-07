@@ -152,27 +152,23 @@ void socks5_passive_accept_ipv6(SelectorEvent *event){
 void socks5_register_server(FdSelector s, SessionHandlerP session){
 
     session->serverConnection.state = OPEN;
+    statistics_inc_current_connection();
 
     selector_register(s, session->serverConnection.fd, &serverHandler, OP_WRITE, session);
 
     fprintf(stderr, "Registered new server %d\n", session->serverConnection.fd);
 }
 
-void socks5_unregister_server(FdSelector s, SessionHandlerP session){
-
-    selector_unregister_fd(s, session->serverConnection.fd);
-
-    fprintf(stderr, "Unregistered new server %d\n", session->serverConnection.fd);
-}
-
 void socks5_register_dns(FdSelector s, SessionHandlerP session){
 
     if(session->dnsHeaderContainer->ipv4.dnsConnection.state == OPEN) {
+        statistics_inc_current_connection();
         selector_register(s, session->dnsHeaderContainer->ipv4.dnsConnection.fd, &DNSHandler, OP_WRITE, session);
         fprintf(stderr, "IPv4 - Registered new dns. Fd: %d. Session %p. Client Fd: %d.\n", session->dnsHeaderContainer->ipv4.dnsConnection.fd, (void *) session, session->clientConnection.fd);
     }
 
     if(session->dnsHeaderContainer->ipv6.dnsConnection.state == OPEN) {
+        statistics_inc_current_connection();
         selector_register(s, session->dnsHeaderContainer->ipv6.dnsConnection.fd, &DNSHandler, OP_WRITE, session);
         fprintf(stderr, "IPv6 - Registered new dns. Fd: %d. Session %p. Client Fd: %d.\n", session->dnsHeaderContainer->ipv6.dnsConnection.fd, (void *)session, session->clientConnection.fd);
     }
@@ -539,6 +535,8 @@ static SessionHandlerP socks5_session_init(void) {
 
     session->lastInteraction = time(NULL);
 
+    statistics_inc_current_connection();
+
     return session;
 }
 
@@ -606,6 +604,7 @@ static void socks5_client_close(SelectorEvent *event){
     } 
 
     close(session->clientConnection.fd);
+    statistics_dec_current_connection();
 
     free(session->input.data);
     free(session->output.data);
@@ -613,23 +612,31 @@ static void socks5_client_close(SelectorEvent *event){
 }
 
 static void socks5_server_close(SelectorEvent *event) {
+    
+    SessionHandlerP session = (SessionHandlerP) event->data;
+    session->serverConnection.state = INVALID;
+
     close(event->fd);
+
+    statistics_dec_current_connection();
 }
 
 static void socks5_dns_close(SelectorEvent *event) {
+    
     SessionHandlerP session = (SessionHandlerP) event->data;
 
     close(event->fd);
+    
     fprintf(stderr, "DNS closed. Fd: %d. State: %d\n", event->fd, session->sessionStateMachine.current);
-
-    if(session != NULL && session->dnsHeaderContainer != NULL) {
-        if(session->dnsHeaderContainer->ipv4.dnsConnection.fd == event->fd) {
-            session->dnsHeaderContainer->ipv4.dnsConnection.state = INVALID;
-        }
-        else {
-            session->dnsHeaderContainer->ipv6.dnsConnection.state = INVALID;
-        }
+    statistics_dec_current_connection();
+    
+    if(session->dnsHeaderContainer->ipv4.dnsConnection.fd == event->fd) {
+        session->dnsHeaderContainer->ipv4.dnsConnection.state = INVALID;
     }
+    else {
+        session->dnsHeaderContainer->ipv6.dnsConnection.state = INVALID;
+    }
+    
 }
 
 static void socks5_close_session(SelectorEvent *event) {
@@ -652,7 +659,6 @@ void socks5_cleanup_session(SelectorEvent *event) {
     if(event->fd == session->clientConnection.fd && difftime(time(NULL), session->lastInteraction) >= maxSessionInactivity) {
         
         fprintf(stderr, "Cleaned Up Session of Client Socket %d\n", event->fd);
-        statistics_dec_current_connection();
         selector_unregister_fd(event->s, event->fd);
     }
 }

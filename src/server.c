@@ -195,6 +195,7 @@ finally:
     if(serverHandler.ipv6Fd >= 0) {
         close(serverHandler.ipv6Fd);
     }
+    statistics_print();
     return ret;
 }
 

@@ -7,7 +7,7 @@ KHASH_MAP_INIT_STR(STRING_TO_CHAR_MAP, UserInfoP)
 
 typedef khash_t(STRING_TO_CHAR_MAP) * UserMap;
 
-static UserMap userMap;
+static UserMap userMap = NULL;
 
 // iter == kh_end(userMap) equivale a decir que el valor no pertenece al mapa
 
@@ -91,6 +91,10 @@ bool user_handler_delete_user(char *username) {
 void user_handler_destroy(void) {
 
     UserInfoP userIter;
+
+    if(userMap == NULL){
+        return;
+    }
 
     kh_foreach_value(userMap, userIter, user_handler_free_user(userIter));
 
