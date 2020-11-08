@@ -11,7 +11,7 @@ void admin_request_parser_add_user(uint8_t type, uint8_t cmd, AdminRequestParser
 
     uint8_t status = 0x00;
 
-    if(args->user.admin > 0x01) {
+    if(args->user.admin > 0x01 || *args->user.uname == 0 || *args->user.pass == 0) {
         status = 0xFE;
     }
 

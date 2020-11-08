@@ -41,6 +41,10 @@ uint8_t user_handler_get_total_users(void) {
 
 UserInfoP user_handler_get_user_by_username(char *username) {
 
+    if(*username == 0) {
+        return NULL;
+    }
+
     khiter_t iter = kh_get(STRING_TO_CHAR_MAP, userMap, username);
 
     if(iter != kh_end(userMap)) {
@@ -65,6 +69,10 @@ uint8_t user_handler_get_all_users(UserInfoP output[]) {
 }
 
 UserInfoP user_handler_add_user(char *username, char *password, bool admin) {
+
+    if(*username == 0 || *password == 0) {
+        return NULL;
+    }
 
     if(kh_size(userMap) >= MAX_USER_COUNT){
         return NULL;
@@ -93,6 +101,11 @@ UserInfoP user_handler_add_user(char *username, char *password, bool admin) {
 }
 
 bool user_handler_delete_user(char *username) {
+
+    if(*username == 0) {
+        return false;
+    }
+
     khiter_t iter = kh_get(STRING_TO_CHAR_MAP, userMap, username);
 
     if(iter != kh_end(userMap)) {
