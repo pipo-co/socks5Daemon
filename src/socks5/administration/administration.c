@@ -282,7 +282,7 @@ static AdminStateEnum auth_write(SelectorEvent *event) {
 
     AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
     
-    auth_marshall(&adminSession->output, &adminSession->adminHeader.authHeader.bytes, adminSession->adminHeader.authHeader.status); 
+    admin_auth_marshall(&adminSession->output, &adminSession->adminHeader.authHeader.bytes, adminSession->adminHeader.authHeader.status); 
 
     if(adminSession->adminHeader.authHeader.bytes == AUTH_ACK_SIZE && !buffer_can_read(&adminSession->output)) {
         return ADMIN_METHOD_ARRIVAL;
@@ -295,7 +295,7 @@ static AdminStateEnum auth_write_error(SelectorEvent *event) {
 
     AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
     
-    auth_marshall(&adminSession->output, &adminSession->adminHeader.authHeader.bytes, adminSession->adminHeader.authHeader.status); 
+    admin_auth_marshall(&adminSession->output, &adminSession->adminHeader.authHeader.bytes, adminSession->adminHeader.authHeader.status); 
 
     if(adminSession->adminHeader.authHeader.bytes == AUTH_ACK_SIZE && !buffer_can_read(&adminSession->output)) {
         return ADMIN_FINISH;
@@ -304,9 +304,10 @@ static AdminStateEnum auth_write_error(SelectorEvent *event) {
     return adminSession->currentState;
 }
 
-static void auth_marshall(Buffer *b, size_t *bytes, AuthCodesStateEnum status) {
+static void admin_auth_marshall(Buffer *b, size_t *bytes, AuthCodesStateEnum status) {
 
     while(*bytes < AUTH_ACK_SIZE && buffer_can_write(b)){
+
         if(*bytes == 0){
             buffer_write(b, AUTH_VERSION);
         }
