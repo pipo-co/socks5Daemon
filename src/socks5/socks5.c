@@ -336,8 +336,10 @@ static void socks5_client_write(SelectorEvent *event){
     if(!buffer_can_read(buffer)) {
         // fprintf(stderr, "Write client socket %d was registered on pselect, but there was no space in buffer\n", event->fd);
 
-        if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
+        if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH){
             socks5_close_session(event);
+        }
+            
 
         return;
     }
@@ -351,8 +353,10 @@ static void socks5_client_write(SelectorEvent *event){
 
         statistics_add_bytes_sent(writeBytes);
 
-        if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
+        if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH){
             socks5_close_session(event);
+        }
+            
 
         // fprintf(stderr, "%d: Client Write, State %u\n", stateLogCount, state);
         stateLogCount++;
