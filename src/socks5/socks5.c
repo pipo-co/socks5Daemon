@@ -19,6 +19,9 @@
 #define DEFAULT_OUTPUT_BUFFER_SIZE 512
 #define DEFAULT_DNS_BUFFER_SIZE 512
 
+#define MIN_IO_BUFFER_SIZE 50
+#define MAX_IO_BUFFER_SIZE 1*1024*1024
+
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 
 static Socks5Args * args;
@@ -77,6 +80,29 @@ void socks5_init(Socks5Args *argsParam, double maxSessionInactivityParam) {
 
     // Load Parsers
     auth_request_parser_load();
+}
+
+bool socks5_set_io_buffer_size(uint32_t size) {
+
+    if(size < MIN_IO_BUFFER_SIZE || size > MAX_IO_BUFFER_SIZE) {
+        return false;
+    }
+
+    sessionInputBufferSize = size;
+    sessionOutputBufferSize = size;
+
+    return true;
+}
+
+bool socks5_set_max_session_inactivity(uint8_t seconds) {
+
+    if(seconds < 1 || seconds > 255) {
+        return false;
+    }
+
+    maxSessionInactivity = seconds;
+
+    return true;
 }
 
 static int socks5_accept_connection(int passiveFd, struct sockaddr *cli_addr, socklen_t *clilen) {

@@ -4,18 +4,18 @@
 #include <stdint.h>
 #include "parsers/adminRequestParser/adminRequestParser.h"
 
-RequestHandler admin_request_parser_add_user(AdminRequestParser *p, void *data);
+AdminResponseBuilderContainer admin_request_parser_add_user(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args);
 
-RequestHandler admin_request_parser_remove_user(AdminRequestParser *p, void *data);
+AdminResponseBuilderContainer admin_request_parser_remove_user(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args);
 
-RequestHandler admin_request_parser_toggle_password_spoofing(AdminRequestParser *p, void *data);
+AdminResponseBuilderContainer admin_request_parser_toggle_password_spoofing(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args);
 
-RequestHandler admin_request_parser_toggle_connection_clean_up(AdminRequestParser *p, void *data);
+AdminResponseBuilderContainer admin_request_parser_toggle_connection_clean_up(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args);
 
-RequestHandler admin_request_parser_set_buffer_size(AdminRequestParser *p, void *data);
+AdminResponseBuilderContainer admin_request_parser_set_buffer_size(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args);
 
-RequestHandler admin_request_parser_set_selector_timeout(AdminRequestParser *p, void *data);
+AdminResponseBuilderContainer admin_request_parser_set_selector_timeout(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args);
 
-RequestHandler admin_request_parser_set_connection_timeout(AdminRequestParser *p, void *data);
+AdminResponseBuilderContainer admin_request_parser_set_connection_timeout(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args);
 
 #endif

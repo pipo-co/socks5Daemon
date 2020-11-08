@@ -61,6 +61,7 @@ typedef struct ServerHandler {
 
 static Socks5Args args;
 static ServerHandler serverHandler;
+static FdSelector selector;
 static bool done = false;
 
 
@@ -86,7 +87,7 @@ int main(const int argc, char **argv) {
     SelectorStatus   ss      = SELECTOR_SUCCESS;
     int passiveSocketErrorCount = 0;
     
-    FdSelector selector = initialize_selector(&err_msg);
+    selector = initialize_selector(&err_msg);
     
     if(selector == NULL) {
         goto finally;
@@ -204,6 +205,16 @@ finally:
     return ret;
 }
 
+bool update_socks5_selector_timeout(time_t timeout) {
+
+    if(timeout < 1 || timeout > 255) {
+        return false;
+    }
+
+    selector_update_timeout(&selector, timeout);
+
+    return true;
+}
 
 static FdSelector initialize_selector(char ** errorMessage) {
 

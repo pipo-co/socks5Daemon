@@ -259,6 +259,7 @@ Acknowledgments
                 o   X'00'   Succeeded
                 o   X'01'   Username Already Taken
                 o   X'02'   Invalid Parameter
+                0   X'03'   Max Total Users Reached
                 o   X'FF'   General Server Error
 
         4.2.2. Delete user
@@ -275,6 +276,7 @@ Acknowledgments
             The possible values for STATUS are:
                 
                 o   X'00' Succeeded
+                o   X'01' Invalid Parameter
                 o   X'FF' General Server Error 
 
         4.2.4. Enable/Disable Connection Clean-up Routine
@@ -282,6 +284,7 @@ Acknowledgments
             The possible values for STATUS are:
 
                 o   X'00' Succeeded
+                o   X'01' Invalid Parameter
                 o   X'FF' General Server Error 
         
         4.2.5. Set I/O Buffer Sizes

@@ -31,4 +31,6 @@ bool user_handler_delete_user(char *username);
 
 void user_handler_destroy(void);
 
+uint8_t user_handler_get_total_users(void);
+
 #endif

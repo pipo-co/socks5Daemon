@@ -35,6 +35,10 @@ bool user_handler_user_exists(char *username, bool *admin) {
     return false;
 }
 
+uint8_t user_handler_get_total_users(void) {
+    return kh_size(userMap);
+}
+
 UserInfoP user_handler_get_user_by_username(char *username) {
 
     khiter_t iter = kh_get(STRING_TO_CHAR_MAP, userMap, username);
