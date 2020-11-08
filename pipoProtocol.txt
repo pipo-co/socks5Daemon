@@ -375,6 +375,14 @@ Acknowledgments
 
             The use of this Command will provide a number that indicates the number of concurrent
             connections that a user has in the Server. 
+
+            +------+-----+------+-----------+
+            | TYPE | CMD | ULEN |   UNAME   |
+            +------+-----+------+-----------+
+            |  1   |  1  |   1  | 1 to 255  |
+            +------+-----+------+-----------+
+
+            ULEN and UNAME fields are the same as de ones defined in 2.2.
         
     5.2. Responses
 
@@ -382,16 +390,16 @@ Acknowledgments
 
             The Server sends the following response:
 
-            +------+-----+----------+--------+-----------+----------+--------+-----------+
-            | TYPE | CMD |  USRLEN  | ULEN_1 |  UNAME_1  |    ...   | ULEN_n |  UNAME_n  |
-            +------+-----+----------+--------+-----------+----------+--------+-----------+
-            |  1   |  1  |     1    |   1    | 1 to 255  |    ...   |   1    | 1 to 255  |
-            +------+-----+----------+--------+-----------+----------+--------+-----------+
+            +------+-----+----------+--------+-----------+-------------+----------+--------+-----------+-------------+
+            | TYPE | CMD |  USRLEN  | ULEN_1 |  UNAME_1  |  PRIVILEGE  |    ...   | ULEN_n |  UNAME_n  | PRIVILEGE_n |
+            +------+-----+----------+--------+-----------+-------------+----------+--------+-----------+-------------+
+            |  1   |  1  |     1    |   1    | 1 to 255  |      1      |    ...   |   1    | 1 to 255  |      1      |
+            +------+-----+----------+--------+-----------+-------------+----------+--------+-----------+-------------+
 
             Where USRLEN is a 1 byte long unsigned integer that describes the amount of users listed.
 
-            The message contains that amount of fields ULEN and UNAME, which are the same as
-            those defined in 2.2.
+            The message contains that amount of fields ULEN, UNAME and PRIVILEGE, which are the same as
+            those defined in 2.2 and 4.1.1.
                 
         5.2.2. Get Total Historic Connections
 
