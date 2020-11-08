@@ -17,11 +17,10 @@ void admin_request_parser_init(AdminRequestParser *p){
     p->parserCount = 0;
     p->argLength = -1;
     p->state = ARP_STATE_TYPE;
-    p->request_handler = admin_request_error_handler_parser_error;
+    memset(&p->args, '\0', sizeof(p->args));
 }
 
 bool admin_request_parser_consume(AdminRequestParser *p, Buffer *b, bool *errored){
-    
     
     while(!admin_request_parser_is_done(p, errored) && buffer_can_read(b)){
         admin_request_parser_feed(p, buffer_read(b));
@@ -43,6 +42,7 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
                 p->state = ARP_STATE_MODIFICATION;
             }
             else {
+                p->request_handler = admin_request_error_handler_invalid_type;
                 p->state = ARP_STATE_ERROR_TYPE_NOT_SUPPORTED;
             }
         break;
@@ -296,7 +296,7 @@ static void (*admin_request_parser_get_query_handler(uint8_t b))(uint8_t type, u
         break;
     
         default:
-            return admin_request_error_handler_parser_error;
+            return admin_request_error_handler_invalid_query;
         break;
     }
 }
@@ -327,7 +327,7 @@ static void (*admin_request_parser_get_modification_handler(uint8_t b))(uint8_t 
             break;
     
         default:
-            return admin_request_error_handler_parser_error;
+            return admin_request_error_handler_invalid_modification;
             break;
     }
 }

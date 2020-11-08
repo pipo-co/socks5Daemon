@@ -13,8 +13,10 @@ static void admin_auth_arrival(SelectorEvent *event);
 static AdminStateEnum admin_auth_read(SelectorEvent *event);
 static AdminStateEnum auth_write(SelectorEvent *event);
 static AdminStateEnum auth_write_error(SelectorEvent *event);
-static void request_arrival(SelectorEvent *event);
+static void admin_auth_marshall(Buffer *b, size_t *bytes, AuthCodesStateEnum status);
+static void admin_request_arrival(SelectorEvent *event);
 static AdminStateEnum admin_request_read(SelectorEvent *event);
+static AdminStateEnum admin_response_write(SelectorEvent *event);
 static void admin_close_session(SelectorEvent *event);
 static void administration_close(SelectorEvent *event);
 static void admin_passive_accept_util(SelectorEvent *event, struct sockaddr *cli_addr, socklen_t *clilen);
@@ -181,7 +183,7 @@ static void admin_post_read_handler(SelectorEvent *event) {
         break;
 
         case ADMIN_METHOD_ARRIVAL:
-            admin_method_arrival(event);
+            admin_request_arrival(event);
 
         case ADMIN_METHOD:
             if(adminSession->currentState = admin_request_read(event), adminSession->currentState == ADMIN_METHOD_RESPONSE){
@@ -310,7 +312,7 @@ static void admin_auth_marshall(Buffer *b, size_t *bytes, AuthCodesStateEnum sta
     }
 }
 
-static void request_arrival(SelectorEvent *event){
+static void admin_request_arrival(SelectorEvent *event){
 
     AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
 
@@ -327,13 +329,13 @@ static AdminStateEnum admin_request_read(SelectorEvent *event){
         return adminSession->currentState;
     }
 
-    h->responseBuilder = h->requestParser.requestHandler(h->requestParser.type, h->requestParser.command, &h->requestParser.args);
+    h->requestParser.request_handler(h->requestParser.type, h->requestParser.command, &h->requestParser.args, &h->responseBuilder);
     return ADMIN_METHOD_RESPONSE;
 }
 
 static AdminStateEnum admin_response_write(SelectorEvent *event){
     AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
-    AdminResponseBuilderContainer * b = &adminSession->adminHeader.requestHeader.responseBuilder;
+    AdminResponseBuilderContainer * b = &adminSession->adminHeader.requestHeader.responseBuilder; 
 
     if(b->admin_response_builder(b, &adminSession->output) && !buffer_can_read(&adminSession->output)){
         return ADMIN_METHOD;

@@ -7,7 +7,7 @@ START_TEST (request_error_test_core_request_marshall_incomplete) {
     size_t bytes = 0;
     uint8_t rep = 0x01;
 
-    request_error_marshall(&buff, &bytes, rep);
+    request_marshall(&buff, &bytes, rep);
 
     ck_assert_uint_eq(bytes, 4);
     ck_assert_uint_eq(buffer_read(&buff), SOCKS_VERSION);
@@ -26,7 +26,7 @@ START_TEST (request_error_test_core_request_marshall_complete) {
     size_t bytes = 0;
     uint8_t rep = 0x01;
 
-    request_error_marshall(&buff, &bytes, rep);
+    request_marshall(&buff, &bytes, rep);
 
     ck_assert_uint_eq(bytes, 10);
     ck_assert_uint_eq(buffer_read(&buff), SOCKS_VERSION);

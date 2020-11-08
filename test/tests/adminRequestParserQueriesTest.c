@@ -1,1 +1,1 @@
-#include "parsers/adminRequestParser/adminRequestParserQueries.c"
+#include "parsers/adminRequestParser/adminRequestQueryHandlers.c"

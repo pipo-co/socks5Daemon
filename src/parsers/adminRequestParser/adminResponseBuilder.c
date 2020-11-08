@@ -39,7 +39,7 @@ bool admin_response_builder_uint16(AdminResponseBuilderContainer * adminResponse
         else {
             (*currByte)++;
             aux = (adminResponse->data.uint16 >> ((UINT16_RESPONSE_SIZE - *currByte)* 8)) & MASK;
-            buffer_write(b, adminResponse->data.uint8);
+            buffer_write(b, aux);
         }
     }
     if(*currByte == UINT16_RESPONSE_SIZE){
@@ -64,7 +64,7 @@ bool admin_response_builder_uint32(AdminResponseBuilderContainer * adminResponse
         else {
             (*currByte)++;
             aux = (adminResponse->data.uint16 >> ((UINT32_RESPONSE_SIZE - *currByte)* 8)) & MASK;
-            buffer_write(b, adminResponse->data.uint8);
+            buffer_write(b, aux);
         }
     }
     if(*currByte == UINT32_RESPONSE_SIZE){
@@ -89,7 +89,7 @@ bool admin_response_builder_uint64(AdminResponseBuilderContainer * adminResponse
         else {
             (*currByte)++;
             aux = adminResponse->data.uint16 >> ((UINT64_RESPONSE_SIZE - *currByte)* 8) & MASK;
-            buffer_write(b, adminResponse->data.uint8);
+            buffer_write(b, aux);
         }
     }
     if(*currByte == UINT64_RESPONSE_SIZE){
