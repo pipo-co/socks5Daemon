@@ -18,13 +18,13 @@ void admin_request_parser_init(AdminRequestParser *p){
     p->state = ARP_STATE_TYPE;  
 }
 
-bool admin_request_parser_consume(AdminRequestParser *p, Buffer *b){
+bool admin_request_parser_consume(AdminRequestParser *p, Buffer *b, bool *errored){
     
-    bool errored;
-    while(!admin_request_parser_is_done(p, &errored) && buffer_can_read(b)){
+    
+    while(!admin_request_parser_is_done(p, errored) && buffer_can_read(b)){
         admin_request_parser_feed(p, buffer_read(b));
     }
-    return admin_request_parser_is_done(p, &errored);
+    return admin_request_parser_is_done(p, errored);
 }
 
 AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t b) {

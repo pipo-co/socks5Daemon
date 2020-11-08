@@ -44,6 +44,8 @@ typedef Suite *(*suiteSupplier)(void);
 #include "tests/adminRequestParserTest.c"
 #include "tests/adminRequestParserQueriesTest.c"
 #include "tests/adminRequestParserModificationsTest.c"
+#include "tests/adminResponseBuilderTest.c"
+#include "tests/requestUtilitiesTest.c"
 
 
 // Tests being exercised

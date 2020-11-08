@@ -1,5 +1,6 @@
 #include "administration.h"
-#include "parsers/authRequest/authRequestParser.c"
+#include "parsers/authRequest/authRequestParser.h"
+#include "parsers/adminRequestParser/adminRequestParser.h"
 
 #define DEFAULT_INPUT_BUFFER_SIZE 512
 #define DEFAULT_OUTPUT_BUFFER_SIZE 512
@@ -185,7 +186,7 @@ static void admin_post_read_handler(SelectorEvent *event) {
             admin_method_arrival(event);
 
         case ADMIN_METHOD:
-            if(adminSession->currentState = admin_request_read(event), adminSession->currentState == ADMIN_METHOD_RESPONSE || adminSession->currentState == ADMIN_METHOD_ERROR){
+            if(adminSession->currentState = admin_request_read(event), adminSession->currentState == ADMIN_METHOD_RESPONSE){
                 selector_set_interest_event(event, OP_WRITE);
             }
 
@@ -214,17 +215,10 @@ static void admin_post_write_handler(SelectorEvent *event) {
         break;
 
         case ADMIN_METHOD_RESPONSE:
-            if(adminSession->currentState = response_write(event), adminSession->currentState == ADMIN_METHOD){
+            if(adminSession->currentState = admin_response_write(event), adminSession->currentState == ADMIN_METHOD){
                 selector_set_interest_event(event, OP_READ);
             }
 
-        break;
-
-        case ADMIN_METHOD_ERROR:
-            if(adminSession->currentState = response_write_error(event), adminSession->currentState == ADMIN_METHOD){
-                selector_set_interest_event(event, OP_READ);
-            }
-        
         break;
     }
 }
@@ -322,44 +316,32 @@ static void request_arrival(SelectorEvent *event){
 
     AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
 
-    admin_method_parser_init(&adminSession->adminHeader.requestHeader.requestParser);
-
-    adminSession->adminHeader.requestHeader.bytes = 0;
+    parser_init(&adminSession->adminHeader.requestHeader.requestParser);
 
 }
 
 static AdminStateEnum admin_request_read(SelectorEvent *event){
     AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
-    AdminAuthHeader * h = &adminSession->adminHeader.authHeader;
+    AdminRequestHeader * h = &adminSession->adminHeader.requestHeader;
     bool errored;
 
-    if(!auth_request_parser_consume(&adminSession->input, &h->authParser, &errored)) {
+    if(!admin_request_parser_consume(&h->requestParser, &adminSession->input, &errored)) {
         return adminSession->currentState;
     }
 
-    if(errored == true) {
-        // loggear ( auth_request_parser_error_message(socks5_p->auth_parser.current_state);)
-        return ADMIN_METHOD_ERROR;
+    h->responseBuilder = h->requestParser.requestHandler(h->requestParser.type, h->requestParser.command, &h->requestParser.args);
+    return ADMIN_METHOD_RESPONSE;
+}
+
+static AdminStateEnum admin_response_write(SelectorEvent *event){
+    AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+    AdminResponseBuilderContainer * b = &adminSession->adminHeader.requestHeader.responseBuilder;
+
+    if(b->admin_response_builder(b, &adminSession->output) && !buffer_can_read(&adminSession->output)){
+        return ADMIN_METHOD;
     }
 
-    if(h->authParser.version != AUTH_VERSION) {
-        //loggear ("AuthRequest: Invalid version!")
-        return ADMIN_METHOD_ERROR;
-    }
-
-    adminSession->user = user_handler_get_user_by_username(h->authParser.username);
-
-    // User does not exist, falta preguntar que si no es admin
-    if(adminSession->user == NULL ) {
-        return ADMIN_METHOD_ERROR;
-    }
-
-    // Password does not match
-    if(strcmp(adminSession->user->password, h->authParser.password) != 0) {
-        return ADMIN_METHOD_ERROR;
-    }
-
-    return ADMIN_METHOD_ARRIVAL;
+    return adminSession->currentState;
 }
 
 static void admin_close_session(SelectorEvent *event) {

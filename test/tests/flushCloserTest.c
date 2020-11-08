@@ -1,4 +1,5 @@
 #include "states/close/flushCloser/flushCloser.c"
+#include <check.h>
 
 uint8_t flushCloserDummyBufferInput[] = {
     0x05, 0x01, 0x02

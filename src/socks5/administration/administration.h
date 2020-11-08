@@ -14,6 +14,7 @@
 #include <netinet/sctp.h>
 #include <arpa/inet.h>
 
+#include "parsers/adminRequestParser/adminResponseBuilder.h"
 #include "argsHandler/argsHandler.h"
 #include "selector/selector.h"
 #include "netutils/netutils.h"
@@ -48,13 +49,13 @@ typedef struct AdminAuthHeader {
 
 typedef struct AdminRequestHeader{
     AdminRequestParser requestParser;
-    size_t bytes;
+    AdminResponseBuilderContainer responseBuilder;
 
-} RequestHeader;
+} AdminRequestHeader;
 
 typedef union AdminHeaders{
     AdminAuthHeader authHeader;    
-    AdminRequestParser requestHeader;
+    AdminRequestHeader requestHeader;
 } AdminHeaders;
 
 typedef struct AdministrationHandler {
