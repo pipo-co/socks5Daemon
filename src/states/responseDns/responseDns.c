@@ -90,8 +90,6 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     selector_unregister_fd(event->s, event->fd);
     free(dnsHeaderMe->buffer.data);
     dnsHeaderMe->buffer.data = NULL;
-    // fprintf(stderr, "Finished parsing DNS response. Errored: %d. \
-        Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", errored, dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
     
     if (errored){
 
@@ -141,9 +139,6 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
 
     if(session->serverConnection.fd  == -1) {
 
-        // fprintf(stderr, "Couldn't connect with any addr. \
-                Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
-
         if(dnsHeaderOther->dnsConnection.state == INVALID){
             // Mensaje de error viene de adentro del while. Error del ultimo intento de conexion. Hay que elegir uno.
             return REQUEST_ERROR;
@@ -153,9 +148,6 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
         dnsHeaderMe->responseParser.addresses = NULL;
         return session->sessionStateMachine.current;
     }
-
-    // fprintf(stderr, "Succesfully connected (1st part). \
-            Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
     socks5_register_server(event->s, session);
     dnsHeaderMe->connected = true;

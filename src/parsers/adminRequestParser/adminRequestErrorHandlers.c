@@ -1,5 +1,6 @@
 #include "parsers/adminRequestParser/adminRequestErrorHandlers.h"
 
+static void admin_request_error_handler_invalid_command(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
 void admin_request_error_handler_invalid_type(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
 

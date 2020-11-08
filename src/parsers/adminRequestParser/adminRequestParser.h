@@ -63,15 +63,15 @@ typedef enum AdminRequestParserModification {
 } AdminRequestParserModification;
 
 typedef struct AdminRequestParserUserInfo{
-    uint8_t     uname[MAX_STRING_LENGTH];
-    uint8_t     pass[MAX_STRING_LENGTH];
+    char     uname[MAX_STRING_LENGTH];
+    char     pass[MAX_STRING_LENGTH];
     uint8_t     admin;
 } AdminRequestParserUserInfo;
 
 typedef union AdminRequestParserArgs{
     uint8_t                     uint8;
     uint32_t                    uint32;
-    uint8_t                     string[MAX_STRING_LENGTH];
+    char                     string[MAX_STRING_LENGTH];
     AdminRequestParserUserInfo  user;
 } AdminRequestParserArgs; 
 

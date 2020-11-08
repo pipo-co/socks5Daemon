@@ -104,7 +104,7 @@ uint8_t socks5_get_max_session_inactivity(void) {
 
 bool socks5_set_max_session_inactivity(uint8_t seconds) {
 
-    if(seconds < 1 || seconds > 255) {
+    if(seconds < 1) {
         return false;
     }
 

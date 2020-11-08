@@ -60,8 +60,6 @@ void logger_non_blocking_log(int fd, char *log, size_t nbytes) {
 
     int writeBytes;
 
-    int i = 0;
-
     do {
         writeBytes = write(fd, log, nbytes);
 

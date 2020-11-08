@@ -53,13 +53,14 @@ START_TEST (admin_request_parser_query_with_no_args) {
     admin_request_parser_init(&p);
 
     Buffer b;
+    bool errored;
 
     buffer_init(&b, sizeof(query_with_no_args), query_with_no_args);
     buffer_write_adv(&b, sizeof(query_with_no_args));
     
-    admin_request_parser_consume(&p, &b);
+    admin_request_parser_consume(&p, &b, &errored);
 
-    bool errored;
+    
 
     ck_assert(admin_request_parser_is_done(&p, &errored));
     ck_assert(!errored);
@@ -75,14 +76,13 @@ START_TEST (admin_request_parser_query_with_string) {
     admin_request_parser_init(&p);
 
     Buffer b;
+    bool errored;
 
     buffer_init(&b, sizeof(query_with_string), query_with_string);
     buffer_write_adv(&b, sizeof(query_with_string));
     
-    admin_request_parser_consume(&p, &b);
+    admin_request_parser_consume(&p, &b, &errored);
     
-    bool errored;
-
     ck_assert(admin_request_parser_is_done(&p, &errored));
     ck_assert(!errored);
     ck_assert(buffer_can_read(&b));
@@ -99,14 +99,13 @@ START_TEST (admin_request_parser_modifier_with_uint8) {
     admin_request_parser_init(&p);
 
     Buffer b;
+    bool errored;
 
     buffer_init(&b, sizeof(modifier_with_uint8), modifier_with_uint8);
     buffer_write_adv(&b, sizeof(modifier_with_uint8));
     
-    admin_request_parser_consume(&p, &b);
+    admin_request_parser_consume(&p, &b, &errored);
     
-    bool errored;
-
     ck_assert(admin_request_parser_is_done(&p, &errored));
     ck_assert(!errored);
     ck_assert_uint_eq(MODIFICATION, p.type);
@@ -122,14 +121,14 @@ START_TEST (admin_request_parser_modifier_with_uint32) {
     admin_request_parser_init(&p);
 
     Buffer b;
+    bool errored;
 
     buffer_init(&b, sizeof(modifier_with_uint32), modifier_with_uint32);
     buffer_write_adv(&b, sizeof(modifier_with_uint32));
     
-    admin_request_parser_consume(&p, &b);
+    admin_request_parser_consume(&p, &b, &errored);
     
-    bool errored;
-
+    
     ck_assert(admin_request_parser_is_done(&p, &errored));
     ck_assert(!errored);
     ck_assert_uint_eq(MODIFICATION, p.type);
@@ -145,13 +144,13 @@ START_TEST (admin_request_parser_modifier_with_user) {
     admin_request_parser_init(&p);
 
     Buffer b;
+    bool errored;
 
     buffer_init(&b, sizeof(modification_with_user), modification_with_user);
     buffer_write_adv(&b, sizeof(modification_with_user));
     
-    admin_request_parser_consume(&p, &b);
+    admin_request_parser_consume(&p, &b, &errored);
     
-    bool errored;
 
     ck_assert(admin_request_parser_is_done(&p, &errored));
     ck_assert(!errored);
@@ -170,14 +169,13 @@ START_TEST (admin_request_parser_invalid_type) {
     admin_request_parser_init(&p);
 
     Buffer b;
+    bool errored;
 
     buffer_init(&b, sizeof(invalid_type), invalid_type);
     buffer_write_adv(&b, sizeof(invalid_type));
     
-    admin_request_parser_consume(&p, &b);
+    admin_request_parser_consume(&p, &b, &errored);
     
-    bool errored;
-
     ck_assert(admin_request_parser_is_done(&p, &errored));
     ck_assert(errored);
     ck_assert(buffer_can_read(&b));
@@ -191,13 +189,13 @@ START_TEST (admin_request_parser_invalid_query) {
     admin_request_parser_init(&p);
 
     Buffer b;
+    bool errored;
 
     buffer_init(&b, sizeof(invalid_query), invalid_query);
     buffer_write_adv(&b, sizeof(invalid_query));
     
-    admin_request_parser_consume(&p, &b);
+    admin_request_parser_consume(&p, &b, &errored);
     
-    bool errored;
 
     ck_assert(admin_request_parser_is_done(&p, &errored));
     ck_assert(errored);
@@ -211,13 +209,14 @@ START_TEST (admin_request_parser_invalid_modification) {
     admin_request_parser_init(&p);
 
     Buffer b;
+    bool errored;
 
     buffer_init(&b, sizeof(invalid_modifier), invalid_query);
     buffer_write_adv(&b, sizeof(invalid_query));
     
-    admin_request_parser_consume(&p, &b);
+    admin_request_parser_consume(&p, &b, &errored);
     
-    bool errored;
+    
 
     ck_assert(admin_request_parser_is_done(&p, &errored));
     ck_assert(errored);

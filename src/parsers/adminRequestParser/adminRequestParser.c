@@ -6,11 +6,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 static AdminRequestParserState admin_request_parser_get_arg_state_modifications(AdminRequestParserModification m);
 static AdminRequestParserState admin_request_parser_get_arg_state_queries(AdminRequestParserQuery q);
-static bool (*admin_request_parser_get_query_handler(uint8_t b))(AdminRequestParser *p, Buffer *b);
-static bool (*admin_request_parser_get_modification_handler(uint8_t b))(AdminRequestParser *p, Buffer *b);
+
+static void (*admin_request_parser_get_query_handler(uint8_t b))(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
+static void (*admin_request_parser_get_modification_handler(uint8_t b))(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
 void admin_request_parser_init(AdminRequestParser *p){
     p->parserCount = 0;
@@ -192,8 +194,11 @@ bool admin_request_parser_is_done(AdminRequestParser *p, bool *errored) {
         case ARP_ERROR_NO_PARSER_STATE:
         case ARP_ERROR_INVALID_STATE:
             *errored = true;
+            return true;
+
         case ARP_STATE_DONE:
             return true;
+
         default:
             *errored = true;
             return true;
@@ -251,7 +256,7 @@ static AdminRequestParserState admin_request_parser_get_arg_state_queries(AdminR
     }
 }
 
-static bool (*admin_request_parser_get_query_handler(uint8_t b))(AdminRequestParser *p, Buffer *b) {
+static void (*admin_request_parser_get_query_handler(uint8_t b))(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
 
     switch (b){
         case LIST_USERS:
@@ -297,7 +302,7 @@ static bool (*admin_request_parser_get_query_handler(uint8_t b))(AdminRequestPar
     }
 }
 
-static bool (*admin_request_parser_get_modification_handler(uint8_t b))(AdminRequestParser *p, Buffer *b) {
+static void (*admin_request_parser_get_modification_handler(uint8_t b))(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
 
     switch (b){
         case ADD_USER:
