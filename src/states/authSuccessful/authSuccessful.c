@@ -22,7 +22,7 @@ static void auth_successful_on_arrival(SelectorEvent *event) {
 
 static unsigned auth_successful_on_write(SelectorEvent *event) {
 
-     SessionHandlerP session = (SessionHandlerP) event->data;
+    SessionHandlerP session = (SessionHandlerP) event->data;
 
     if(session->socksHeader.authRequestHeader.bytes == AUTH_REPLY_SIZE && !buffer_can_read(&session->output)) {
         return REQUEST;

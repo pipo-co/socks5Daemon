@@ -29,6 +29,7 @@
 #include "selector/selector.h"
 #include "netutils/netutils.h"
 #include "socks5/socks5.h"
+#include "socks5/administration/administration.h"
 #include "userHandler/userHandler.h"
 #include "statistics/statistics.h"
 
@@ -51,9 +52,12 @@ typedef struct ServerHandler {
     in_port_t port;
     FdHandler ipv6Handler;
     FdHandler ipv4Handler;
+    FdHandler adminHandler;
     int ipv4Fd;
     int ipv6Fd;
+    int adminFd;
 } ServerHandler;
+
 
 static Socks5Args args;
 static ServerHandler serverHandler;
@@ -113,11 +117,7 @@ int main(const int argc, char **argv) {
                 goto finally;
             }
         }
-        // if(generate_administration_socket(selector, &err_msg) != 0){
-        //     fprintf(stdout, "Error registering Administration listening socket\n");
-        // }
     }
-
     // -l 
     else if(inet_pton(AF_INET, args.socks_addr, &serverHandler.ipv4addr)) {
         if(generate_register_ipv4_socket(selector, &err_msg) != 0) {
@@ -133,6 +133,11 @@ int main(const int argc, char **argv) {
 
     else {
         err_msg = "Invalid IP in -l parameter";
+        goto finally;
+    }
+
+    if(generate_administration_socket(selector, &err_msg) != 0){
+        fprintf(stderr, "Unable to initialize administration socket\n");
         goto finally;
     }
 
@@ -275,31 +280,80 @@ static int generate_register_ipv6_socket(FdSelector selector, char **errorMessag
     return 0;
 }
 
-// static int generate_administration_socket(FdSelector selector, char **errorMessage) {
-     
-//     memset(&serverHandler.ipv6Handler, '\0', sizeof(serverHandler.ipv6Handler));
+static int generate_administration_socket(FdSelector selector, char **errorMessage) {
+    int ret, fd;
+    struct in_addr ipv4addr;
+    struct in6_addr ipv6addr;
+    struct sockaddr_in servaddr;
+    struct sockaddr_in6 servaddr6;
+    struct sctp_initmsg initmsg = {
+                .sinit_num_ostreams = 5,
+                .sinit_max_instreams = 5,
+                .sinit_max_attempts = 4,
+        };
+    struct sockaddr * admin;
+    
 
-//     serverHandler.ipv6Handler.handle_read = socks5_passive_accept_ipv6;
+    memset(&serverHandler.adminHandler, '\0', sizeof(serverHandler.adminHandler));
 
-//     struct sockaddr_in6 sockaddr6 = {
-//         .sin6_addr = serverHandler.ipv6addr,
-//         .sin6_family = AF_INET6,
-//         .sin6_port = serverHandler.port,
-//     };
+    serverHandler.adminHandler.handle_read = administration_passive_accept;
 
-//     int ipv6Fd = generate_new_socket((struct sockaddr *)&sockaddr6, sizeof(sockaddr6), errorMessage);
-//     if(ipv6Fd == -1) {
-//         return -1;
-//     }
+    
 
-//     if(selector_register(selector, ipv6Fd, &serverHandler.ipv6Handler, OP_READ, NULL) != SELECTOR_SUCCESS) {
-//         *errorMessage = "Registering fd for ipv6";
-//         return -1;
-//     }
+    if(inet_pton(AF_INET, args.mng_addr, &ipv4addr)){
+        servaddr.sin_addr = ipv4addr;
+        servaddr.sin_port = htons(args.mng_port);
+        servaddr.sin_family = AF_INET;
 
-//     serverHandler.ipv6Fd = ipv6Fd;
-//     return 0;
-// }
+        admin = &servaddr;
+    }
+    else if (inet_pton(AF_INET6, args.mng_addr, &ipv6addr)){
+        servaddr6.sin6_addr = ipv6addr;
+        servaddr6.sin6_port = htons(args.mng_port);
+        servaddr6.sin6_family = AF_INET6;
+
+        admin = &servaddr;
+    }
+    else{
+        *errorMessage = "Invalid ip type";
+        return -1;
+    }
+
+    
+    fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
+    if(fd == -1) {
+        *errorMessage = "Unable to create socket";
+        return -1;
+    }
+
+    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
+
+    setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(initmsg));
+
+    ret = bind(fd, admin, sizeof(admin));
+    if (ret < 0){
+        *errorMessage = "Unable to bind socket";
+        return -1;
+    }
+    
+    if(listen(fd, SERVER_BACKLOG) < 0) {
+        *errorMessage = "Unable to listen";
+        return -1;
+    }
+
+    if(selector_fd_set_nio(fd) == -1) {
+        *errorMessage = "Getting server socket flags";
+        return -1;
+    }
+
+    if(selector_register(selector, fd, &serverHandler.adminHandler, OP_READ, NULL) != SELECTOR_SUCCESS) {
+        *errorMessage = "Registering Admin fd";
+        return -1;
+    }
+
+    serverHandler.adminFd = fd;
+    return 0;
+}
 
 static int generate_new_socket(struct sockaddr *addr, socklen_t addrLen,char ** errorMessage) {
 
