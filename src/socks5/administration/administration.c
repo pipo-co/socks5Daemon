@@ -53,8 +53,6 @@ static void admin_passive_accept_util(SelectorEvent *event, struct sockaddr *cli
 
     int fd, in, flags;
     FdHandler adminHandler;
-    //TODO: Y esto???
-    struct sctp_sndrcvinfo sndrcvinfo;
 
     fd = sctp_accept_connection(event->fd, cli_addr, clilen);
     if(fd < 0){
@@ -316,7 +314,7 @@ static void request_arrival(SelectorEvent *event){
 
     AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
 
-    parser_init(&adminSession->adminHeader.requestHeader.requestParser);
+    admin_request_parser_init(&adminSession->adminHeader.requestHeader.requestParser);
 
 }
 

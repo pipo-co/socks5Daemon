@@ -81,7 +81,7 @@ typedef struct AdminRequestParser {
               //refactor to arg
 } AdminRequestParser;
 
-void parser_init(AdminRequestParser *p);
+void admin_request_parser_init(AdminRequestParser *p);
 
 bool admin_request_parser_consume(AdminRequestParser *p, Buffer *b, bool *errored);
 
