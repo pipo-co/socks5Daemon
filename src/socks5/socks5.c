@@ -82,6 +82,10 @@ void socks5_init(Socks5Args *argsParam, double maxSessionInactivityParam) {
     auth_request_parser_load();
 }
 
+uint32_t socks5_get_io_buffer_size(void) {
+    return sessionInputBufferSize;
+}
+
 bool socks5_set_io_buffer_size(uint32_t size) {
 
     if(size < MIN_IO_BUFFER_SIZE || size > MAX_IO_BUFFER_SIZE) {
@@ -92,6 +96,10 @@ bool socks5_set_io_buffer_size(uint32_t size) {
     sessionOutputBufferSize = size;
 
     return true;
+}
+
+uint8_t socks5_get_max_session_inactivity(void) {
+    return maxSessionInactivity;
 }
 
 bool socks5_set_max_session_inactivity(uint8_t seconds) {

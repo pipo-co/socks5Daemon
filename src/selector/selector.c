@@ -670,3 +670,8 @@ void
 selector_update_timeout(FdSelector s, time_t timeout) {
     s->master_t.tv_sec = timeout;
 }
+
+time_t
+selector_get_timeout(FdSelector s) {
+    return s->master_t.tv_sec;
+}

@@ -9,7 +9,11 @@
 
 void socks5_init(Socks5Args *argsParam, double maxSessionInactivityParam);
 
+uint32_t socks5_get_io_buffer_size(void);
+
 bool socks5_set_io_buffer_size(uint32_t size);
+
+uint8_t socks5_get_max_session_inactivity(void);
 
 bool socks5_set_max_session_inactivity(uint8_t seconds);
 

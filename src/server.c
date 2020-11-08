@@ -205,6 +205,10 @@ finally:
     return ret;
 }
 
+uint8_t get_socks5_selector_timeout(void) {
+    return selector_get_timeout(selector);
+}
+
 bool update_socks5_selector_timeout(time_t timeout) {
 
     if(timeout < 1 || timeout > 255) {
