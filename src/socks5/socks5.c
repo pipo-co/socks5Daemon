@@ -617,6 +617,7 @@ static void socks5_close_session(SelectorEvent *event) {
     selector_unregister_fd(event->s, session->clientConnection.fd);
 }
 
+// TODO: Update clean-up
 void socks5_cleanup_session(SelectorEvent *event) {
 
     // Socket pasivo
