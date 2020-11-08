@@ -140,7 +140,7 @@ int main(const int argc, char **argv) {
     }
 
     if(generate_administration_socket(selector, &err_msg) != 0){
-        fprintf(stderr, "Unable to initialize administration socket\n");
+        fprintf(stderr, "Unable to initialize administration socket. Administration functionality will not be available\n");
         goto finally;
     }
 
@@ -304,12 +304,14 @@ static int generate_administration_socket(FdSelector selector, char **errorMessa
     struct in6_addr ipv6addr;
     struct sockaddr_in servaddr;
     struct sockaddr_in6 servaddr6;
-    struct sctp_initmsg initmsg = {
-                .sinit_num_ostreams = 5,
-                .sinit_max_instreams = 5,
-                .sinit_max_attempts = 4,
-        };
+        // struct sctp_initmsg initmsg = {
+        //         .sinit_num_ostreams = 5,
+        //         .sinit_max_instreams = 5,
+        //         .sinit_max_attempts = 4,
+        // };
+
     struct sockaddr * admin;
+    socklen_t adminLen;
     
 
     memset(&serverHandler.adminHandler, '\0', sizeof(serverHandler.adminHandler));
@@ -320,6 +322,7 @@ static int generate_administration_socket(FdSelector selector, char **errorMessa
         servaddr.sin_family = AF_INET;
 
         admin = (struct sockaddr*) &servaddr;
+        adminLen = sizeof(servaddr);
         serverHandler.adminHandler.handle_read = admin_passive_accept_ipv4;
     }
     else if(inet_pton(AF_INET6, args.mng_addr, &ipv6addr)){
@@ -328,6 +331,7 @@ static int generate_administration_socket(FdSelector selector, char **errorMessa
         servaddr6.sin6_family = AF_INET6;
 
         admin = (struct sockaddr*) &servaddr6;
+        adminLen = sizeof(servaddr6);
         serverHandler.adminHandler.handle_read = admin_passive_accept_ipv6;
     }
     else{
@@ -344,9 +348,9 @@ static int generate_administration_socket(FdSelector selector, char **errorMessa
 
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
 
-    setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(initmsg));
+    // setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(initmsg));
 
-    ret = bind(fd, admin, sizeof(admin));
+    ret = bind(fd, admin, adminLen);
     if (ret < 0){
         *errorMessage = "Unable to bind socket";
         return -1;

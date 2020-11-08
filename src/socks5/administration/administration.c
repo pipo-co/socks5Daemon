@@ -191,6 +191,8 @@ static void admin_post_read_handler(SelectorEvent *event) {
             }
 
         break;
+
+        default: break;
     }
 }
 
@@ -220,6 +222,8 @@ static void admin_post_write_handler(SelectorEvent *event) {
             }
 
         break;
+
+        default: break;
     }
 }
 
