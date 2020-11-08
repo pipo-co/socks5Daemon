@@ -3,9 +3,6 @@
 
 #include "buffer/buffer.h"
 
-
-
-
 typedef enum AdminRequestParserState {
     ARP_STATE_TYPE,
     ARP_STATE_QUERY,

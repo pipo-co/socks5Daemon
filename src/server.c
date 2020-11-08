@@ -297,23 +297,21 @@ static int generate_administration_socket(FdSelector selector, char **errorMessa
 
     memset(&serverHandler.adminHandler, '\0', sizeof(serverHandler.adminHandler));
 
-    serverHandler.adminHandler.handle_read = administration_passive_accept;
-
-    
-
     if(inet_pton(AF_INET, args.mng_addr, &ipv4addr)){
         servaddr.sin_addr = ipv4addr;
         servaddr.sin_port = htons(args.mng_port);
         servaddr.sin_family = AF_INET;
 
         admin = &servaddr;
+        serverHandler.adminHandler.handle_read = admin_passive_accept_ipv4;
     }
-    else if (inet_pton(AF_INET6, args.mng_addr, &ipv6addr)){
+    else if(inet_pton(AF_INET6, args.mng_addr, &ipv6addr)){
         servaddr6.sin6_addr = ipv6addr;
         servaddr6.sin6_port = htons(args.mng_port);
         servaddr6.sin6_family = AF_INET6;
 
-        admin = &servaddr;
+        admin = &servaddr6;
+        serverHandler.adminHandler.handle_read = admin_passive_accept_ipv6;
     }
     else{
         *errorMessage = "Invalid ip type";

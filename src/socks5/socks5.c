@@ -90,7 +90,6 @@ static int socks5_accept_connection(int passiveFd, struct sockaddr *cli_addr, so
     return fd;
 }
 
-//tendría que haber otro passive accept para ipv6
 void socks5_passive_accept_ipv4(SelectorEvent *event){
     
     struct sockaddr_in cli_addr;
@@ -118,7 +117,6 @@ void socks5_passive_accept_ipv4(SelectorEvent *event){
     // fprintf(stderr, "Registered new client %d\n", fd);
 }
 
-//tendría que haber otro passive accept para ipv6
 void socks5_passive_accept_ipv6(SelectorEvent *event){
     
     struct sockaddr_in6 cli_addr;
