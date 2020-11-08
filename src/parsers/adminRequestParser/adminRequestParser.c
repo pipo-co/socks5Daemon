@@ -47,8 +47,8 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
 
         case ARP_STATE_QUERY:
             p->command = b;
-            p->requestHandler = admin_request_parser_get_query_handler(p->command);
-            if(p->requestHandler == NULL){
+            p->request_handler = admin_request_parser_get_query_handler(p->command);
+            if(p->request_handler == NULL){
                 p->state = ARP_STATE_ERROR_QUERY_NOT_SUPPORTED;
             }
             else {
@@ -58,9 +58,9 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
 
         case ARP_STATE_MODIFICATION:
             p->command = b;
-            p->requestHandler = admin_request_parser_get_modification_handler(p->command);
+            p->request_handler = admin_request_parser_get_modification_handler(p->command);
             
-            if(p->requestHandler == NULL){
+            if(p->request_handler == NULL){
                 p->state = ARP_STATE_ERROR_MODIFICATION_NOT_SUPPORTED;
             }
             else {

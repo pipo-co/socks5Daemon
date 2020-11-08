@@ -8,7 +8,7 @@
 typedef struct UserListResponseData {
     int currentUser;
     int totalUsers;
-    UserInfoP users[255];
+    UserInfoP users[MAX_USER_COUNT];
 } UserListResponseData;
 
 typedef union CommandResponseBuilderData {

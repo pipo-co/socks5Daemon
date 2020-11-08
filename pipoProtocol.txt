@@ -79,6 +79,7 @@ Acknowledgments
 
         o   X'00'   Query
         o   X'01'   Modification
+        o   X'FF'   Invalid TYPE
 
     Each TYPE of Request has a set of Commands associated with it.
     
@@ -100,6 +101,8 @@ Acknowledgments
         o   X'09'   Get Selector Timeout 
         o   X'0A'   Get Connection Timeout
         o   X'0B'   Get User Total Current Connections
+        o   X'FE'   Query Error
+        o   X'FF'   Invalid CMD
 
 
     The associated Commands (CMD) for the Modification TYPE are:
@@ -111,6 +114,21 @@ Acknowledgments
         o   X'04'   Set I/O Buffer Sizes
         o   X'05'   Set Selector Timeout
         o   X'06'   Set Connection Timeout
+        o   X'FF'   Invalid CMD
+
+    If an invalid TYPE or CMD is sent to the Server, the Server MUST respond with the message:
+
+        +------+-----+
+        | TYPE | CMD |
+        +------+-----+
+        |   1  |  1  |
+        +------+-----+
+    
+    where the invalid field now has the value X'FF' and the other one conserves the value
+    it had on the Request. It is possible for both values to be invalid, and thus both be X'FF'.
+
+    The values X'FF' and X'FE' for TYPE and CMD SHOULD never be included in a Request message, as they are
+    reserved to notify errors.
 
 
 4. Modification Commands
@@ -258,8 +276,8 @@ Acknowledgments
             
                 o   X'00'   Succeeded
                 o   X'01'   Username Already Taken
-                o   X'02'   Invalid Parameter
-                0   X'03'   Max Total Users Reached
+                o   X'02'   Max Total Users Reached
+                o   X'FE'   Invalid Parameter
                 o   X'FF'   General Server Error
 
         4.2.2. Delete user
@@ -268,7 +286,7 @@ Acknowledgments
             
                 o   X'00'   Succeeded
                 o   X'01'   Username Doesn't Exist
-                o   X'02'   Invalid Parameter
+                o   X'FE'   Invalid Parameter
                 o   X'FF'   General Server Error
                 
         4.2.3. Enable/Disable Password Spoofing
@@ -276,7 +294,7 @@ Acknowledgments
             The possible values for STATUS are:
                 
                 o   X'00' Succeeded
-                o   X'01' Invalid Parameter
+                o   X'FE' Invalid Parameter
                 o   X'FF' General Server Error 
 
         4.2.4. Enable/Disable Connection Clean-up Routine
@@ -284,7 +302,7 @@ Acknowledgments
             The possible values for STATUS are:
 
                 o   X'00' Succeeded
-                o   X'01' Invalid Parameter
+                o   X'FE' Invalid Parameter
                 o   X'FF' General Server Error 
         
         4.2.5. Set I/O Buffer Sizes
@@ -293,6 +311,7 @@ Acknowledgments
     
                 o   X'00' Succeeded
                 o   X'01' Unsupported Buffer Size
+                o   X'FE' Invalid Parameter
                 o   X'FF' General Server Error 
 
         4.2.6. Set Selector timeout
@@ -301,6 +320,7 @@ Acknowledgments
                 
                 o   X'00' Succeeded
                 o   X'01' Unsupported Timeout
+                o   X'FE' Invalid Parameter
                 o   X'FF' General Server Error 
 
         4.2.7. Set Connection timeout
@@ -309,6 +329,7 @@ Acknowledgments
                 
                 o   X'00' Succeded
                 o   X'01' Unsupported Timeout
+                o   X'FE' Invalid Parameter
                 o   X'FF' General Server Error 
 
 5. Query Commands
@@ -532,6 +553,23 @@ Acknowledgments
 
             Where RESPONSE is 1 byte long unsigned integer that indicates the amount concurrent
             connections the the user has currently in server.
+
+        5.2.12. Query Error
+
+            If the server encounters an unexpected error or an Invalid Field Value was included in the Request
+            (not including TYPE and CMD, whose error response was already defined), the following response
+            MUST be issued by the Server:
+
+                +------+-----+--------+
+                | TYPE | CMD | STATUS |
+                +------+-----+--------+
+                |  1   |  1  |    1   |
+                +------+-----+--------+
+
+            Where CMD takes the value X'FE' (Query Error) and STATUS takes one of the following values:
+
+                o   X'FE'   Invalid Parameter
+                o   X'FF'   General Server Error
 
 6. Pipelining
 

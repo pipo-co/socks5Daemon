@@ -76,9 +76,8 @@ typedef struct AdminRequestParser {
     uint8_t                         command;
     int                             parserCount;    // i
     int                             argLength;      // n
-    AdminResponseBuilderContainer (*requestHandler)(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args);
+    void (*request_handler)(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
     AdminRequestParserArgs          args;
-              //refactor to arg
 } AdminRequestParser;
 
 void parser_init(AdminRequestParser *p);
