@@ -90,7 +90,7 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     selector_unregister_fd(event->s, event->fd);
     free(dnsHeaderMe->buffer.data);
     dnsHeaderMe->buffer.data = NULL;
-    fprintf(stderr, "Finished parsing DNS response. Errored: %d. \
+    // fprintf(stderr, "Finished parsing DNS response. Errored: %d. \
         Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", errored, dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
     
     if (errored){
@@ -109,7 +109,7 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     if(dnsHeaderOther->connected){
 
         // Los dos termianron de parsear y el otro ya pudo hacer primer conncet ->  DNS_CONNECT
-        fprintf(stderr, "Leaving to DNS_CONNECT other connected. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+        // fprintf(stderr, "Leaving to DNS_CONNECT other connected. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
         return DNS_CONNECT;
     }
@@ -141,7 +141,7 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
 
     if(session->serverConnection.fd  == -1) {
 
-        fprintf(stderr, "Couldn't connect with any addr. \
+        // fprintf(stderr, "Couldn't connect with any addr. \
                 Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
         if(dnsHeaderOther->dnsConnection.state == INVALID){
@@ -154,7 +154,7 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
         return session->sessionStateMachine.current;
     }
 
-    fprintf(stderr, "Succesfully connected (1st part). \
+    // fprintf(stderr, "Succesfully connected (1st part). \
             Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
     socks5_register_server(event->s, session);
@@ -162,12 +162,12 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     selector_set_interest_event(event, OP_NOOP);
 
     if(dnsHeaderOther->dnsConnection.state == OPEN /* && !response_dns_parser_is_done(dnsHeaderOther->responseParser.currentState, &errored)*/){
-        fprintf(stderr, "Connected, waiting for brother. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+        // fprintf(stderr, "Connected, waiting for brother. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
         return session->sessionStateMachine.current;
     }
 
-    fprintf(stderr, "Leaving to DNS_CONNECT me connected. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+    // fprintf(stderr, "Leaving to DNS_CONNECT me connected. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
     return DNS_CONNECT;
 }

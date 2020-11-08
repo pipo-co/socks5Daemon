@@ -19,6 +19,6 @@ void socks5_cleanup_session(SelectorEvent *event);
 
 void socks5_register_dns(FdSelector s, SessionHandlerP session);
 
-Socks5Args *socks5_get_args(void); 
+Socks5Args *socks5_get_args(void);
 
 #endif

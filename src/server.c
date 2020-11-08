@@ -95,19 +95,19 @@ int main(const int argc, char **argv) {
         serverHandler.ipv4addr.s_addr = htonl(INADDR_ANY);
 
         if(generate_register_ipv4_socket(selector, &err_msg) != 0) {
-            fprintf(stderr, "Error registering IPv4 listening socket\n");
+            // fprintf(stderr, "Error registering IPv4 listening socket\n");
             perror(err_msg);
-            fprintf(stderr, "Trying with IPv6\n\n");
+            // fprintf(stderr, "Trying with IPv6\n\n");
             
             passiveSocketErrorCount++;
         }
 
         if(generate_register_ipv6_socket(selector, &err_msg) != 0) {
-            fprintf(stderr, "Error registering IPv6 listening socket\n");
+            // fprintf(stderr, "Error registering IPv6 listening socket\n");
 
             if(passiveSocketErrorCount == 0) {
                 perror(err_msg);
-                fprintf(stderr, "Continuing with just IPv4\n");
+                // fprintf(stderr, "Continuing with just IPv4\n");
             }
             else {
                 goto finally;
@@ -152,7 +152,7 @@ int main(const int argc, char **argv) {
 
         // Cleanup selector sockets every cleanupInterval seconds
         if(!args.debugEnable && difftime(time(NULL), lastFdCleanup) >= cleanupInterval) {
-            fprintf(stderr, "Initializing Selector Cleanup\n");
+            // fprintf(stderr, "Initializing Selector Cleanup\n");
             selector_fd_cleanup(selector, socks5_cleanup_session);
             lastFdCleanup = time(NULL);
         }
@@ -335,7 +335,8 @@ static int generate_new_socket(struct sockaddr *addr, socklen_t addrLen,char ** 
 }
 
 static void sigterm_handler(const int signal) {
-    printf("signal %d, cleaning up and exiting\n", signal);
+    int sig = signal;
+    sig = sig;
     done = true;
 }
 
