@@ -92,7 +92,7 @@ START_TEST (http_dns_test_parser_init) {
     ck_assert_uint_eq(p->currentState, HTTP_STATUS_CODE_FIRST);
     ck_assert_uint_eq(p->contentLenght, 0);
 
-    http_dns_parser_destroy(p);
+
     free(p);
 }
 END_TEST
@@ -135,8 +135,7 @@ START_TEST (http_dns_test_parser_feed_success) {
     }
 
     ck_assert(p->currentState == HTTP_DNS_DONE);
-    
-    http_dns_parser_destroy(p);
+
     free(p);
 }
 END_TEST

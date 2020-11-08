@@ -43,6 +43,7 @@ static void sigterm_handler(const int signal);
 static int generate_register_ipv4_socket(FdSelector selector, char **errorMessage);
 static int generate_register_ipv6_socket(FdSelector selector, char **errorMessage);
 static FdSelector initialize_selector(char ** errorMessage);
+static int generate_administration_socket(FdSelector selector, char **errorMessage);
 static void initialize_users(void);
 
 
