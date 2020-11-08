@@ -2,6 +2,7 @@
 #define ADMIN_REQUEST_PARSER_H_a7f0b7011d5bc49decb646a7852c4531c07e17b5
 
 #include "buffer/buffer.h"
+#include "adminResponseBuilder.h"
 
 #define MAX_STRING_LENGTH 256
 
@@ -70,13 +71,13 @@ typedef union AdminRequestParserArgs{
 } AdminRequestParserArgs; 
 
 typedef struct AdminRequestParser {
-    AdminRequestParserState     state;
-    AdminRequestParserType      type; //Puede fletarse
-    uint8_t                     command;
-    int                         parserCount;    // i
-    int                         argLength;      // n
-    bool                      (*requestHandler)(struct AdminRequestParser *, Buffer *);
-    AdminRequestParserArgs      args;
+    AdminRequestParserState         state;
+    AdminRequestParserType          type;
+    uint8_t                         command;
+    int                             parserCount;    // i
+    int                             argLength;      // n
+    AdminResponseBuilderContainer (*requestHandler)(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args);
+    AdminRequestParserArgs          args;
               //refactor to arg
 } AdminRequestParser;
 

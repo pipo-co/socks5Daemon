@@ -9,6 +9,10 @@
 
 void socks5_init(Socks5Args *argsParam, double maxSessionInactivityParam);
 
+bool socks5_set_io_buffer_size(uint32_t size);
+
+bool socks5_set_max_session_inactivity(uint8_t seconds);
+
 void socks5_passive_accept_ipv4(SelectorEvent *event);
 
 void socks5_passive_accept_ipv6(SelectorEvent *event);
