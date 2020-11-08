@@ -16,25 +16,21 @@ Acknowledgments
 
 1. Introduction
 
-    The goal of this protocol is to provide a mechanism for interacting with the
-    Socks5d server. This will allow to get different configurations and statistics
-    form the server, and also set some configuration parameters.
-    For that an early authentication with the server is needed. Once 
-    authenticated a server listens on a connection for a request, parses each message 
-    received, interprets the message semantics in relation to the identified request
-    target, and responds to that request with the proper response message. 
-    Once the the authentication is done the user might ask for information held by the
-    server such as the list of users or the historic connections amount of the server.
-    Also the user will also be able to modify information and properties of the server
-    such as adding or deleting a user, set up spoofing or changing the timeout for 
-    a session.
+    The goal of this protocol is to provide a mechanism for interacting with a running
+    Socks5d Server. The Client might ask for information held by the
+    Server such as the list of users or the total historic connections of the Server.
+    Also, the Client will also be able to modify information and properties of the server
+    such as adding or deleting a user, set up spoofing or changing the I/O buffer sizes.
+    In order to maintain security, authentication with the server upon connection is required.
+    Once authenticated, the connection follows a Request/Response structure, where the
+    clients makes the requests, and the server processes and responds. Pipelining is supported.
 
 2. Connection and Authentication
 
    2.1. Connection
-        When a SCTP-based client wishes to establish a connection to the socks5d server 
+        When a SCTP-based Client wishes to establish a connection to the socks5d Server 
         it must open a SCTP connection to the appropriate port on the server system. 
-        The socks5d service is conventionally located on port 8080.
+        The Socks5d Administration service is conventionally located on port 8080.
         
    2.2. Authentication
         Once the connection with the socks5d server has started, the client produces an
@@ -102,8 +98,8 @@ Acknowledgments
         o   X'07'   Get Total User Count     
         o   X'08'   Get I/O Buffer Sizes
         o   X'09'   Get Selector Timeout 
-        o   X'10'   Get Connection Timeout
-        o   X'11'   Get User Total Current Connections
+        o   X'0A'   Get Connection Timeout
+        o   X'0B'   Get User Total Current Connections
 
 
     The associated Commands (CMD) for the Modification TYPE are:
@@ -157,7 +153,7 @@ Acknowledgments
                 +------+-----+--------+----------+
                 | TYPE | CMD |  ULEN  | USERNAME |
                 +------+-----+--------+----------+
-                |  1   |  1  |    1   |     1    |
+                |  1   |  1  |    1   | 1 to 255 |
                 +------+-----+--------+----------+
 
                 The ULEN, UNAME fields are defined the same way they were in 2.2.
@@ -379,6 +375,14 @@ Acknowledgments
 
             The use of this Command will provide a number that indicates the number of concurrent
             connections that a user has in the Server. 
+
+            +------+-----+------+-----------+
+            | TYPE | CMD | ULEN |   UNAME   |
+            +------+-----+------+-----------+
+            |  1   |  1  |   1  | 1 to 255  |
+            +------+-----+------+-----------+
+
+            ULEN and UNAME fields are the same as de ones defined in 2.2.
         
     5.2. Responses
 
@@ -386,16 +390,16 @@ Acknowledgments
 
             The Server sends the following response:
 
-            +------+-----+----------+--------+-----------+----------+--------+-----------+
-            | TYPE | CMD |  USRLEN  | ULEN_1 |  UNAME_1  |    ...   | ULEN_n |  UNAME_n  |
-            +------+-----+----------+--------+-----------+----------+--------+-----------+
-            |  1   |  1  |     1    |   1    | 1 to 255  |    ...   |   1    | 1 to 255  |
-            +------+-----+----------+--------+-----------+----------+--------+-----------+
+            +------+-----+----------+--------+-----------+-------------+----------+--------+-----------+-------------+
+            | TYPE | CMD |  USRLEN  | ULEN_1 |  UNAME_1  |  PRIVILEGE  |    ...   | ULEN_n |  UNAME_n  | PRIVILEGE_n |
+            +------+-----+----------+--------+-----------+-------------+----------+--------+-----------+-------------+
+            |  1   |  1  |     1    |   1    | 1 to 255  |      1      |    ...   |   1    | 1 to 255  |      1      |
+            +------+-----+----------+--------+-----------+-------------+----------+--------+-----------+-------------+
 
             Where USRLEN is a 1 byte long unsigned integer that describes the amount of users listed.
 
-            The message contains that amount of fields ULEN and UNAME, which are the same as
-            those defined in 2.2.
+            The message contains that amount of fields ULEN, UNAME and PRIVILEGE, which are the same as
+            those defined in 2.2 and 4.1.1.
                 
         5.2.2. Get Total Historic Connections
 

@@ -43,12 +43,12 @@ sockaddr_to_human(char *buff, const size_t buffsize,
         strncpy(buff, "unknown", buffsize);
     }
 
-    strncat(buff, "\t", buffsize);
+    // strncat(buff, "\t", buffsize);
     buff[buffsize - 1] = 0;
     const size_t len = strlen(buff);
 
     if(handled) {
-        snprintf(buff + len, buffsize - len, "%d", ntohs(port));
+        snprintf(buff + len, buffsize - len, ":%d", ntohs(port));
     }
     buff[buffsize - 1] = 0;
 
@@ -102,9 +102,13 @@ sock_blocking_copy(const int source, const int dest) {
 
 int new_ipv4_socket(struct in_addr ip, in_port_t port, struct sockaddr *outAddr) {
 	
+    if(outAddr == NULL){
+        return -1;
+    }
+
 	int sock;
 	struct sockaddr_in addr; 
-  
+    
     // socket create and varification 
     sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
     if (sock == -1) { 
@@ -124,24 +128,20 @@ int new_ipv4_socket(struct in_addr ip, in_port_t port, struct sockaddr *outAddr)
     do{
         ans = connect(sock, (struct sockaddr*) &addr, sizeof(addr));
     } while (ans != 0 && errno == EINTR);
-    if(ans != 0){
-        if(errno == EINPROGRESS) {
-
-            if(outAddr != NULL) {
-                memcpy(outAddr, (struct sockaddr*) &addr, sizeof(addr));
-            } else {
-                return -1;
-            }
-            return sock;
-        }
+    if(ans != 0 && errno != EINPROGRESS){
+        close(sock);
         return -1;
     }
-
+    memcpy(outAddr, (struct sockaddr*) &addr, sizeof(addr));
 	return sock;
 }
 
 int new_ipv6_socket(struct in6_addr ip, in_port_t port, struct sockaddr *outAddr) {
 	
+    if(outAddr == NULL){
+        return -1;
+    }
+
 	int sock;
 	struct sockaddr_in6 addr; 
   
@@ -159,21 +159,13 @@ int new_ipv6_socket(struct in6_addr ip, in_port_t port, struct sockaddr *outAddr
     addr.sin6_port = port; 
 	addr.sin6_addr = ip;
 
-        int ans;
+    int ans;
 
     do{
         ans = connect(sock, (struct sockaddr*) &addr, sizeof(addr));
     } while (ans != 0 && errno == EINTR);
-    if(ans != 0){
-        if(errno == EINPROGRESS) {
-
-            if(outAddr != NULL) {
-                memcpy(outAddr, (struct sockaddr*) &addr, sizeof(addr));
-            } else {
-                return -1;
-            }
-            return sock;
-        }
+    if(ans != 0 && errno != EINPROGRESS){
+        close(sock);
         return -1;
     }
 

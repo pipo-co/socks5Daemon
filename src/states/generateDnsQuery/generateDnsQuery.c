@@ -44,39 +44,39 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
 
     if(dnsHeaderMe->dnsConnection.state == INVALID || getsockopt(dnsHeaderMe->dnsConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
         
-        // Cerramos el Fd de la conexion que salio mal
+        if(dnsHeaderOther->dnsConnection.state == INVALID){
+            session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+            return REQUEST_ERROR;
+        }
+
+        // Liberar todo lo mio porque soy invalid y el otro no
         if(dnsHeaderMe->dnsConnection.state != INVALID){
             selector_unregister_fd(event->s, event->fd);
         }
 
-        if(dnsHeaderOther->dnsConnection.state == INVALID){
-            session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-            return REQUEST_ERROR;
-        }
-        goto finally;    
+        free(dnsHeaderMe->buffer.data);
+        dnsHeaderMe->buffer.data = NULL;
+        return session->sessionStateMachine.current;  
     }
 
     if(doh_builder_build(&dnsHeaderMe->buffer, (char *)session->socksHeader.requestHeader.parser.address.domainName, family, socks5_get_args()) != 0) {
         
-        free(dnsHeaderMe->buffer.data);
-        dnsHeaderMe->buffer.data = NULL;
-
-        // Cerramos el Fd
-        selector_unregister_fd(event->s, event->fd);
-        
         if(dnsHeaderOther->dnsConnection.state == INVALID){
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
         }
-        goto finally; 
+        
+        // Liberar todo lo mio porque soy invalid y el otro no
+        selector_unregister_fd(event->s, event->fd);
+        free(dnsHeaderMe->buffer.data);
+        dnsHeaderMe->buffer.data = NULL;
+        return session->sessionStateMachine.current; 
     }
 
     dnsHeaderMe->connected = true;
-    selector_set_interest_event(event, OP_NOOP);
-
-finally:
 
     if(dnsHeaderOther->dnsConnection.state == OPEN && !dnsHeaderOther->connected){
+        selector_set_interest_event(event, OP_NOOP);
         return session->sessionStateMachine.current;
     }
 

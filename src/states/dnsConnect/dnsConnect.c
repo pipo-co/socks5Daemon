@@ -4,6 +4,8 @@
 
 #include "socks5/socks5.h"
 #include "netutils/netutils.h"
+#include "states/stateUtilities/request/requestUtilities.h"
+
 
 static void dns_connect_on_arrival(SelectorEvent *event);
 static unsigned dns_connect_on_write(SelectorEvent *event);
@@ -25,7 +27,7 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
 
     if(getsockopt(session->serverConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
         
-        socks5_unregister_server(event->s, session);
+        selector_unregister_fd(event->s, event->fd);
 
         if(ipv4->responseParser.addresses != NULL && ipv4->responseParser.counter < ipv4->responseParser.totalAnswers){
             
@@ -35,21 +37,7 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
                             session->socksHeader.requestHeader.parser.port, (struct sockaddr *)&session->serverConnection.addr);
             
                 if (session->serverConnection.fd  == -1) {
-                    if(errno == ENETUNREACH){
-                        session->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
-                    }
-
-                    else if(errno = EHOSTUNREACH) {
-                        session->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
-                    }
-
-                    else if(errno = ECONNREFUSED) {
-                        session->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
-                    }
-
-                    else {
-                        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-                    } 
+                    session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(errno); 
                 }
             } while(session->serverConnection.fd  == -1 && ipv4->responseParser.counter < ipv4->responseParser.totalAnswers);
                         
@@ -67,21 +55,7 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
                             session->socksHeader.requestHeader.parser.port, (struct sockaddr *)&session->serverConnection.addr);
 
                 if (session->serverConnection.fd  == -1) {
-                    if(errno == ENETUNREACH){
-                        session->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
-                    }
-
-                    else if(errno = EHOSTUNREACH) {
-                        session->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
-                    }
-
-                    else if(errno = ECONNREFUSED) {
-                        session->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
-                    }
-
-                    else {
-                        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-                    } 
+                    session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(errno); 
                 }
             } while(session->serverConnection.fd  == -1 && ipv6->responseParser.counter < ipv6->responseParser.totalAnswers);
                         
@@ -91,11 +65,6 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
             }
         }
         
-        // TODO: free redundante
-        free(session->dnsHeaderContainer->ipv4.responseParser.addresses);
-        session->dnsHeaderContainer->ipv4.responseParser.addresses = NULL;
-        free(session->dnsHeaderContainer->ipv6.responseParser.addresses);
-        session->dnsHeaderContainer->ipv6.responseParser.addresses = NULL;
         return REQUEST_ERROR;
     }
     
@@ -106,8 +75,8 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
     session->dnsHeaderContainer->ipv4.responseParser.addresses = NULL;
     free(session->dnsHeaderContainer->ipv6.responseParser.addresses);
     session->dnsHeaderContainer->ipv6.responseParser.addresses = NULL;
-    fprintf(stderr, "DNSContainer set NULL. IPv4. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv4.dnsConnection.fd, session->dnsHeaderContainer->ipv4.dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
-    fprintf(stderr, "DNSContainer set NULL. IPv6. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv6.dnsConnection.fd, session->dnsHeaderContainer->ipv6.dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+    // fprintf(stderr, "DNSContainer set NULL. IPv4. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv4.dnsConnection.fd, session->dnsHeaderContainer->ipv4.dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+    // fprintf(stderr, "DNSContainer set NULL. IPv6. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv6.dnsConnection.fd, session->dnsHeaderContainer->ipv6.dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
     free(session->dnsHeaderContainer);
     session->dnsHeaderContainer = NULL;
     return REQUEST_SUCCESSFUL;

@@ -11,6 +11,7 @@
 #include "parsers/dns/httpDnsParser.h"
 #include "parsers/dns/dnsParser.h"
 #include "netutils/netutils.h"
+#include "states/stateUtilities/request/requestUtilities.h"
 
 static void response_dns_on_arrival (SelectorEvent *event);
 static unsigned response_dns_on_read(SelectorEvent *event);
@@ -61,9 +62,11 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
             return REQUEST_ERROR;
         }
 
-        // TODO: Free buffer y addresses
-        
-        goto finally;
+        free(dnsHeaderMe->buffer.data);
+        dnsHeaderMe->buffer.data = NULL;
+        free(dnsHeaderMe->responseParser.addresses);
+        dnsHeaderMe->responseParser.addresses = NULL;
+        return session->sessionStateMachine.current;
     }
 
     if(!http_dns_parser_consume(&dnsHeaderMe->buffer, &dnsHeaderMe->httpParser, &errored)){
@@ -71,7 +74,7 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     } 
     else if(!errored && !response_dns_parser_consume(&dnsHeaderMe->buffer, &dnsHeaderMe->responseParser, &errored)){
         return session->sessionStateMachine.current;
-    } 
+    }
     else if(!errored && (dnsHeaderMe->responseParser.totalQuestions == 0 || dnsHeaderMe->responseParser.totalAnswers == 0)){   
         errored = true;
     }
@@ -79,34 +82,34 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
         errored = true;
     }
 
+    /*
+     * Termine de parsar. 
+     * - No necesito mas mi fd ni el buffer
+     * - Tengo la lista con las IPs posibles
+     **/
+    selector_unregister_fd(event->s, event->fd);
+    free(dnsHeaderMe->buffer.data);
+    dnsHeaderMe->buffer.data = NULL;
+    // fprintf(stderr, "Finished parsing DNS response. Errored: %d. \
+        Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", errored, dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+    
     if (errored){
-
-        selector_unregister_fd(event->s, event->fd);
-        free(dnsHeaderMe->buffer.data);
-        free(dnsHeaderMe->responseParser.addresses);
-        dnsHeaderMe->buffer.data = NULL;
-        dnsHeaderMe->responseParser.addresses = NULL;
 
         if(dnsHeaderOther->dnsConnection.state == INVALID) {
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
         }
 
-        goto finally;
+        free(dnsHeaderMe->responseParser.addresses);
+        dnsHeaderMe->responseParser.addresses = NULL;
+
+        return session->sessionStateMachine.current;
     }
 
-    // TODO: Una vez que llegas aca hay free del buffer no? -Tobi
-    // TODO: unregister -Tobi
+    if(dnsHeaderOther->connected){
 
-    // response_dns_parser_is_done
-    // Terminaste parsing -> Tengo la lista con las IPs posibles
-    fprintf(stderr, "Finished parsing. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
-
-    // TODO: No entiendo esto -Tobi
-    if(dnsHeaderOther->dnsConnection.state == OPEN && dnsHeaderOther->connected){
-        // Tengo todas las IPs == Haber llegado hasta aca
-        // Tengo una IP que paso el primer connect. == Estar connected
-        fprintf(stderr, "Leaving to DNS_CONNECT other connected. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+        // Los dos termianron de parsear y el otro ya pudo hacer primer conncet ->  DNS_CONNECT
+        // fprintf(stderr, "Leaving to DNS_CONNECT other connected. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
         return DNS_CONNECT;
     }
@@ -124,64 +127,47 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
         }
 
         if (session->serverConnection.fd  == -1) {
-
-            if(errno == ENETUNREACH){
-                session->socksHeader.requestHeader.rep = NETWORK_UNREACHABLE;
-            }
-
-            else if(errno = EHOSTUNREACH) {
-                session->socksHeader.requestHeader.rep = HOST_UNREACHABLE;
-            }
-
-            else if(errno = ECONNREFUSED) {
-                session->socksHeader.requestHeader.rep = CONNECTION_REFUSED;
-            }
-
-            else {
-                session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-            } 
+            session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(errno);
         }
     } while(session->serverConnection.fd  == -1 && dnsHeaderMe->responseParser.counter < dnsHeaderMe->responseParser.totalAnswers);
 
-    // Saliste con -1 -> se quedo sin addr para probar 
-    // Saliste con != -1 -> hay conexion. (puede o no haber mas en la lista) 
+    /*
+    * Salidas posibles
+    * - fd == -1 -> probe toda la lista y ninguno pudo concetarse -> fin.
+    * - fd != -1 -> pude hacer un primer conect. 
+    *       - Si estyo solo -> me puedo ir
+    *       - Si el otro esta activo -> espero que termine de parsear
+    */
 
     if(session->serverConnection.fd  == -1) {
 
-        fprintf(stderr, "Couldn't connect with any addr. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
-
-        // TODO: Funcion Invalidate -Tobi
-        selector_unregister_fd(event->s, event->fd);
-        free(dnsHeaderMe->buffer.data);
-        free(dnsHeaderMe->responseParser.addresses);
-        dnsHeaderMe->buffer.data = NULL;
-        dnsHeaderMe->responseParser.addresses = NULL;
+        // fprintf(stderr, "Couldn't connect with any addr. \
+                Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
         if(dnsHeaderOther->dnsConnection.state == INVALID){
             // Mensaje de error viene de adentro del while. Error del ultimo intento de conexion. Hay que elegir uno.
             return REQUEST_ERROR;
         }
-        goto finally;
+
+        free(dnsHeaderMe->responseParser.addresses);
+        dnsHeaderMe->responseParser.addresses = NULL;
+        return session->sessionStateMachine.current;
     }
-    fprintf(stderr, "Succesfully connected (1st part). Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+
+    // fprintf(stderr, "Succesfully connected (1st part). \
+            Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
     socks5_register_server(event->s, session);
     dnsHeaderMe->connected = true;
-
     selector_set_interest_event(event, OP_NOOP);
 
-    // Si se llega desde el goto -> Ya sabemos que el otro esta open pero 
-    // no sabemos si ya habia terminado o no
-
-    // Todo lo que llega al finally ya no se despierta mas. Esta unregistered o con interest en OP_NOOP
-finally:   
-    if(dnsHeaderOther->dnsConnection.state == OPEN && !response_dns_parser_is_done(dnsHeaderOther->responseParser.currentState, &errored)){
-        fprintf(stderr, "Connected, waiting for brother. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+    if(dnsHeaderOther->dnsConnection.state == OPEN /* && !response_dns_parser_is_done(dnsHeaderOther->responseParser.currentState, &errored)*/){
+        // fprintf(stderr, "Connected, waiting for brother. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
         return session->sessionStateMachine.current;
     }
 
-    fprintf(stderr, "Leaving to DNS_CONNECT me connected. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
+    // fprintf(stderr, "Leaving to DNS_CONNECT me connected. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
     return DNS_CONNECT;
 }

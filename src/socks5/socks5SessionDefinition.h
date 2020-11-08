@@ -83,7 +83,7 @@ typedef struct DnsHeaderContainer{
 typedef struct RequestHeader{
     RequestParser parser;
     size_t bytes;
-    uint8_t rep;
+    ReplyValues rep;
 } RequestHeader;
 
 typedef union SocksHeaders{
