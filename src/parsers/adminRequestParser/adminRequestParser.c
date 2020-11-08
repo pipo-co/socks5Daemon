@@ -1,6 +1,7 @@
 #include "parsers/adminRequestParser/adminRequestParser.h"
 #include "parsers/adminRequestParser/adminRequestParserQueries.h"
 #include "parsers/adminRequestParser/adminRequestParserModifiers.h"
+#include "parsers/adminRequestParser/adminRequestErrorHandlers.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -14,8 +15,9 @@ static bool (*admin_request_parser_get_modification_handler(uint8_t b))(AdminReq
 
 void admin_request_parser_init(AdminRequestParser *p){
     p->parserCount = 0;
-    p->argLength = -1;  //Podria ser 0 ahora
-    p->state = ARP_STATE_TYPE;  
+    p->argLength = -1;
+    p->state = ARP_STATE_TYPE;
+    p->requestHandler = admin_request_error_handler_parser_error;
 }
 
 bool admin_request_parser_consume(AdminRequestParser *p, Buffer *b, bool *errored){
@@ -48,24 +50,13 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
         case ARP_STATE_QUERY:
             p->command = b;
             p->requestHandler = admin_request_parser_get_query_handler(p->command);
-            if(p->requestHandler == NULL){
-                p->state = ARP_STATE_ERROR_QUERY_NOT_SUPPORTED;
-            }
-            else {
-                p->state = admin_request_parser_get_arg_state_queries(p->command);
-            }
+            p->state = admin_request_parser_get_arg_state_queries(p->command);
         break;
 
         case ARP_STATE_MODIFICATION:
             p->command = b;
             p->requestHandler = admin_request_parser_get_modification_handler(p->command);
-            
-            if(p->requestHandler == NULL){
-                p->state = ARP_STATE_ERROR_MODIFICATION_NOT_SUPPORTED;
-            }
-            else {
-                p->state = admin_request_parser_get_arg_state_modifications(p->command);
-            }
+            p->state = admin_request_parser_get_arg_state_modifications(p->command);
         break;
         
         case ARP_PARSE_STRING:
@@ -233,7 +224,7 @@ static AdminRequestParserState admin_request_parser_get_arg_state_modifications(
             
     
     default:
-        return ARP_ERROR_INVALID_STATE;
+        return ARP_STATE_ERROR_MODIFICATION_NOT_SUPPORTED;
     }
 }
 
@@ -257,7 +248,7 @@ static AdminRequestParserState admin_request_parser_get_arg_state_queries(AdminR
             return ARP_PARSE_STRING;
         
         default:
-            return ARP_ERROR_NO_PARSER_STATE;
+            return ARP_STATE_ERROR_QUERY_NOT_SUPPORTED;
     }
 }
 
@@ -302,7 +293,7 @@ static bool (*admin_request_parser_get_query_handler(uint8_t b))(AdminRequestPar
         break;
     
         default:
-            return NULL;
+            return admin_request_error_handler_parser_error;
         break;
     }
 }
@@ -333,7 +324,7 @@ static bool (*admin_request_parser_get_modification_handler(uint8_t b))(AdminReq
             break;
     
         default:
-            return NULL;
+            return admin_request_error_handler_parser_error;
             break;
     }
 }
