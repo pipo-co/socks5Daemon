@@ -30,6 +30,7 @@ typedef enum AdminRequestParserState {
 typedef enum AdminRequestParserType {
     QUERY               = 0x00,
     MODIFICATION        = 0x01,
+    INVALID_TYPE        = 0xFF,
 } AdminRequestParserType;
 
 typedef enum AdminRequestParserQuery {
@@ -45,6 +46,9 @@ typedef enum AdminRequestParserQuery {
     SELECTOR_TIMEOUT                        = 0x09,
     CONNECTION_TIMEOUT                      = 0x0A,
     USER_TOTAL_CONCURRENT_CONNECTIONS       = 0x0B,
+    INVALID_PARAM                           = 0xFE,
+    INVALID_QUERY                           = 0xFF,
+
 } AdminRequestParserQuery;
 
 typedef enum AdminRequestParserModification {
@@ -55,6 +59,7 @@ typedef enum AdminRequestParserModification {
     SET_BUFFER_SIZE                         = 0x04,
     SET_SELECTOR_TIMEOUT                    = 0x05,
     SET_CONNECTION_TIMEOUT                  = 0x06,
+    INVALID_MODIFICATION                    = 0xFF,
 } AdminRequestParserModification;
 
 typedef struct AdminRequestParserUserInfo{
