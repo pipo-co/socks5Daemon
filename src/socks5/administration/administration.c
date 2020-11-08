@@ -183,7 +183,7 @@ static void admin_post_read_handler(SelectorEvent *event) {
         break;
 
         case ADMIN_METHOD_ARRIVAL:
-            admin_method_arrival(event);
+            admin_request_arrival(event);
 
         case ADMIN_METHOD:
             if(adminSession->currentState = admin_request_read(event), adminSession->currentState == ADMIN_METHOD_RESPONSE){
