@@ -4,6 +4,7 @@
 #include "buffer/buffer.h"
 
 #define MAX_STRING_LENGTH 256
+
 typedef enum AdminRequestParserState {
     ARP_STATE_TYPE,
     ARP_STATE_QUERY,

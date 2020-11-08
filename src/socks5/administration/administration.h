@@ -21,11 +21,25 @@
 
 #define QUERY_BUFFER 128
 
-typedef enum AdminStateEnum {ADMIN_AUTH_ARRIVAL, ADMIN_AUTHENTICATING, ADMIN_AUTH_ACK, ADMIN_METHOD_ARRIVAL, ADMIN_METHOD, ADMIN_METHOD_RESPONSE, ADMIN_FINISH, ADMIN_AUTH_ERROR, ADMIN_METHOD_ERROR } AdminStateEnum;
+typedef enum AdminStateEnum {
+    ADMIN_AUTH_ARRIVAL,
+    ADMIN_AUTHENTICATING,
+    ADMIN_AUTH_ACK,
+    ADMIN_METHOD_ARRIVAL,
+    ADMIN_METHOD,
+    ADMIN_METHOD_RESPONSE,
+    ADMIN_FINISH,
+    ADMIN_AUTH_ERROR,
+    ADMIN_METHOD_ERROR
+ } AdminStateEnum;
 
-typedef enum AuthCodesStateEnum {SUCCESS, AUTH_FAILED, INVALID_VERSION} AuthCodesStateEnum;
+typedef enum AuthCodesStateEnum {
+    SUCCESS,
+    AUTH_FAILED,
+    INVALID_VERSION
+} AuthCodesStateEnum;
 
-typedef struct AdminAuthHeader{
+typedef struct AdminAuthHeader {
     AuthRequestParser authParser;
     size_t bytes;
     AuthCodesStateEnum status;
@@ -58,7 +72,8 @@ typedef struct AdministrationHandler {
 
 typedef AdministrationHandler * AdministrationHandlerP;
 
-void administration_passive_accept(SelectorEvent *event);
+void admin_passive_accept_ipv4(SelectorEvent *event);
 
+void admin_passive_accept_ipv6(SelectorEvent *event);
 
 #endif
