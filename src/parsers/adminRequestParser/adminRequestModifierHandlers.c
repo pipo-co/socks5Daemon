@@ -62,11 +62,14 @@ void admin_request_parser_remove_user(uint8_t type, uint8_t cmd, AdminRequestPar
 
 void admin_request_parser_toggle_password_spoofing(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
 
-    AdminResponseBuilderContainer container;
+    uint8_t status = 0x00;
 
     // TODO: code function
-
-    return container;
+    outContainer->type = type;
+    outContainer->cmd = cmd;
+    outContainer->currByte = 0;
+    outContainer->data.uint8 = status;
+    outContainer->admin_response_builder = admin_response_builder_uint8;
 }
 
 void admin_request_parser_toggle_connection_clean_up(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {

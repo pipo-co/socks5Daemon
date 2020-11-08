@@ -38,7 +38,7 @@ void admin_passive_accept_ipv4(SelectorEvent *event) {
     struct sockaddr_in cli_addr;
     socklen_t clilen = sizeof(cli_addr);
 
-    admin_passive_accept_util(event, &cli_addr, &clilen);
+    admin_passive_accept_util(event, (struct sockaddr *)&cli_addr, &clilen);
 }
 
 void admin_passive_accept_ipv6(SelectorEvent *event) {
@@ -46,12 +46,12 @@ void admin_passive_accept_ipv6(SelectorEvent *event) {
     struct sockaddr_in6 cli_addr;
     socklen_t clilen = sizeof(cli_addr);
     
-    admin_passive_accept_util(event, &cli_addr, &clilen);
+    admin_passive_accept_util(event, (struct sockaddr *) &cli_addr, &clilen);
 }
 
 static void admin_passive_accept_util(SelectorEvent *event, struct sockaddr *cli_addr, socklen_t *clilen) {
 
-    int fd, in, flags;
+    int fd;
     FdHandler adminHandler;
 
     fd = sctp_accept_connection(event->fd, cli_addr, clilen);

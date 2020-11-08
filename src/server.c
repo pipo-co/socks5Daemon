@@ -44,6 +44,7 @@ static int generate_register_ipv4_socket(FdSelector selector, char **errorMessag
 static int generate_register_ipv6_socket(FdSelector selector, char **errorMessage);
 static FdSelector initialize_selector(char ** errorMessage);
 static void initialize_users(void);
+static int generate_administration_socket(FdSelector selector, char **errorMessage);
 
 
 typedef struct ServerHandler {
@@ -215,7 +216,7 @@ bool update_socks5_selector_timeout(time_t timeout) {
         return false;
     }
 
-    selector_update_timeout(&selector, timeout);
+    selector_update_timeout(selector, timeout);
 
     return true;
 }
@@ -317,7 +318,7 @@ static int generate_administration_socket(FdSelector selector, char **errorMessa
         servaddr.sin_port = htons(args.mng_port);
         servaddr.sin_family = AF_INET;
 
-        admin = &servaddr;
+        admin = (struct sockaddr*) &servaddr;
         serverHandler.adminHandler.handle_read = admin_passive_accept_ipv4;
     }
     else if(inet_pton(AF_INET6, args.mng_addr, &ipv6addr)){
@@ -325,7 +326,7 @@ static int generate_administration_socket(FdSelector selector, char **errorMessa
         servaddr6.sin6_port = htons(args.mng_port);
         servaddr6.sin6_family = AF_INET6;
 
-        admin = &servaddr6;
+        admin = (struct sockaddr*) &servaddr6;
         serverHandler.adminHandler.handle_read = admin_passive_accept_ipv6;
     }
     else{

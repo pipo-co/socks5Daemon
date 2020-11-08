@@ -14,6 +14,7 @@
 #include <netinet/sctp.h>
 #include <arpa/inet.h>
 
+#include "parsers/adminRequestParser/adminRequestParser.h"
 #include "parsers/adminRequestParser/adminResponseBuilder.h"
 #include "argsHandler/argsHandler.h"
 #include "selector/selector.h"
