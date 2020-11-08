@@ -6,9 +6,9 @@
 #include "userHandler/userHandler.h"
 
 typedef struct UserListResponseData {
-
+    int currentUser;
+    int totalUsers;
     UserInfoP users[255];
-
 } UserListResponseData;
 
 typedef union CommandResponseBuilderData {
