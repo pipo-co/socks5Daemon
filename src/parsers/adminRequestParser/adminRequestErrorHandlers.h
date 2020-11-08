@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include "parsers/adminRequestParser/adminRequestParser.h"
 
-void admin_request_error_handler_parser_error(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
+void admin_request_error_handler_invalid_type(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
+
+void admin_request_error_handler_invalid_query(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
+
+void admin_request_error_handler_invalid_modification(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
 #endif
