@@ -58,17 +58,16 @@ typedef enum AdminRequestParserModification {
     SET_CONNECTION_TIMEOUT                  = 0x06,
 } AdminRequestParserModification;
 
-typedef void (*RequestHandler)(struct AdminRequestParser *, void *);
+typedef bool (*RequestHandler)(struct AdminRequestParser *, Buffer *);
 
 typedef struct AdminRequestParser {
     AdminRequestParserState     state;
     AdminRequestParserType      type; //Puede fletarse
     uint8_t                     command;
-    int                         parserCount;
-    int                         argLength;
+    int                         parserCount;    // i
+    int                         argLength;      // n
     RequestHandler              requestHandler;
-    // void (*requestHandler)(AdminRequestParser *, void*);
-    void                       *data;
+    void                       *data;           //refactor to arg
 } AdminRequestParser;
 
 void parser_init(AdminRequestParser *p);

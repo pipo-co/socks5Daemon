@@ -13,13 +13,13 @@ static RequestHandler admin_request_parser_get_modification_handler(uint8_t b);
 
 void parser_init(AdminRequestParser *p){
     p->parserCount = 0;
-    p->argLength = -1;
+    p->argLength = -1;  //Podria ser 0 ahora
 }
 
 bool admin_request_parser_consume(AdminRequestParser *p, Buffer *b){
     
     bool errored;
-    while(admin_request_parser_is_done(p, &errored), buffer_can_read(b)){
+    while(admin_request_parser_is_done(p, &errored) && buffer_can_read(b)){
         admin_request_parser_feed(p, buffer_read(b));
     }
     return admin_request_parser_is_done(p, &errored);
@@ -63,18 +63,12 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
             return admin_request_parser_get_arg_state_modifications(p->command);
         break;
         
-        /*
-        * ARP_PARSE_STRING,
-        * ARP_PARSE_UINT_8,
-        * ARP_PARSE_UINT_32,
-        * ARP_PARSE_ADD_USER,
-        */
         case ARP_PARSE_STRING:
         
             if(p->argLength == -1){
                 p->parserCount = 0;
                 p->argLength = b;
-                p->data = malloc(p->argLength);
+                p->data = malloc(p->argLength + 1);
                 
                 if(p->data == NULL) {
                     return ARP_STATE_ERROR_NOT_ENOUGH_MEMORY;
@@ -86,6 +80,7 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
             }
 
             if(p->parserCount == p->argLength) {
+                ((uint8_t *)p->data)[p->parserCount++] = '\0';
                 return ARP_STATE_DONE;
             }
 
@@ -156,7 +151,7 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
         break;
 
         case ARP_PARSE_ADD_PASS:
-
+            
              if(p->argLength == -1){
                 p->argLength = p->parserCount + b;
                 p->data = realloc(p->argLength, p->argLength + 1);
@@ -265,13 +260,12 @@ static AdminRequestParserState admin_request_parser_get_arg_state_queries(AdminR
         case SELECTOR_TIMEOUT:
         case CONNECTION_TIMEOUT:
             return ARP_STATE_DONE;
-        break;
+        
         case USER_TOTAL_CONCURRENT_CONNECTIONS:
             return ARP_PARSE_STRING;
-        break;
+        
         default:
             return ARP_ERROR_NO_PARSER_STATE;
-        break;
     }
 }
 
@@ -317,7 +311,7 @@ static RequestHandler admin_request_parser_get_query_handler(uint8_t b) {
     
         default:
             return NULL;
-            break;
+        break;
     }
 }
 
