@@ -5,6 +5,14 @@
 #include "buffer/buffer.h"
 #include "userHandler/userHandler.h"
 
+#define UINT8_RESPONSE_SIZE 3
+#define UINT16_RESPONSE_SIZE 4
+#define UINT32_RESPONSE_SIZE 6
+#define UINT64_RESPONSE_SIZE 10
+#define MASK 0xff
+#define USER 0
+#define ADMIN 1
+#define INITIAL_HEADER 2
 typedef struct UserListResponseData {
     int currentUser;
     int totalUsers;
@@ -20,16 +28,26 @@ typedef union CommandResponseBuilderData {
 } CommandResponseBuilderData;
 
 typedef struct AdminResponseBuilderContainer {
-    int currByte;
+    uint16_t currByte;
 
     uint8_t type;
     uint8_t cmd;
 
     CommandResponseBuilderData data;
 
-    void (*admin_response_builder)(AdminResponseBuilderContainer *, Buffer *);
+    bool (*admin_response_builder)(struct AdminResponseBuilderContainer *, Buffer *);
 
 } AdminResponseBuilderContainer;
+
+bool admin_response_builder_uint8(AdminResponseBuilderContainer * adminResponse, Buffer * b);
+
+bool admin_response_builder_uint16(AdminResponseBuilderContainer * adminResponse, Buffer * b);
+
+bool admin_response_builder_uint32(AdminResponseBuilderContainer * adminResponse, Buffer * b);
+
+bool admin_response_builder_uint64(AdminResponseBuilderContainer * adminResponse, Buffer * b);
+
+bool admin_response_builder_user_list(AdminResponseBuilderContainer * adminResponse, Buffer * b);
 
 
 #endif

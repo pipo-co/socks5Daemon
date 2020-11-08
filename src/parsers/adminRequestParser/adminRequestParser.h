@@ -80,9 +80,9 @@ typedef struct AdminRequestParser {
     AdminRequestParserArgs          args;
 } AdminRequestParser;
 
-void parser_init(AdminRequestParser *p);
+void admin_request_parser_init(AdminRequestParser *p);
 
-bool admin_request_parser_consume(AdminRequestParser *p, Buffer *b);
+bool admin_request_parser_consume(AdminRequestParser *p, Buffer *b, bool *errored);
 
 AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t b);
 
