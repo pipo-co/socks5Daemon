@@ -4,28 +4,28 @@
 #include <stdint.h>
 #include "parsers/adminRequestParser/adminRequestParser.h"
 
-bool admin_request_parser_list_users(struct AdminRequestParser *p, Buffer *b);
+void admin_request_parser_list_users(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
-bool admin_request_parser_total_historic_connections(struct AdminRequestParser *p, Buffer *b);
+void admin_request_parser_total_historic_connections(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
-bool admin_request_parser_current_connections(struct AdminRequestParser *p, Buffer *b);
+void admin_request_parser_current_connections(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
-bool admin_request_parser_max_current_conections(struct AdminRequestParser *p, Buffer *b);
+void admin_request_parser_max_current_conections(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
-bool admin_request_parser_total_bytes_sent(struct AdminRequestParser *p, Buffer *b);
+void admin_request_parser_total_bytes_sent(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
-bool admin_request_parser_total_bytes_received(struct AdminRequestParser *p, Buffer *b);
+void admin_request_parser_total_bytes_received(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
-bool admin_request_parser_connected_users(struct AdminRequestParser *p, Buffer *b);
+void admin_request_parser_connected_users(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
-bool admin_request_parser_user_count(struct AdminRequestParser *p, Buffer *b);
+void admin_request_parser_user_count(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
-bool admin_request_parser_buffer_sizes(struct AdminRequestParser *p, Buffer *b);
+void admin_request_parser_buffer_sizes(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
-bool admin_request_parser_selector_timeout(struct AdminRequestParser *p, Buffer *b);
+void admin_request_parser_selector_timeout(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
-bool admin_request_parser_connection_timeout(struct AdminRequestParser *p, Buffer *b);
+void admin_request_parser_connection_timeout(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
-bool admin_request_parser_user_total_concurrent_connections(struct AdminRequestParser *p, Buffer *b);
+void admin_request_parser_user_total_concurrent_connections(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
 #endif

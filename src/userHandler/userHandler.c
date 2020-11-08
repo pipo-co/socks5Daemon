@@ -48,7 +48,21 @@ UserInfoP user_handler_get_user_by_username(char *username) {
     }
 
     return NULL;
-}   
+}
+
+uint8_t user_handler_get_all_users(UserInfoP output[]) {
+
+    uint8_t iter = 0;
+
+    for (khiter_t k = kh_begin(userMap); k != kh_end(userMap); k++) {
+
+		if(kh_exist(userMap, k)) {
+            output[iter++] = kh_value(userMap, k);
+        }
+    }
+
+    return iter;
+}
 
 UserInfoP user_handler_add_user(char *username, char *password, bool admin) {
 

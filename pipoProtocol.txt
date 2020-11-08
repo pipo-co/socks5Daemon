@@ -336,7 +336,7 @@ Acknowledgments
 
     5.1. Requests
 
-        All Requests from Query TYPE Commands have the following structure:
+        Unless specified otherwise, all Requests from Query TYPE Commands have the following structure:
 
             +------+-----+
             | TYPE | CMD |
@@ -398,7 +398,9 @@ Acknowledgments
         5.1.11. Get User Total Current Connections
 
             The use of this Command will provide a number that indicates the number of concurrent
-            connections that a user has in the Server. 
+            connections that a user has in the Server.
+
+            For this Command, the message structure is:
 
             +------+-----+------+-----------+
             | TYPE | CMD | ULEN |   UNAME   |
