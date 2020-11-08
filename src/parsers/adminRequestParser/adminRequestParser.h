@@ -3,9 +3,7 @@
 
 #include "buffer/buffer.h"
 
-
-
-
+#define MAX_STRING_LENGTH 256
 typedef enum AdminRequestParserState {
     ARP_STATE_TYPE,
     ARP_STATE_QUERY,
@@ -60,6 +58,19 @@ typedef enum AdminRequestParserModification {
 
 typedef bool (*RequestHandler)(struct AdminRequestParser *, Buffer *);
 
+typedef struct AdminRequestParserUserInfo{
+    uint8_t     uname[MAX_STRING_LENGTH];
+    uint8_t     pass[MAX_STRING_LENGTH];
+    uint8_t     admin;
+} AdminRequestParserUserInfo;
+
+typedef union AdminRequestParserArgs{
+    uint8_t                     uint8;
+    uint32_t                    uint32;
+    uint8_t                     string[MAX_STRING_LENGTH];
+    AdminRequestParserUserInfo  user;
+} AdminRequestParserArgs; 
+
 typedef struct AdminRequestParser {
     AdminRequestParserState     state;
     AdminRequestParserType      type; //Puede fletarse
@@ -67,7 +78,8 @@ typedef struct AdminRequestParser {
     int                         parserCount;    // i
     int                         argLength;      // n
     RequestHandler              requestHandler;
-    void                       *data;           //refactor to arg
+    AdminRequestParserArgs      args;
+              //refactor to arg
 } AdminRequestParser;
 
 void parser_init(AdminRequestParser *p);

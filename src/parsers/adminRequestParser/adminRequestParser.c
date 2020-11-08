@@ -11,7 +11,7 @@ static AdminRequestParserState admin_request_parser_get_arg_state_queries(AdminR
 static RequestHandler admin_request_parser_get_query_handler(uint8_t b);
 static RequestHandler admin_request_parser_get_modification_handler(uint8_t b);
 
-void parser_init(AdminRequestParser *p){
+void admin_request_parser_init(AdminRequestParser *p){
     p->parserCount = 0;
     p->argLength = -1;  //Podria ser 0 ahora
 }
@@ -67,20 +67,15 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
         
             if(p->argLength == -1){
                 p->parserCount = 0;
-                p->argLength = b;
-                p->data = malloc(p->argLength + 1);
-                
-                if(p->data == NULL) {
-                    return ARP_STATE_ERROR_NOT_ENOUGH_MEMORY;
-                }
+                p->argLength = b;   
             }
 
             else if(p->parserCount < p->argLength) {
-                ((uint8_t *)p->data)[p->parserCount++] = b;
+                p->args.string[p->parserCount++] = b;
             }
 
             if(p->parserCount == p->argLength) {
-                ((uint8_t *)p->data)[p->parserCount++] = '\0';
+                p->args.string[p->parserCount++] = '\0';
                 return ARP_STATE_DONE;
             }
 
@@ -89,13 +84,7 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
 
         case ARP_PARSE_UINT_8:
         
-            p->data = malloc(sizeof(uint8_t));
-                
-            if(p->data == NULL) {
-                return ARP_STATE_ERROR_NOT_ENOUGH_MEMORY;
-            }
-            
-            *((uint8_t *)p->data) = b;
+            p->args.uint8 = b;
             
             return ARP_STATE_DONE;
 
@@ -106,16 +95,12 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
             if(p->argLength == -1){
                 p->parserCount = 0;
                 p->argLength = sizeof(uint32_t);
-                p->data = malloc(p->argLength);
-                
-                if(p->data == NULL) {
-                    return ARP_STATE_ERROR_NOT_ENOUGH_MEMORY;
-                }
             }
 
             else if(p->parserCount < p->argLength) {
-                *((uint32_t *)p->data) <<= 8;
-                *((uint32_t *)p->data) += b;
+                p->args.uint32 <<= 8;
+                p->args.uint32 += b;
+                p->parserCount++;
             }
 
             if(p->parserCount == p->argLength) {
@@ -130,20 +115,15 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
              if(p->argLength == -1){
                 p->parserCount = 0;
                 p->argLength = b;
-                p->data = malloc(p->argLength + 1);
-                
-                if(p->data == NULL) {
-                    return ARP_STATE_ERROR_NOT_ENOUGH_MEMORY;
-                }
             }
 
             else if(p->parserCount < p->argLength) {
-                ((uint8_t *)p->data)[p->parserCount++] = b;
+                p->args.user.uname[p->parserCount++] = b;
             }
 
             if(p->parserCount == p->argLength) {
                 p->argLength = -1;
-                ((uint8_t *)p->data)[p->parserCount++] = '\0';
+                p->args.user.uname[p->parserCount++] = '\0';
                 return ARP_PARSE_ADD_PASS;
             }
 
@@ -153,20 +133,17 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
         case ARP_PARSE_ADD_PASS:
             
              if(p->argLength == -1){
-                p->argLength = p->parserCount + b;
-                p->data = realloc(p->argLength, p->argLength + 1);
-                
-                if(p->data == NULL) {
-                    return ARP_STATE_ERROR_NOT_ENOUGH_MEMORY;
-                }
+                p->parserCount = 0;
+                p->argLength = b;
+
             }
 
             else if(p->parserCount < p->argLength) {
-                ((uint8_t *)p->data)[p->parserCount++] = b;
+                p->args.user.pass[p->parserCount++] = b;
             }
 
             if(p->parserCount == p->argLength) {
-                ((uint8_t *)p->data)[p->parserCount++] = '\0';
+                p->args.user.pass[p->parserCount++] = '\0';
                 return ARP_PARSE_ADD_PRIV;
             }
 
@@ -175,7 +152,7 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
 
         case ARP_PARSE_ADD_PRIV:
             
-            ((uint8_t *)p->data)[p->parserCount++] = b;
+            p->args.user.admin = b;
             
             return ARP_STATE_DONE;
 
