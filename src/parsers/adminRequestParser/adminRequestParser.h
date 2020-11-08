@@ -24,7 +24,6 @@ typedef enum AdminRequestParserState {
     ARP_STATE_ERROR_MODIFICATION_NOT_SUPPORTED,
     ARP_ERROR_NO_PARSER_STATE,
     ARP_ERROR_INVALID_STATE,
-    ARP_STATE_ERROR_NOT_ENOUGH_MEMORY,
 } AdminRequestParserState;
 
 typedef enum AdminRequestParserType {
@@ -57,8 +56,6 @@ typedef enum AdminRequestParserModification {
     SET_CONNECTION_TIMEOUT                  = 0x06,
 } AdminRequestParserModification;
 
-typedef bool (*RequestHandler)(struct AdminRequestParser *, Buffer *);
-
 typedef struct AdminRequestParserUserInfo{
     uint8_t     uname[MAX_STRING_LENGTH];
     uint8_t     pass[MAX_STRING_LENGTH];
@@ -78,7 +75,7 @@ typedef struct AdminRequestParser {
     uint8_t                     command;
     int                         parserCount;    // i
     int                         argLength;      // n
-    RequestHandler              requestHandler;
+    bool                      (*requestHandler)(struct AdminRequestParser *, Buffer *);
     AdminRequestParserArgs      args;
               //refactor to arg
 } AdminRequestParser;

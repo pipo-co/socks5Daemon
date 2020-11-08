@@ -41,6 +41,9 @@ typedef Suite *(*suiteSupplier)(void);
 #include "tests/userHandlerTest.c"
 #include "tests/statisticsTest.c"
 #include "tests/base64Test.c"
+#include "tests/adminRequestParserTest.c"
+#include "tests/adminRequestParserQueriesTest.c"
+#include "tests/adminRequestParserModificationsTest.c"
 
 
 // Tests being exercised
@@ -66,6 +69,7 @@ static const suiteSupplier suiteSuppliers[] = {
     http_dns_parser_test_suite,
     base64_test_suite,
     doh_builder_test_suite,
+    admin_request_parser_test_suite,
 };
 
 SRunner * test_srunner_init(void) {

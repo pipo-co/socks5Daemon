@@ -8,18 +8,20 @@
 
 static AdminRequestParserState admin_request_parser_get_arg_state_modifications(AdminRequestParserModification m);
 static AdminRequestParserState admin_request_parser_get_arg_state_queries(AdminRequestParserQuery q);
-static RequestHandler admin_request_parser_get_query_handler(uint8_t b);
-static RequestHandler admin_request_parser_get_modification_handler(uint8_t b);
+
+static bool (*admin_request_parser_get_query_handler(uint8_t b))(AdminRequestParser *p, Buffer *b);
+static bool (*admin_request_parser_get_modification_handler(uint8_t b))(AdminRequestParser *p, Buffer *b);
 
 void admin_request_parser_init(AdminRequestParser *p){
     p->parserCount = 0;
     p->argLength = -1;  //Podria ser 0 ahora
+    p->state = ARP_STATE_TYPE;  
 }
 
 bool admin_request_parser_consume(AdminRequestParser *p, Buffer *b){
     
     bool errored;
-    while(admin_request_parser_is_done(p, &errored) && buffer_can_read(b)){
+    while(!admin_request_parser_is_done(p, &errored) && buffer_can_read(b)){
         admin_request_parser_feed(p, buffer_read(b));
     }
     return admin_request_parser_is_done(p, &errored);
@@ -32,24 +34,26 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
         case ARP_STATE_TYPE:
             if(b == QUERY){
                 p->type = b;
-                return ARP_STATE_QUERY;
+                p->state = ARP_STATE_QUERY;
             }
-            if(b == MODIFICATION){
+            else if(b == MODIFICATION){
                 p->type = b;
-                return ARP_STATE_MODIFICATION;
+                p->state = ARP_STATE_MODIFICATION;
             }
-            return ARP_STATE_ERROR_TYPE_NOT_SUPPORTED;
+            else {
+                p->state = ARP_STATE_ERROR_TYPE_NOT_SUPPORTED;
+            }
         break;
 
         case ARP_STATE_QUERY:
             p->command = b;
             p->requestHandler = admin_request_parser_get_query_handler(p->command);
-            
             if(p->requestHandler == NULL){
-                return ARP_STATE_ERROR_QUERY_NOT_SUPPORTED;
+                p->state = ARP_STATE_ERROR_QUERY_NOT_SUPPORTED;
             }
-            
-            return admin_request_parser_get_arg_state_queries(p->command);
+            else {
+                p->state = admin_request_parser_get_arg_state_queries(p->command);
+            }
         break;
 
         case ARP_STATE_MODIFICATION:
@@ -57,10 +61,11 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
             p->requestHandler = admin_request_parser_get_modification_handler(p->command);
             
             if(p->requestHandler == NULL){
-                return ARP_STATE_ERROR_MODIFICATION_NOT_SUPPORTED;
+                p->state = ARP_STATE_ERROR_MODIFICATION_NOT_SUPPORTED;
             }
-            
-            return admin_request_parser_get_arg_state_modifications(p->command);
+            else {
+                p->state = admin_request_parser_get_arg_state_modifications(p->command);
+            }
         break;
         
         case ARP_PARSE_STRING:
@@ -76,17 +81,19 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
 
             if(p->parserCount == p->argLength) {
                 p->args.string[p->parserCount++] = '\0';
-                return ARP_STATE_DONE;
+                p->state = ARP_STATE_DONE;
+            }
+            else {
+                p->state = ARP_PARSE_STRING;
             }
 
-            return ARP_PARSE_STRING;
         break;
 
         case ARP_PARSE_UINT_8:
         
             p->args.uint8 = b;
             
-            return ARP_STATE_DONE;
+            p->state = ARP_STATE_DONE;
 
         break;
 
@@ -94,20 +101,22 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
 
             if(p->argLength == -1){
                 p->parserCount = 0;
+                p->args.uint32 = 0;
                 p->argLength = sizeof(uint32_t);
             }
 
-            else if(p->parserCount < p->argLength) {
+            if(p->parserCount < p->argLength) {
                 p->args.uint32 <<= 8;
                 p->args.uint32 += b;
                 p->parserCount++;
             }
 
             if(p->parserCount == p->argLength) {
-                return ARP_STATE_DONE;
+                p->state = ARP_STATE_DONE;
             }
-
-            return ARP_PARSE_UINT_32;
+            else {
+                p->state = ARP_PARSE_UINT_32;
+            }
         break;
 
         case ARP_PARSE_ADD_USER:
@@ -124,10 +133,11 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
             if(p->parserCount == p->argLength) {
                 p->argLength = -1;
                 p->args.user.uname[p->parserCount++] = '\0';
-                return ARP_PARSE_ADD_PASS;
+                p->state = ARP_PARSE_ADD_PASS;
             }
-
-            return ARP_PARSE_ADD_USER;
+            else{
+                p->state = ARP_PARSE_ADD_USER;
+            }
         break;
 
         case ARP_PARSE_ADD_PASS:
@@ -144,24 +154,30 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
 
             if(p->parserCount == p->argLength) {
                 p->args.user.pass[p->parserCount++] = '\0';
-                return ARP_PARSE_ADD_PRIV;
+                p->state = ARP_PARSE_ADD_PRIV;
             }
-
-            return ARP_PARSE_ADD_PASS;
+            else {
+                p->state = ARP_PARSE_ADD_PASS;
+            }
         break;
 
         case ARP_PARSE_ADD_PRIV:
             
             p->args.user.admin = b;
             
-            return ARP_STATE_DONE;
+            p->state = ARP_STATE_DONE;
+
+        break;
+
+        case ARP_STATE_DONE:
 
         break;
 
         default:
-            return ARP_ERROR_INVALID_STATE;
+            p->state = ARP_ERROR_INVALID_STATE;
         break;
     }
+    return p->state;
 }
 
 bool admin_request_parser_is_done(AdminRequestParser *p, bool *errored) {
@@ -185,7 +201,6 @@ bool admin_request_parser_is_done(AdminRequestParser *p, bool *errored) {
         case ARP_STATE_ERROR_MODIFICATION_NOT_SUPPORTED:
         case ARP_ERROR_NO_PARSER_STATE:
         case ARP_ERROR_INVALID_STATE:
-        case ARP_STATE_ERROR_NOT_ENOUGH_MEMORY:
             *errored = true;
         case ARP_STATE_DONE:
             return true;
@@ -218,7 +233,7 @@ static AdminRequestParserState admin_request_parser_get_arg_state_modifications(
             
     
     default:
-        break;
+        return ARP_ERROR_INVALID_STATE;
     }
 }
 
@@ -246,8 +261,8 @@ static AdminRequestParserState admin_request_parser_get_arg_state_queries(AdminR
     }
 }
 
-static RequestHandler admin_request_parser_get_query_handler(uint8_t b) {
-    
+static bool (*admin_request_parser_get_query_handler(uint8_t b))(AdminRequestParser *p, Buffer *b) {
+
     switch (b){
         case LIST_USERS:
             return admin_request_parser_list_users;
@@ -292,7 +307,7 @@ static RequestHandler admin_request_parser_get_query_handler(uint8_t b) {
     }
 }
 
-static RequestHandler admin_request_parser_get_modification_handler(uint8_t b) {
+static bool (*admin_request_parser_get_modification_handler(uint8_t b))(AdminRequestParser *p, Buffer *b) {
 
     switch (b){
         case ADD_USER:
@@ -322,4 +337,3 @@ static RequestHandler admin_request_parser_get_modification_handler(uint8_t b) {
             break;
     }
 }
-
