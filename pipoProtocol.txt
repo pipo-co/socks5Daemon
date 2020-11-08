@@ -102,8 +102,8 @@ Acknowledgments
         o   X'07'   Get Total User Count     
         o   X'08'   Get I/O Buffer Sizes
         o   X'09'   Get Selector Timeout 
-        o   X'10'   Get Connection Timeout
-        o   X'11'   Get User Total Current Connections
+        o   X'0A'   Get Connection Timeout
+        o   X'0B'   Get User Total Current Connections
 
 
     The associated Commands (CMD) for the Modification TYPE are:
