@@ -1,6 +1,6 @@
 #include "parsers/adminRequestParser/adminRequestParser.h"
-#include "parsers/adminRequestParser/adminRequestParserQueries.h"
-#include "parsers/adminRequestParser/adminRequestParserModifiers.h"
+#include "parsers/adminRequestParser/adminRequestQueryHandlers.h"
+#include "parsers/adminRequestParser/adminRequestModifierHandlers.h"
 #include "parsers/adminRequestParser/adminRequestErrorHandlers.h"
 
 #include <stdbool.h>
@@ -17,7 +17,7 @@ void admin_request_parser_init(AdminRequestParser *p){
     p->parserCount = 0;
     p->argLength = -1;
     p->state = ARP_STATE_TYPE;
-    p->requestHandler = admin_request_error_handler_parser_error;
+    p->request_handler = admin_request_error_handler_parser_error;
 }
 
 bool admin_request_parser_consume(AdminRequestParser *p, Buffer *b, bool *errored){

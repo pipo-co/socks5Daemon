@@ -1,4 +1,4 @@
-#include "parsers/adminRequestParser/adminRequestParserQueries.h"
+#include "parsers/adminRequestParser/adminRequestQueryHandlers.h"
 #include "adminResponseBuilder.h"
 
 #include "userHandler/userHandler.h"
@@ -20,7 +20,7 @@ void admin_request_parser_list_users(uint8_t type, uint8_t cmd, AdminRequestPars
 
 void admin_request_parser_total_historic_connections(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
 
-    
+
 
     outContainer->type = type;
     outContainer->cmd = cmd;
