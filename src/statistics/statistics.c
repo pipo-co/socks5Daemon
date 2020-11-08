@@ -62,7 +62,7 @@ void statistics_dec_current_user_count() {
 }
 
 void statistics_print() {
-    fprintf(stderr, "TotalCon: %ld. CurrentCon: %d. MaxCurrCon: %d. BytesSent: %ld. BytesRec: %ld. UsersCon: %d.\n",
-        statistics.totalConnections, statistics.currentConnections, statistics.maxConcurrentConnections,
-                statistics.bytesSent, statistics.bytesReceived, statistics.currentUserCount);
+    // fprintf(stderr, "TotalCon: %ld. CurrentCon: %d. MaxCurrCon: %d. BytesSent: %ld. BytesRec: %ld. UsersCon: %d.\n",
+    //     statistics.totalConnections, statistics.currentConnections, statistics.maxConcurrentConnections,
+    //             statistics.bytesSent, statistics.bytesReceived, statistics.currentUserCount);
 }

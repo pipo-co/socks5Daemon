@@ -3,9 +3,12 @@
 #include <errno.h>
 #include "netutils/netutils.h"
 #include "states/stateUtilities/request/requestUtilities.h"
+#include "socks5/logger/logger.h"
 
 #define DATE_SIZE 30
 #define REPLY_SIZE 10
+
+#define LOG_MAX_SIZE 600
 
 void log_user_access(SessionHandlerP session, ReplyValues rep) {
 
@@ -34,7 +37,18 @@ void log_user_access(SessionHandlerP session, ReplyValues rep) {
         printableServerAddres = session->clientInfo.connectedDomain;
     }
 
-    printf("%s\t%s\tA\t%s\t%s\t%d\n", date, session->clientInfo.user->username, clientAddress, printableServerAddres, rep);
+    char printBuffer[LOG_MAX_SIZE];
+    int logLen;
+
+    for(int i = 0; i < 20; i++){
+    logLen = snprintf(printBuffer, LOG_MAX_SIZE, "%s\t%s\tA\t%s\t%s\t%d\n", date, session->clientInfo.user->username, clientAddress, printableServerAddres, rep);
+
+    if(logLen > LOG_MAX_SIZE) {
+        logLen = LOG_MAX_SIZE;
+    }
+
+    logger_non_blocking_log(STDOUT_FILENO, printBuffer, logLen);
+    }
 }
 
 bool request_marshall(Buffer *b, size_t *bytes, ReplyValues rep) {
