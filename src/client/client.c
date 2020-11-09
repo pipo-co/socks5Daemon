@@ -3,6 +3,7 @@
 
 #include "buffer/buffer.h"
 #include "client/clientCommandController.h"
+#include "client/clientDefs.h"
 
 #include <arpa/inet.h>
 #include <netinet/in.h> 
@@ -27,13 +28,14 @@
 static int new_ipv6_connection(struct in6_addr ip, in_port_t port) ;
 static int new_ipv4_connection(struct in_addr ip, in_port_t port) ;
 static void interactive_client(int fd);
+static bool log_in(int fd);
 static void print_help();
 
 static CommandController controllers[COMMAND_COUNT];
+static char descriptions[COMMAND_COUNT];
 
 int main(int argc, char *argv[]) {
 		
-	fd_set fds;
 	int fd;
 	char * ip = "127.0.0.1";
 	uint16_t port = 8080;
@@ -57,7 +59,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if(log_in(fd)) {
-		client_command_controller_init(controllers);
+		client_command_controller_init(controllers, descriptions);
 		interactive_client(fd);
 	}
 
@@ -154,9 +156,9 @@ static bool log_in(int fd) {
 	memset(authMessage, '\0', AUTH_MESSAGE_LENGTH);
 	authMessage[0] = PIPO_PROTOCOL_VERSION;
 	authMessage[1] = ulen;
-	strcpy(authMessage, username);
+	strcpy((char *) authMessage, username);
 	authMessage[ulen + 2] = plen;
-	strcpy(authMessage, password);
+	strcpy((char *) authMessage, password);
 	
 	size_t bytesToSend = ulen + plen + 3;
 	size_t bytesSent = 0;
@@ -235,5 +237,13 @@ static void interactive_client(int fd) {
 		controllers[command].sender(fd);
 
 		controllers[command].receiver(fd);
+	}
+}
+
+static void print_help(){
+
+	printf("Client help\n");
+	for (size_t i = 0; i < COMMAND_COUNT; i++){
+		printf("%s\n",descriptions[i]);
 	}
 }

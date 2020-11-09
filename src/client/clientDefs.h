@@ -7,6 +7,11 @@ typedef enum ClientType {
     CT_INVALID_TYPE        = 0xFF,
 } ClientType;
 
+// ClientTypeCommandCount
+#define CTCC_QUERY_COUNT 12
+#define CTCC_MODIFICATIONS_COUNT 7
+#define COMMAND_COUNT (CTCC_QUERY_COUNT + CTCC_MODIFICATIONS_COUNT)
+
 typedef enum ClientQuery {
     CQ_LIST_USERS                              = 0x00,
     CQ_TOTAL_HISTORIC_CONNECTIONS              = 0x01,

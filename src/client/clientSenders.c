@@ -88,7 +88,6 @@ bool add_user_sender(int fd){
 	printf("Insert password: ");
 	fgets(pass, CREDENTIALS_LENGTH, stdin);
 
-	// Check privilege value (0 or 1)??
 	char priv;
 	printf("Admin privilege?: [y/n] ");
 	priv = getchar();
@@ -137,6 +136,7 @@ bool set_buffer_size_sender(int fd){
 	printf("Insert new buffer size: ");
 	fgets(size, UINT32_BASE_10_SIZE, stdin);
 	uint32_t size32 = strtoul(size, NULL, 10);
+
 	return uint32_builder(fd, CT_MODIFICATION, CM_SET_BUFFER_SIZE, size32);
 	
 }
@@ -147,6 +147,7 @@ bool set_selector_timeout_sender(int fd){
 	printf("Insert new selector timeout: ");
 	fgets(timeout, UINT8_BASE_10_SIZE, stdin);
 	uint8_t timeout8 = strtoul(timeout, NULL, 10);
+
 	return uint32_builder(fd, CT_MODIFICATION, CM_SET_SELECTOR_TIMEOUT, timeout8);
 }
 
@@ -156,6 +157,7 @@ bool set_connection_timeout_sender(int fd){
 	printf("Insert new selector timeout: ");
 	fgets(timeout, UINT8_BASE_10_SIZE, stdin);
 	uint8_t timeout8 = strtoul(timeout, NULL, 10);
+
 	return uint32_builder(fd, CT_MODIFICATION, CM_SET_CONNECTION_TIMEOUT, timeout8);
 }
 
