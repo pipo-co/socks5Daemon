@@ -1,6 +1,12 @@
 #ifndef CLIENT_DEFS_H_00180a6350a1fbe79f133adf0a96eb6685c242b6
 #define CLIENT_DEFS_H_00180a6350a1fbe79f133adf0a96eb6685c242b6
 
+typedef enum ClientType {
+    CT_QUERY               = 0x00,
+    CT_MODIFICATION        = 0x01,
+    CT_INVALID_TYPE        = 0xFF,
+} ClientType;
+
 typedef enum ClientQuery {
     CQ_LIST_USERS                              = 0x00,
     CQ_TOTAL_HISTORIC_CONNECTIONS              = 0x01,
