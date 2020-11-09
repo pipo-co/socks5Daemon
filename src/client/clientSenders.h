@@ -15,7 +15,7 @@ bool total_historic_connections_sender(int fd);
 
 bool current_connections_sender(int fd);
 
-bool max_current_conections_sender(int fd);
+bool max_concurrent_conections_sender(int fd);
 
 bool total_bytes_sent_sender(int fd);
 
