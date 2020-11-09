@@ -95,11 +95,11 @@ bool user_total_concurrent_connections_receiver(int fd){
 }
 
 static bool receiver_uint8(int fd) {
-	uint16_t bytes, bytesReceived = 0;
+	ssize_t bytes;
+	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
 	char buffer[UINT8_LENGTH];
 	uint16_t type, command;
-	uint8_t response;
       
     do {
 		bytes = recv(fd, buffer, UINT8_LENGTH - bytesWritten, MSG_NOSIGNAL);
@@ -133,8 +133,7 @@ static bool receiver_uint8(int fd) {
 					return true;
 				}
 				else {
-					response = buffer[bytesWritten++];
-					printf("RESPONSE: %c\n", command);
+					printf("RESPONSE: %c\n", buffer[bytesWritten++]);
 				}
 			}
 		}	
@@ -149,7 +148,8 @@ static bool receiver_uint8(int fd) {
 }
 
 static bool receiver_uint16(int fd) {
-	uint16_t bytes, bytesReceived = 0;
+	ssize_t bytes;
+	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
 	char buffer[UINT16_LENGTH];
 	uint16_t type, command, response;
@@ -206,8 +206,8 @@ static bool receiver_uint16(int fd) {
 static bool receiver_uint32(int fd) {
 
 	char buffer[UINT32_LENGTH];
-
-	uint16_t bytes, bytesReceived = 0;
+	ssize_t bytes;
+	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
 	
 	uint16_t type, command;
@@ -264,11 +264,12 @@ static bool receiver_uint32(int fd) {
 }
 
 static bool receiver_uint64(int fd) {
-	uint16_t bytes, bytesReceived = 0;
+	ssize_t bytes;
+	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
 	char buffer[UINT64_LENGTH];
 	uint16_t type, command;
-	uint32_t response;
+	uint64_t response;
       
     do {
 		bytes = recv(fd, buffer, UINT64_LENGTH - bytesReceived, MSG_NOSIGNAL);
@@ -322,7 +323,8 @@ static bool receiver_uint64(int fd) {
 }
 
 static bool receiver_user_list(int fd) {
-	uint16_t bytes, bytesReceived = 0;
+	ssize_t bytes;
+	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
 	uint16_t ucount, thirdVal = 0, ulen = 0;
 	char intialBuffer[NO_ARGS_LENGTH];
