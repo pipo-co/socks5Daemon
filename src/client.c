@@ -13,7 +13,6 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <sys/uio.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -73,7 +72,7 @@ int main(int argc, char *argv[]) {
 		perror("The provided IP address is invalid.");
 	}
 
-	if(!log_in(fd)){
+	if(!log_in(fd)) {
 		return 1;
 	}
 
@@ -188,9 +187,11 @@ static bool log_in(int fd) {
 
 	do {
 		writeBytes = write(fd, authMessage + bytesSent, bytesToSend - bytesSent);
+
 		if(writeBytes > 0){
 			bytesSent += writeBytes;
 		}
+
 	} while (bytesSent < bytesToSend && (writeBytes != -1 || errno !=  EINTR));
 
 	if(writeBytes == -1){
@@ -213,7 +214,7 @@ static bool log_in(int fd) {
 	}
 
 	// Auth successful
-	if(authAns[1] == 0x00){
+	if(authAns[1] == 0x00) {
 		printf("Logged in succesfully\n");
 		return true;
 	}
@@ -474,7 +475,7 @@ int string_builder(int fd, uint8_t type, uint8_t command, char * string) {
 		bytes = send(fd, message, messageLen - bytesSent, MSG_NOSIGNAL);
 
 		// Closed Connection
-		if(bytes == 0){
+		if(bytes == 0) {
 			return -1;
 		}
 
@@ -586,7 +587,6 @@ int uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg) {
 	return 0;
 }
 
-// TODO: Privilege?? - Tobi
 int user_builder(int fd, uint8_t type, uint8_t command, char * username, char * password, uint8_t privilege) {
 
 	char message[FULL_USER_MAX_SIZE + 2];
