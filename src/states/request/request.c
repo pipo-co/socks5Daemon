@@ -140,7 +140,7 @@ static unsigned dns_connection_handling (SelectorEvent * event){
         return REQUEST_ERROR;      
     }
 
-    socks5_register_dns(event->s, session);
+    socks5_register_dns(session);
 
     return GENERATE_DNS_QUERY; 
 }
@@ -172,7 +172,7 @@ static unsigned ip_connection_handling(SelectorEvent * event){
     }
 
     session->clientInfo.addressTypeSelected = session->socksHeader.requestHeader.parser.addressType;
-    socks5_register_server(event->s, session);
+    socks5_register_server(session);
 
     return IP_CONNECT;
 

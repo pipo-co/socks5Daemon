@@ -42,7 +42,7 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
             } while(session->serverConnection.fd  == -1 && ipv4->responseParser.counter < ipv4->responseParser.totalAnswers);
                         
             if(session->serverConnection.fd != -1) {
-                socks5_register_server(event->s, session);
+                socks5_register_server(session);
                 return session->sessionStateMachine.current;
             }
         }
@@ -60,7 +60,7 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
             } while(session->serverConnection.fd  == -1 && ipv6->responseParser.counter < ipv6->responseParser.totalAnswers);
                         
             if(session->serverConnection.fd != -1) {
-                socks5_register_server(event->s, session);
+                socks5_register_server(session);
                 return session->sessionStateMachine.current;
             }
         }

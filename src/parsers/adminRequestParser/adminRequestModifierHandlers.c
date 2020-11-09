@@ -34,7 +34,7 @@ void admin_request_parser_add_user(uint8_t type, uint8_t cmd, AdminRequestParser
     outContainer->currByte = 0;
     outContainer->data.uint8 = status;
     outContainer->admin_response_builder = admin_response_builder_uint8;
-    outContainer->admin_response_free_data == NULL;
+    outContainer->admin_response_free_data = NULL;
 }
 
 void admin_request_parser_remove_user(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
@@ -57,7 +57,7 @@ void admin_request_parser_remove_user(uint8_t type, uint8_t cmd, AdminRequestPar
     outContainer->currByte = 0;
     outContainer->data.uint8 = status;
     outContainer->admin_response_builder = admin_response_builder_uint8;
-    outContainer->admin_response_free_data == NULL;
+    outContainer->admin_response_free_data = NULL;
 }
 
 void admin_request_parser_toggle_password_spoofing(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
@@ -70,7 +70,7 @@ void admin_request_parser_toggle_password_spoofing(uint8_t type, uint8_t cmd, Ad
     outContainer->currByte = 0;
     outContainer->data.uint8 = status;
     outContainer->admin_response_builder = admin_response_builder_uint8;
-    outContainer->admin_response_free_data == NULL;
+    outContainer->admin_response_free_data = NULL;
 }
 
 void admin_request_parser_toggle_connection_clean_up(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
@@ -92,7 +92,7 @@ void admin_request_parser_toggle_connection_clean_up(uint8_t type, uint8_t cmd, 
     outContainer->currByte = 0;
     outContainer->data.uint8 = status;
     outContainer->admin_response_builder = admin_response_builder_uint8;
-    outContainer->admin_response_free_data == NULL;
+    outContainer->admin_response_free_data = NULL;
 }
 
 void admin_request_parser_set_buffer_size(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
@@ -108,7 +108,7 @@ void admin_request_parser_set_buffer_size(uint8_t type, uint8_t cmd, AdminReques
     outContainer->currByte = 0;
     outContainer->data.uint8 = status;
     outContainer->admin_response_builder = admin_response_builder_uint8;
-    outContainer->admin_response_free_data == NULL;
+    outContainer->admin_response_free_data = NULL;
 }
 
 void admin_request_parser_set_selector_timeout(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
@@ -124,7 +124,7 @@ void admin_request_parser_set_selector_timeout(uint8_t type, uint8_t cmd, AdminR
     outContainer->currByte = 0;
     outContainer->data.uint8 = status;
     outContainer->admin_response_builder = admin_response_builder_uint8;
-    outContainer->admin_response_free_data == NULL;
+    outContainer->admin_response_free_data = NULL;
 }
 
 void admin_request_parser_set_connection_timeout(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
@@ -140,5 +140,5 @@ void admin_request_parser_set_connection_timeout(uint8_t type, uint8_t cmd, Admi
     outContainer->currByte = 0;
     outContainer->data.uint8 = status;
     outContainer->admin_response_builder = admin_response_builder_uint8;
-    outContainer->admin_response_free_data == NULL;
+    outContainer->admin_response_free_data = NULL;
 }

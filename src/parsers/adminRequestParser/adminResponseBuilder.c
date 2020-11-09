@@ -135,8 +135,8 @@ bool admin_response_builder_user_list(AdminResponseBuilderContainer * adminRespo
 }
 
 bool admin_response_builder_simple_error(AdminResponseBuilderContainer * adminResponse, Buffer * b) {
+    
     uint16_t * currByte = &adminResponse->currByte;
-    uint8_t aux;
 
     while(*currByte < ERROR_RESPONSE_SIZE && buffer_can_write(b)){
 
