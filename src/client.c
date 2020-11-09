@@ -20,6 +20,12 @@
 #define BUFSIZE 512
 #define COMMAND_COUNT 18
 #define STDIN 0
+#define NO_ARGS_LENGTH 2
+#define UINT8_LENGTH 3
+#define UINT32_LENGTH 6
+#define UINT64_LENGTH 10
+#define MASK 0xff
+#define MAX_USERNAME 255
 
 #define CREDENTIALS_LENGTH 256
 #define AUTH_MESSAGE_LENGTH 512
@@ -36,29 +42,10 @@ static void print_help();
 
 typedef struct CommandController {
 	void (*sender)(int);
-	void (*reciever)(int);	
+	void (*receiver)(int);	
 } CommandController;
 
 CommandController controllers[COMMAND_COUNT];
-
-
-
-/*
-  * Sender -> generar paquete y enviarlo al server
-  * - String
-  * - No args
-  * - uint8
-  * - uint32
-  * - User (string, string, uint8)  
-  */
-
-/*
-  * Reciever -> recibir el paquete y parsearlo
-  * - uint8
-  * - uint32
-  * - uint64
-  * - User list
-  */
 
 int main(int argc, char *argv[]) {
 		
@@ -115,7 +102,7 @@ static int new_ipv6_connection(struct in6_addr ip, in_port_t port) {
 	int ans;
 
 	do {
-		ans = connect(sock, (struct sockaddr*) &addr, sizeof(addr);
+		ans = connect(sock, (struct sockaddr*) &addr, sizeof(addr));
 	}while(ans == -1 && errno != EINTR);
 	
 	if(ans == -1) {  
@@ -146,7 +133,7 @@ static int new_ipv4_connection(struct in_addr ip, in_port_t port) {
 	int ans;
 
 	do {
-		ans = connect(sock, (struct sockaddr*) &addr, sizeof(addr);
+		ans = connect(sock, (struct sockaddr*) &addr, sizeof(addr));
 	}while(ans == -1 && errno != EINTR);
 	
 	if(ans == -1) {  
@@ -262,7 +249,7 @@ static void interactive_client(int fd) {
 
 		controllers[command].sender(fd);
 
-		controllers[command].reciever(fd);
+		controllers[command].receiver(fd);
 	}
 }
 
@@ -271,7 +258,7 @@ void list_users_sender(int fd){
 }
 
 void total_historic_connections_sender(int fd){
-	no_args_builder(fd, QUERY, TOTAL_CONNECTIONS)
+	no_args_builder(fd, QUERY, TOTAL_CONNECTIONS);
 }
 
 void current_connections_sender(int fd){
@@ -439,4 +426,336 @@ void connection_timeout_reciever(int fd){
 
 void user_total_concurrent_connections_reciever(int fd){
 
+}
+
+/*
+  * Sender -> generar paquete y enviarlo al server
+  * - String
+  * - No args
+  * - uint8
+  * - uint32
+  * - User (string, string, uint8)  
+  */
+
+/*
+  * Reciever -> recibir el paquete y parsearlo
+  * - uint8
+  * - uint32
+  * - uint64
+  * - User list
+  */
+
+
+int string_builder(int fd, uint8_t type, uint8_t command, char * string){
+	uint16_t length = (4+strlen(string)); // type + command + strlen + string + '\0'
+	uint16_t bytes, bytesSent = 0;
+	char * message = malloc(length);
+	message[0] = type;
+	message[1] = command;
+	message[2] = strlen(string);
+	memcpy(message + 3, string, strlen(string) + 1);
+
+	do{
+		bytes = send(fd, message, length, MSG_NOSIGNAL);
+		if(bytes < 0){
+			return -1;
+		}
+		bytesSent += bytes;
+	} while( bytesSent < length);
+	
+	free(message);
+
+	if(bytesSent > length){
+		return -1;
+	}
+	
+	return 0;
+}
+
+int no_args_builder (int fd, uint8_t type, uint8_t command){
+	char message[NO_ARGS_LENGTH];
+	message[0] = type;
+	message[1] = command;
+	uint8_t bytes, bytesSent = 0;
+
+	do {
+		bytes = send(fd, message, NO_ARGS_LENGTH, MSG_NOSIGNAL);
+		if(bytes < 0){
+			return -1;
+		}
+		bytesSent += bytes;
+	} while( bytesSent < NO_ARGS_LENGTH);
+	free(message);
+
+	if(bytesSent > NO_ARGS_LENGTH){
+		return -1;
+	}
+
+	return 0;
+}
+
+int uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg){
+	char message[UINT8_LENGTH];
+	message[0] = type;
+	message[1] = command;
+	message[2] = arg;
+	uint8_t bytes, bytesSent = 0;
+
+	do {
+		bytes = send(fd, message, UINT8_LENGTH, MSG_NOSIGNAL);
+		if(bytes < 0){
+			return -1;
+		}
+		bytesSent += bytes;
+	} while( bytesSent < UINT8_LENGTH);
+	free(message);
+
+	if(bytesSent > UINT8_LENGTH){
+		return -1;
+	}
+
+	return 0;
+}
+
+int uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg){
+	char message[UINT32_LENGTH];
+	int i = 0;
+	message[i++] = type;
+	message[i++] = command;
+	do {
+		i++;
+		message[i] = (arg >> ((UINT32_LENGTH - i)* 8)) & MASK;
+	} while(i < 5);
+	
+	uint8_t bytes, bytesSent = 0;
+
+	do {
+		bytes = send(fd, message, UINT8_LENGTH, MSG_NOSIGNAL);
+		if(bytes < 0){
+			return -1;
+		}
+		bytesSent += bytes;
+	} while( bytesSent < UINT32_LENGTH);
+	free(message);
+
+	if(bytesSent > UINT32_LENGTH){
+		return -1;
+	}
+
+	return 0;
+}
+
+
+int user_builder(int fd, uint8_t type, uint8_t command, char * username, char * password){
+	uint16_t ulen = strlen(username);
+	uint16_t plen = strlen(password);
+	uint16_t length = (6 + ulen + plen ); //1 x type, 1 x command, y 2 extra por cada string, uno para el length y otro para el \0
+	uint16_t bytes, bytesSent = 0;
+	uint16_t i = 0;
+	char * message = malloc(length);
+	message[i++] = type;
+	message[i++] = command;
+	message[i++] = ulen;
+	memcpy(message + i, username, ulen + 1);
+	i += ulen + 1;
+	message[i++] = plen;
+	memcpy(message + i, password, plen + 1);
+
+	do {
+		bytes = send(fd, message, length, MSG_NOSIGNAL);
+		if(bytes < 0){
+			return -1;
+		}
+		bytesSent += bytes;
+	} while( bytesSent < length);
+	free(message);
+
+	if(bytesSent > length){
+		return -1;
+	}
+	
+	return 0;
+}
+
+int receiver_uint8(int fd){
+	uint16_t bytes, bytesReceived = 0;
+	uint16_t bytesWritten = 0;
+	char buffer[UINT8_LENGTH];
+	char type, command, response;
+      
+    do {
+		bytes = recv(fd, buffer, UINT8_LENGTH, MSG_NOSIGNAL);
+		if(bytes < 0){
+			return -1;
+		}
+		bytesReceived += bytes;
+		if (bytesWritten < bytesReceived){
+			if( bytesWritten == 0){
+				type = buffer[bytesWritten++];
+				printf("TYPE: %c ", type);
+			}
+			else if (bytesWritten == 1){
+				command = buffer[bytesWritten++];
+				printf("CMD: %c ", command);
+			}
+			else {
+				response = buffer[bytesWritten++];
+				printf("RESPONSE: %c\n", command);
+			}
+		}
+    } while(bytesReceived < UINT8_LENGTH);
+    
+    return 0;
+}
+
+int receiver_uint32(int fd){
+	uint16_t bytes, bytesReceived = 0;
+	uint16_t bytesWritten = 0;
+	char buffer[UINT32_LENGTH];
+	char type, command;
+	uint32_t response;
+      
+    do {
+		bytes = recv(fd, buffer, UINT32_LENGTH, MSG_NOSIGNAL);
+		if(bytes < 0){
+			return -1;
+		}
+		bytesReceived += bytes;
+		if (bytesWritten < bytesReceived){
+			if(bytesWritten == 0){
+				type = buffer[bytesWritten++];
+				printf("TYPE: %c ", type);
+			}
+			else if (bytesWritten == 1){
+				command = buffer[bytesWritten++];
+				printf("CMD: %c ", command);
+			}
+			else {
+				response = (buffer[bytesWritten++] >> ((UINT32_LENGTH - bytesWritten)* 8)) & MASK;
+				if(bytesReceived == UINT32_LENGTH){
+					printf("RESPONSE: %u\n", response);
+				}
+			}
+		}
+    } while(bytesReceived < UINT32_LENGTH);
+	
+	
+    
+    return 0;
+}
+
+int receiver_uint64(int fd){
+	uint16_t bytes, bytesReceived = 0;
+	uint16_t bytesWritten = 0;
+	char buffer[UINT64_LENGTH];
+	char type, command;
+	uint32_t response;
+      
+    do {
+		bytes = recv(fd, buffer, UINT64_LENGTH, MSG_NOSIGNAL);
+		if(bytes < 0){
+			return -1;
+		}
+		bytesReceived += bytes;
+		if (bytesWritten < bytesReceived){
+			if(bytesWritten == 0){
+				type = buffer[bytesWritten++];
+				printf("TYPE: %c ", type);
+			}
+			else if (bytesWritten == 1){
+				command = buffer[bytesWritten++];
+				printf("CMD: %c ", command);
+			}
+			else {
+				response = (buffer[bytesWritten++] >> ((UINT64_LENGTH - bytesWritten)* 8)) & MASK;
+				if(bytesReceived == UINT64_LENGTH){
+						printf("RESPONSE: %lu\n", response);
+					}
+			}
+		}
+    } while(bytesReceived < UINT64_LENGTH);
+    
+    return 0;
+}
+
+int receiver_user_list(int fd){
+	uint16_t bytes, bytesReceived = 0;
+	uint16_t bytesWritten = 0;
+	char intialBuffer[NO_ARGS_LENGTH];
+	char type, command;
+	uint16_t ucount;
+	uint32_t response;
+      
+    do {
+		bytes = recv(fd, intialBuffer, NO_ARGS_LENGTH, MSG_NOSIGNAL);
+		if(bytes < 0){
+			return -1;
+		}
+		bytesReceived += bytes;
+		if (bytesWritten < bytesReceived){
+			if(bytesWritten == 0){
+				type = intialBuffer[bytesWritten++];
+				printf("TYPE: %c ", type);
+			}
+			else{
+				command = intialBuffer[bytesWritten++];
+				printf("CMD: %c ", command);
+			}
+		}
+    } while(bytesReceived < NO_ARGS_LENGTH);
+
+	bytesReceived = 0;
+
+	do {
+		bytes= recv(fd, ucount, 1, MSG_NOSIGNAL);
+		if(bytes < 0){
+			return -1;
+		}
+		bytesReceived += bytes;
+	} while (bytesReceived < 1);
+
+	if(ucount < 0){
+		return -1;
+	}
+
+	bytesWritten = bytesReceived = 0;
+	char userBuffer[MAX_USERNAME + 1] = {0}; //el maximo nombre de usuario mas el ulen
+	char *username = NULL;
+	char ulen;
+
+	while(ucount > 0){
+		bytes = recv(fd, userBuffer, MAX_USERNAME + 1, MSG_NOSIGNAL);
+		if(bytes < 0){
+			return -1;
+		}
+		bytesReceived += bytes;
+		if (bytesWritten < bytesReceived){
+			if(bytesWritten == 0){
+				ulen = userBuffer[bytesWritten++];
+				printf("ULEN: %c ", ulen);
+				if(ulen < 0){
+					return -1;
+				}
+				username = realloc(username, ulen + 1);//por el \0
+			}
+			else{
+				if(ulen > 0){
+					username[bytesWritten - 1] = userBuffer[bytesWritten];
+					bytesWritten++;
+					ulen--;
+				}
+				else{
+					username[bytesWritten - 1] = '\0';
+					memset(userBuffer, 0, bytesWritten);
+					bytesWritten = 0;
+					ucount--;
+					printf("USERNAME: %s\n", username);
+				}
+			}
+		}
+	}
+
+	free(username);
+    
+    return 0;
 }
