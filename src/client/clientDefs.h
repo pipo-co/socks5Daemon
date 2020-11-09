@@ -12,6 +12,9 @@ typedef enum ClientType {
 #define CTCC_MODIFICATIONS_COUNT 7
 #define COMMAND_COUNT (CTCC_QUERY_COUNT + CTCC_MODIFICATIONS_COUNT)
 
+#define UINT8_BASE_10_SIZE 4
+#define UINT32_BASE_10_SIZE 11
+
 typedef enum ClientQuery {
     CQ_LIST_USERS                              = 0x00,
     CQ_TOTAL_HISTORIC_CONNECTIONS              = 0x01,

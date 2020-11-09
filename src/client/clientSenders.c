@@ -3,10 +3,13 @@
 #include <stdlib.h>			// strtoul
 #include <sys/types.h>		// send & recv
 #include <sys/socket.h>		// send & recv
-#include <errno.h>			// send & recv
+#include <errno.h>			
+#include <string.h>			// strlen
 
 #include "client/clientSenders.h"
 #include "client/clientDefs.h"
+
+
 
 #define NO_ARGS_LENGTH 2
 #define UINT8_LENGTH 3
@@ -16,8 +19,6 @@
 #define MAX_USERNAME 255
 #define FULL_USER_MAX_SIZE 513
 #define CREDENTIALS_LENGTH 256
-#define UINT8_BASE_10_SIZE 4
-#define UINT32_BASE_10_SIZE 11
 
 static bool no_args_builder (int fd, uint8_t type, uint8_t command);
 static bool uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg);
@@ -167,8 +168,8 @@ static bool string_builder(int fd, uint8_t type, uint8_t command, char * string)
 
 	uint8_t strLen = (uint8_t) strlen(string);
 	uint16_t messageLen = 3 + strLen;
-
-	uint16_t bytes, bytesSent = 0;
+	ssize_t bytes;
+	uint16_t bytesSent = 0;
 
 	message[0] = type;
 	message[1] = command;
@@ -200,8 +201,8 @@ static bool no_args_builder (int fd, uint8_t type, uint8_t command) {
 
 	char message[NO_ARGS_LENGTH];
 
-	uint8_t bytes, bytesSent = 0;
-
+	uint8_t bytesSent = 0;
+	ssize_t bytes;
 	message[0] = type;
 	message[1] = command;
 
@@ -230,8 +231,8 @@ static bool uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg) {
 
 	char message[UINT8_LENGTH];
 
-	uint8_t bytes, bytesSent = 0;
-
+	uint8_t bytesSent = 0;
+	ssize_t bytes;
 	message[0] = type;
 	message[1] = command;
 	message[2] = arg;
@@ -261,12 +262,12 @@ static bool uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg)
 
 	char message[UINT32_LENGTH];
 
-	uint8_t bytes, bytesSent = 0;
-
+	uint8_t bytesSent = 0;
+	ssize_t bytes;
 	message[0] = type;
 	message[1] = command;
 
-	for(int i = 0; i < sizeof(uint32_t); i++) {
+	for(size_t i = 0; i < sizeof(uint32_t); i++) {
 		message[i + 2] = (arg >> ((sizeof(uint32_t) - i - 1)* 8)) & 0xFF;
 	}
 
@@ -300,9 +301,9 @@ static bool user_builder(int fd, uint8_t type, uint8_t command, char * username,
 
 	uint16_t messageLen = 5 + ulen + plen; //1 x type, 1 x command, 1 privilege y 1 x length por cada string
 
-	uint16_t bytes, bytesSent = 0;
+	uint16_t bytesSent = 0;
 	uint16_t i = 0;
-
+	ssize_t bytes;
 
 	message[i++] = type;
 	message[i++] = command;

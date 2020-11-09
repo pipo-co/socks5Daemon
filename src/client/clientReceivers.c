@@ -1,10 +1,11 @@
-#include <stdbool.h>
-#include <stdint.h>
+#include <stdbool.h>		// bool
+#include <stdint.h>			// uint
 #include <stdio.h>			// fgets
 #include <stdlib.h>			// strtoul
 #include <sys/types.h>		// send & recv
 #include <sys/socket.h>		// send & recv
-#include <errno.h>
+#include <errno.h>			// errno
+#include <string.h>			// memset
 
 #include "client/clientReceivers.h"
 
@@ -21,6 +22,8 @@ static bool receiver_uint32(int fd);
 static bool receiver_uint64(int fd);
 static bool receiver_user_list(int fd);
 
+
+// Modifications
 bool add_user_receiver(int fd){
 	return receiver_uint8(fd);
 }
@@ -50,12 +53,20 @@ bool set_connection_timeout_receiver(int fd){
 	
 }
 
+// Queries
 bool list_users_receiver(int fd){
 	return receiver_user_list(fd);
 }
 
 bool total_historic_connections_receiver(int fd){
+
+
 	return receiver_uint64(fd);
+}
+
+bool current_connections_receiver(int fd){
+
+	return receiver_uint16(fd);
 }
 
 bool max_concurrent_conections_receiver(int fd){
@@ -99,7 +110,7 @@ static bool receiver_uint8(int fd) {
 	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
 	char buffer[UINT8_LENGTH];
-	uint16_t type, command;
+	uint8_t type, command;
       
     do {
 		bytes = recv(fd, buffer, UINT8_LENGTH - bytesWritten, MSG_NOSIGNAL);
@@ -151,8 +162,9 @@ static bool receiver_uint16(int fd) {
 	ssize_t bytes;
 	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
+	uint16_t response;
 	char buffer[UINT16_LENGTH];
-	uint16_t type, command, response;
+	uint8_t type, command;
       
     do {
 		bytes = recv(fd, buffer, UINT16_LENGTH - bytesWritten, MSG_NOSIGNAL);
@@ -186,7 +198,8 @@ static bool receiver_uint16(int fd) {
 					return true;
 				}
 				else {
-					response = (buffer[bytesWritten++] >> ((UINT16_LENGTH - bytesWritten)* 8)) & 0xFF;
+					response = (buffer[bytesWritten] >> ((UINT16_LENGTH - bytesWritten)* 8)) & 0xFF;
+					bytesWritten++;
 					if(bytesReceived == UINT32_LENGTH){
 						printf("RESPONSE: %u\n", response);
 					}
@@ -210,7 +223,7 @@ static bool receiver_uint32(int fd) {
 	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
 	
-	uint16_t type, command;
+	uint8_t type, command;
 	uint32_t response;
       
     do {
@@ -246,7 +259,8 @@ static bool receiver_uint32(int fd) {
 					return true;
 				}
 				else {
-					response = (buffer[bytesWritten++] >> ((UINT32_LENGTH - bytesWritten)* 8)) & 0xFF;
+					response = (buffer[bytesWritten] >> ((UINT32_LENGTH - bytesWritten)* 8)) & 0xFF;
+					bytesWritten++;
 					if(bytesReceived == UINT32_LENGTH){
 						printf("RESPONSE: %u\n", response);
 					}
@@ -268,7 +282,7 @@ static bool receiver_uint64(int fd) {
 	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
 	char buffer[UINT64_LENGTH];
-	uint16_t type, command;
+	uint8_t type, command;
 	uint64_t response;
       
     do {
@@ -304,7 +318,8 @@ static bool receiver_uint64(int fd) {
 					return true;
 				}
 				else {
-					response = (buffer[bytesWritten++] >> ((UINT64_LENGTH - bytesWritten)* 8)) & 0xFF;
+					response = (buffer[bytesWritten] >> ((UINT64_LENGTH - bytesWritten)* 8)) & 0xFF;
+					bytesWritten++;
 					if(bytesReceived == UINT64_LENGTH){
 							printf("RESPONSE: %lu\n", response);
 						}
@@ -326,10 +341,11 @@ static bool receiver_user_list(int fd) {
 	ssize_t bytes;
 	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
-	uint16_t ucount, thirdVal = 0, ulen = 0;
+	uint8_t ucount;
+	uint8_t thirdVal = 0;
 	char intialBuffer[NO_ARGS_LENGTH];
 	char username[MAX_USERNAME] = {0};
-	uint16_t type, command;
+	uint8_t type, command, ulen = 0;
 	
 	bool ulenFlag = true;
 	
@@ -371,8 +387,7 @@ static bool receiver_user_list(int fd) {
 		return false;
 	}
 
-	bytes = recv(fd, thirdVal, 1, MSG_NOSIGNAL);
-
+	bytes = recv(fd, &thirdVal, 1, MSG_NOSIGNAL);
 
 	if(bytes == 0){
 		printf("Connection closed\n");
@@ -400,7 +415,7 @@ static bool receiver_user_list(int fd) {
 	
 	do{
 		if(ulenFlag){
-			bytes = recv(fd, ulen, 1, MSG_NOSIGNAL);
+			bytes = recv(fd, &ulen, 1, MSG_NOSIGNAL);
 
 			if(bytes == 0){
 				printf("Connection closed\n");

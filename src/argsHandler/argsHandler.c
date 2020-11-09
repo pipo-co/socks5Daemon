@@ -33,6 +33,7 @@ user(char *s, struct users *user) {
         p++;
         user->name = s;
         user->pass = p;
+        user->admin = false;
     }
 
 }
@@ -91,6 +92,10 @@ parse_args(const int argc, char **argv, Socks5Args *args) {
     args->doh.httpVersion = "HTTP/1.0";
 
     args->user_count = 0;
+
+    args->admin.name = "admin";
+    args->admin.pass = "papanata";
+    args->admin.admin = true;
 
     int c;
     

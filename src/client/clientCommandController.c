@@ -11,17 +11,17 @@ typedef enum CommandControllerStartIndex {
     CCSI_MODIFICATIONS  = CTCC_QUERY_COUNT,
 } CommandControllerStartIndex;
 
-static void client_command_controller_load_queries(CommandController controllers[], char descriptions[]);
-static void client_command_controller_load_modifications(CommandController controllers[], char descriptions[]);
+static void client_command_controller_load_queries(CommandController controllers[], char *descriptions[]);
+static void client_command_controller_load_modifications(CommandController controllers[], char *descriptions[]);
 
-void client_command_controller_init(CommandController controllers[], char descriptions[]) {
+void client_command_controller_init(CommandController controllers[], char *descriptions[]) {
     
     client_command_controller_load_queries(controllers, descriptions);
 
     client_command_controller_load_modifications(controllers, descriptions);
 }
 
-static void client_command_controller_load_queries(CommandController controllers[], char descriptions[]) {
+static void client_command_controller_load_queries(CommandController controllers[], char *descriptions[]) {
     
     size_t index = CCSI_QUERIES;
 
@@ -86,7 +86,7 @@ static void client_command_controller_load_queries(CommandController controllers
     descriptions[index + CQ_USER_TOTAL_CONCURRENT_CONNECTIONS] = "Get User Total Current Connections";
 }
 
-static void client_command_controller_load_modifications(CommandController controllers[], char descriptions[]) {
+static void client_command_controller_load_modifications(CommandController controllers[], char *descriptions[]) {
     
     size_t index = CCSI_MODIFICATIONS;
 

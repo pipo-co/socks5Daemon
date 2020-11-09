@@ -32,7 +32,7 @@ static bool log_in(int fd);
 static void print_help();
 
 static CommandController controllers[COMMAND_COUNT];
-static char descriptions[COMMAND_COUNT];
+static char *descriptions[COMMAND_COUNT];
 
 int main(int argc, char *argv[]) {
 		
@@ -56,6 +56,12 @@ int main(int argc, char *argv[]) {
 	}
 	else {
 		perror("The provided IP address is invalid.");
+		exit(1);
+	}
+
+	if(fd == -1){
+		perror("Connection error");
+		exit(1);
 	}
 
 	if(log_in(fd)) {
@@ -131,12 +137,8 @@ static int new_ipv4_connection(struct in_addr ip, in_port_t port) {
 }
 
 static bool log_in(int fd) {
-
-	size_t i;
-	uint8_t ulen;
-	uint8_t plen;
 	
-	printf("Insert username: (max 255 characters. Finisish with enter)");
+	printf("Insert username: (max 255 characters. Finisish with enter) ");
 	char username[CREDENTIALS_LENGTH];
 	fgets(username, CREDENTIALS_LENGTH, stdin);
 
@@ -144,7 +146,7 @@ static bool log_in(int fd) {
 		perror("Invalid username");
 	}
 
-	printf("Insert password: (max 255 characters. Finisish with enter)");
+	printf("Insert password: (max 255 characters. Finisish with enter) ");
 	char password[CREDENTIALS_LENGTH];
 	fgets(password, CREDENTIALS_LENGTH, stdin);
 
@@ -152,7 +154,11 @@ static bool log_in(int fd) {
 		perror("Invalid password");
 	}
 
+	uint8_t ulen = strlen(username);
+	uint8_t plen = strlen(password);
+
 	uint8_t authMessage[AUTH_MESSAGE_LENGTH];
+
 	memset(authMessage, '\0', AUTH_MESSAGE_LENGTH);
 	authMessage[0] = PIPO_PROTOCOL_VERSION;
 	authMessage[1] = ulen;
@@ -222,21 +228,15 @@ static void interactive_client(int fd) {
 
 		print_help();
 		
-		char command;
+		char command[UINT8_BASE_10_SIZE];
 		printf("Insert new command: ");
+		
+		fgets(command, UINT8_BASE_10_SIZE, stdin);
+		uint8_t commnad8 = strtoul(command, NULL, 10);
 
-		command = getchar();
- 		while(getchar() != '\n');
+		controllers[commnad8].sender(fd);
 
-		if(command == 'x') {
-			break;
-		}
-
-		command -= 'a';
-
-		controllers[command].sender(fd);
-
-		controllers[command].receiver(fd);
+		controllers[commnad8].receiver(fd);
 	}
 }
 
@@ -244,6 +244,6 @@ static void print_help(){
 
 	printf("Client help\n");
 	for (size_t i = 0; i < COMMAND_COUNT; i++){
-		printf("%s\n",descriptions[i]);
+		printf("Command number: %ld. Desc: %s\n", i, descriptions[i]);
 	}
 }

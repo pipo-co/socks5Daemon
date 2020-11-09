@@ -9,6 +9,7 @@
 struct users {
     char *name;
     char *pass;
+    bool admin;
 };
 
 typedef enum HttpMethod{
@@ -40,6 +41,8 @@ typedef struct Socks5Args {
 
     int user_count;
     struct users    users[MAX_USERS];
+
+    struct users    admin;
 } Socks5Args;
 
 /**

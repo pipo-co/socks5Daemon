@@ -397,4 +397,6 @@ static void initialize_users(void) {
     for(int i = 0; i < args.user_count; i++) {
         user_handler_add_user(args.users[i].name, args.users[i].pass, false);
     }
+
+    user_handler_add_user(args.admin.name, args.admin.pass, args.admin.admin);
 }
