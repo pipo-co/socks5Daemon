@@ -5,6 +5,7 @@
 #include "buffer/buffer.h"
 #include "userHandler/userHandler.h"
 
+#define ERROR_RESPONSE_SIZE 2
 #define UINT8_RESPONSE_SIZE 3
 #define UINT16_RESPONSE_SIZE 4
 #define UINT32_RESPONSE_SIZE 6
@@ -16,7 +17,7 @@
 typedef struct UserListResponseData {
     int currentUser;
     int totalUsers;
-    UserInfoP users[MAX_USER_COUNT];
+    UserInfo *users;    // Malloc property
 } UserListResponseData;
 
 typedef union CommandResponseBuilderData {
@@ -36,6 +37,7 @@ typedef struct AdminResponseBuilderContainer {
     CommandResponseBuilderData data;
 
     bool (*admin_response_builder)(struct AdminResponseBuilderContainer *, Buffer *);
+    void (*admin_response_free_data)(struct AdminResponseBuilderContainer *);
 
 } AdminResponseBuilderContainer;
 
@@ -49,5 +51,6 @@ bool admin_response_builder_uint64(AdminResponseBuilderContainer * adminResponse
 
 bool admin_response_builder_user_list(AdminResponseBuilderContainer * adminResponse, Buffer * b);
 
+bool admin_response_builder_simple_error(AdminResponseBuilderContainer * adminResponse, Buffer * b);
 
 #endif

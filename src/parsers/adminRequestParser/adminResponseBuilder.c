@@ -115,12 +115,12 @@ bool admin_response_builder_user_list(AdminResponseBuilderContainer * adminRespo
             buffer_write(b, adminResponse->cmd);
         }
         else {
-            if((aux = adminResponse->data.userList.users[*currentUser]->username[*currByte - INITIAL_HEADER]), aux != '\0'){
+            if((aux = adminResponse->data.userList.users[*currentUser].username[*currByte - INITIAL_HEADER]), aux != '\0'){
                 (*currByte)++;
                 buffer_write(b, aux);
             }
             else{
-                buffer_write(b, adminResponse->data.userList.users[*currentUser]->admin ? USER:ADMIN);
+                buffer_write(b, adminResponse->data.userList.users[*currentUser].admin ? USER:ADMIN);
                 (*currentUser)++;
                 *currByte = 2;
             }  
@@ -128,6 +128,30 @@ bool admin_response_builder_user_list(AdminResponseBuilderContainer * adminRespo
     }
 
     if(*currentUser == totalUsers){
+        return true;
+    }
+    
+    return false;
+}
+
+bool admin_response_builder_simple_error(AdminResponseBuilderContainer * adminResponse, Buffer * b) {
+    uint16_t * currByte = &adminResponse->currByte;
+    uint8_t aux;
+
+    while(*currByte < ERROR_RESPONSE_SIZE && buffer_can_write(b)){
+
+        if(*currByte == 0){
+            (*currByte)++;
+            buffer_write(b, adminResponse->type);
+        }
+
+        else {
+            (*currByte)++;
+            buffer_write(b, adminResponse->cmd);
+        }
+    }
+
+    if(*currByte == ERROR_RESPONSE_SIZE){
         return true;
     }
     

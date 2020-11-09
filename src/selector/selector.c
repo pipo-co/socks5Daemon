@@ -649,7 +649,7 @@ finally:
 }
 
 void
-selector_fd_cleanup(FdSelector s, void (*cleanup_function)(SelectorEvent *)) {
+selector_fd_cleanup(FdSelector s, void (*cleanup_function)(SelectorEvent *, void*), void *arg) {
     int n = s->max_fd;
     struct SelectorEvent event = {
         .s = s,
@@ -661,7 +661,7 @@ selector_fd_cleanup(FdSelector s, void (*cleanup_function)(SelectorEvent *)) {
             event.fd   = item->fd;
             event.data = item->data;
             
-            cleanup_function(&event);
+            cleanup_function(&event, arg);
         }
     }
 }

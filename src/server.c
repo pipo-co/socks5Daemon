@@ -66,8 +66,8 @@ static ServerHandler serverHandler;
 static FdSelector selector;
 static bool done = false;
 
-
 static double cleanupInterval;
+
 
 int main(const int argc, char **argv) {
 
@@ -148,7 +148,7 @@ int main(const int argc, char **argv) {
 
     initialize_users();
 
-    socks5_init(&args, DEFAULT_MAX_SESSION_INACTIVITY);
+    socks5_init(&args, DEFAULT_MAX_SESSION_INACTIVITY, selector);
 
     cleanupInterval = DEFAULT_SELECT_TIMEOUT;
 
@@ -161,7 +161,7 @@ int main(const int argc, char **argv) {
         // Cleanup selector sockets every cleanupInterval seconds
         if(!args.debugEnable && difftime(time(NULL), lastFdCleanup) >= cleanupInterval) {
             // fprintf(stderr, "Initializing Selector Cleanup\n");
-            selector_fd_cleanup(selector, socks5_cleanup_session);
+            socks5_selector_cleanup();
             lastFdCleanup = time(NULL);
         }
 
@@ -205,21 +205,6 @@ finally:
     }
     statistics_print();
     return ret;
-}
-
-uint8_t get_socks5_selector_timeout(void) {
-    return selector_get_timeout(selector);
-}
-
-bool update_socks5_selector_timeout(time_t timeout) {
-
-    if(timeout < 1 || timeout > 255) {
-        return false;
-    }
-
-    selector_update_timeout(selector, timeout);
-
-    return true;
 }
 
 static FdSelector initialize_selector(char ** errorMessage) {
@@ -304,11 +289,6 @@ static int generate_administration_socket(FdSelector selector, char **errorMessa
     struct in6_addr ipv6addr;
     struct sockaddr_in servaddr;
     struct sockaddr_in6 servaddr6;
-        // struct sctp_initmsg initmsg = {
-        //         .sinit_num_ostreams = 5,
-        //         .sinit_max_instreams = 5,
-        //         .sinit_max_attempts = 4,
-        // };
 
     struct sockaddr * admin;
     socklen_t adminLen;
@@ -347,8 +327,6 @@ static int generate_administration_socket(FdSelector selector, char **errorMessa
     }
 
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
-
-    // setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(initmsg));
 
     ret = bind(fd, admin, adminLen);
     if (ret < 0){

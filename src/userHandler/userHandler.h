@@ -6,10 +6,11 @@
 
 #define ANONYMOUS_USER_CREDENTIALS "anonymous"
 #define MAX_USER_COUNT 255
+#define MAX_CREDENTIAL_SIZE 255
 typedef struct UserInfo {
 
-    char *username;
-    char *password;
+    char username[MAX_CREDENTIAL_SIZE];
+    char password[MAX_CREDENTIAL_SIZE];
 
     bool admin;
 
@@ -33,6 +34,6 @@ void user_handler_destroy(void);
 
 uint8_t user_handler_get_total_users(void);
 
-uint8_t user_handler_get_all_users(UserInfoP output[]);
+uint8_t user_handler_get_all_users(UserInfo output[]);
 
 #endif

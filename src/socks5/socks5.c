@@ -26,6 +26,8 @@
 
 static Socks5Args * args;
 
+static FdSelector selector;
+
 static FdHandler clientHandler;
 static FdHandler serverHandler;
 static FdHandler DNSHandler;
@@ -50,12 +52,14 @@ static void socks5_client_write(SelectorEvent *event);
 static void socks5_client_close(SelectorEvent *event);
 static void socks5_close_session(SelectorEvent *event);
 static int socks5_accept_connection(int passiveFd, struct sockaddr *cli_addr, socklen_t *clilen);
+static void socks5_cleanup_session(SelectorEvent *event, void *maxSessionInactivityParam);
 
-void socks5_init(Socks5Args *argsParam, double maxSessionInactivityParam) {
+void socks5_init(Socks5Args *argsParam, double maxSessionInactivityParam, FdSelector selectorParam) {
 
     args = argsParam;
     stateLogCount = 0;
     maxSessionInactivity = maxSessionInactivityParam;
+    selector = selectorParam;
 
     sessionInputBufferSize = DEFAULT_INPUT_BUFFER_SIZE;
     sessionOutputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
@@ -109,6 +113,21 @@ bool socks5_set_max_session_inactivity(uint8_t seconds) {
     }
 
     maxSessionInactivity = seconds;
+
+    return true;
+}
+
+uint8_t socks5_get_selector_timeout(void) {
+    return selector_get_timeout(selector);
+}
+
+bool socks5_update_selector_timeout(time_t timeout) {
+
+    if(timeout < 1 || timeout > 255) {
+        return false;
+    }
+
+    selector_update_timeout(selector, timeout);
 
     return true;
 }
@@ -176,27 +195,27 @@ void socks5_passive_accept_ipv6(SelectorEvent *event){
     selector_register(event->s, session->clientConnection.fd, &clientHandler, OP_READ, session);
 }
 
-void socks5_register_server(FdSelector s, SessionHandlerP session){
+void socks5_register_server(SessionHandlerP session){
 
     session->serverConnection.state = OPEN;
     statistics_inc_current_connection();
 
-    selector_register(s, session->serverConnection.fd, &serverHandler, OP_WRITE, session);
+    selector_register(selector, session->serverConnection.fd, &serverHandler, OP_WRITE, session);
 
     // fprintf(stderr, "Registered new server %d\n", session->serverConnection.fd);
 }
 
-void socks5_register_dns(FdSelector s, SessionHandlerP session){
+void socks5_register_dns(SessionHandlerP session){
 
     if(session->dnsHeaderContainer->ipv4.dnsConnection.state == OPEN) {
         statistics_inc_current_connection();
-        selector_register(s, session->dnsHeaderContainer->ipv4.dnsConnection.fd, &DNSHandler, OP_WRITE, session);
+        selector_register(selector, session->dnsHeaderContainer->ipv4.dnsConnection.fd, &DNSHandler, OP_WRITE, session);
         // fprintf(stderr, "IPv4 - Registered new dns. Fd: %d. Session %p. Client Fd: %d.\n", session->dnsHeaderContainer->ipv4.dnsConnection.fd, (void *) session, session->clientConnection.fd);
     }
 
     if(session->dnsHeaderContainer->ipv6.dnsConnection.state == OPEN) {
         statistics_inc_current_connection();
-        selector_register(s, session->dnsHeaderContainer->ipv6.dnsConnection.fd, &DNSHandler, OP_WRITE, session);
+        selector_register(selector, session->dnsHeaderContainer->ipv6.dnsConnection.fd, &DNSHandler, OP_WRITE, session);
         // fprintf(stderr, "IPv6 - Registered new dns. Fd: %d. Session %p. Client Fd: %d.\n", session->dnsHeaderContainer->ipv6.dnsConnection.fd, (void *)session, session->clientConnection.fd);
     }
 }
@@ -594,9 +613,6 @@ static void socks5_client_close(SelectorEvent *event){
         free(session->dnsHeaderContainer);
         session->dnsHeaderContainer = NULL;
     }
-    else {
-    //    fprintf(stderr, "DNSContainer was NULL. Client Fd: %d. State: %d\n", session->clientConnection.fd, session->sessionStateMachine.current);
-    }   
 
     selector_state_machine_close(&session->sessionStateMachine, event);
 
@@ -653,8 +669,16 @@ static void socks5_close_session(SelectorEvent *event) {
     selector_unregister_fd(event->s, session->clientConnection.fd);
 }
 
+void socks5_selector_cleanup(void) {
+    selector_fd_cleanup(selector, socks5_cleanup_session, (void*) &maxSessionInactivity);
+}
+
 // TODO: Update clean-up
-void socks5_cleanup_session(SelectorEvent *event) {
+static void socks5_cleanup_session(SelectorEvent *event, void *maxSessionInactivityParam) {
+
+    double maxSessionInactivity = *((double*)maxSessionInactivityParam);
+
+    // TODO: Ignore administrators
 
     // Socket pasivo
     if(event->data == NULL) {
@@ -667,6 +691,30 @@ void socks5_cleanup_session(SelectorEvent *event) {
     if(event->fd == session->clientConnection.fd && difftime(time(NULL), session->lastInteraction) >= maxSessionInactivity) {
         
         // fprintf(stderr, "Cleaned Up Session of Client Socket %d\n", event->fd);
+        selector_unregister_fd(event->s, event->fd);
+    }
+}
+
+void socks5_close_user_sessions(UserInfoP user) {
+    selector_fd_cleanup(selector, socks5_close_user_sessions_util, (void*) user);
+}
+
+// TODO: Update user clean-up
+static void socks5_close_user_sessions_util(SelectorEvent *event, void *userParam) {
+
+    UserInfoP user = (UserInfoP) userParam;
+
+    // TODO: Handle Administrators
+
+    // Socket pasivo
+    if(event->data == NULL) {
+        return;
+    }
+
+    SessionHandlerP session = (SessionHandlerP) event->data;
+    
+    if(event->fd == session->clientConnection.fd && session->clientInfo.user == user) {
+        
         selector_unregister_fd(event->s, event->fd);
     }
 }

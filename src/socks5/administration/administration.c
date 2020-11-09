@@ -334,14 +334,22 @@ static AdminStateEnum admin_request_read(SelectorEvent *event){
     }
 
     h->requestParser.request_handler(h->requestParser.type, h->requestParser.command, &h->requestParser.args, &h->responseBuilder);
+
     return ADMIN_METHOD_RESPONSE;
 }
 
-static AdminStateEnum admin_response_write(SelectorEvent *event){
+static AdminStateEnum admin_response_write(SelectorEvent *event) {
+
     AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+
     AdminResponseBuilderContainer * b = &adminSession->adminHeader.requestHeader.responseBuilder; 
 
-    if(b->admin_response_builder(b, &adminSession->output) && !buffer_can_read(&adminSession->output)){
+    if(b->admin_response_builder(b, &adminSession->output) && !buffer_can_read(&adminSession->output)) {
+
+        if(b->admin_response_free_data != NULL) {
+            b->admin_response_free_data(b);
+        }
+
         return ADMIN_METHOD;
     }
 
@@ -360,5 +368,11 @@ static void administration_close(SelectorEvent *event){
 
     free(adminSession->input.data);
     free(adminSession->output.data);
+
+    // Call responseBuilder free function if necessary
+    if(adminSession->currentState == ADMIN_METHOD_RESPONSE && adminSession->adminHeader.requestHeader.responseBuilder.admin_response_free_data != NULL) {
+        adminSession->adminHeader.requestHeader.responseBuilder.admin_response_free_data(&adminSession->adminHeader.requestHeader.responseBuilder);
+    }
+
     free(adminSession);
 }

@@ -68,7 +68,6 @@ typedef struct AdministrationHandler {
     AdminStateEnum currentState;
 
     UserInfoP user;
-
     
 } AdministrationHandler;
 

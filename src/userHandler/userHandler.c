@@ -3,6 +3,9 @@
 
 #include "utilities/khash.h"
 
+#include "selector/selector.h"
+#include "socks5/socks5.h"
+
 KHASH_MAP_INIT_STR(STRING_TO_CHAR_MAP, UserInfoP)
 
 typedef khash_t(STRING_TO_CHAR_MAP) * UserMap;
@@ -24,7 +27,7 @@ void user_handler_init(void) {
 bool user_handler_user_exists(char *username, bool *admin) {
     khiter_t iter = kh_get(STRING_TO_CHAR_MAP, userMap, username);
     
-    if(iter != kh_end(userMap)){
+    if(iter != kh_end(userMap)) {
         if(admin != NULL){
             UserInfoP u = kh_value(userMap, iter);
             *admin = u->admin;
@@ -41,7 +44,7 @@ uint8_t user_handler_get_total_users(void) {
 
 UserInfoP user_handler_get_user_by_username(char *username) {
 
-    if(*username == 0) {
+    if(username == NULL || *username == 0) {
         return NULL;
     }
 
@@ -54,14 +57,14 @@ UserInfoP user_handler_get_user_by_username(char *username) {
     return NULL;
 }
 
-uint8_t user_handler_get_all_users(UserInfoP output[]) {
+uint8_t user_handler_get_all_users(UserInfo output[]) {
 
     uint8_t iter = 0;
 
     for (khiter_t k = kh_begin(userMap); k != kh_end(userMap); k++) {
 
 		if(kh_exist(userMap, k)) {
-            output[iter++] = kh_value(userMap, k);
+            memcpy(&output[iter++], kh_value(userMap, k), sizeof(UserInfo));
         }
     }
 
@@ -70,7 +73,7 @@ uint8_t user_handler_get_all_users(UserInfoP output[]) {
 
 UserInfoP user_handler_add_user(char *username, char *password, bool admin) {
 
-    if(*username == 0 || *password == 0) {
+    if(username == NULL || password == NULL || *username == 0 || *password == 0) {
         return NULL;
     }
 
@@ -102,7 +105,7 @@ UserInfoP user_handler_add_user(char *username, char *password, bool admin) {
 
 bool user_handler_delete_user(char *username) {
 
-    if(*username == 0) {
+    if(username == NULL || *username == 0) {
         return false;
     }
 
@@ -110,8 +113,13 @@ bool user_handler_delete_user(char *username) {
 
     if(iter != kh_end(userMap)) {
 
-        user_handler_free_user(kh_value(userMap, iter));
+        UserInfoP user = kh_value(userMap, iter);
+
+        socks5_close_user_sessions(user);
+
         kh_del(STRING_TO_CHAR_MAP, userMap, iter);
+
+        user_handler_free_user(user);
 
         return true;
     }
@@ -139,19 +147,6 @@ static UserInfoP user_handler_create_user(char *username, char *password, bool a
         return NULL;
     }
 
-    newUser->username = malloc((strlen(username) + 1) * sizeof(*username));
-    if(newUser->username == NULL) {
-        free(newUser);
-        return NULL;
-    }
-
-    newUser->password = malloc((strlen(password) + 1) * sizeof(*password));
-    if(newUser->password == NULL) {
-        free(newUser);
-        free(newUser->username);
-        return NULL;
-    }
-
     strcpy(newUser->username, username);
     strcpy(newUser->password, password);
     newUser->connectionCount = 0;
@@ -161,7 +156,5 @@ static UserInfoP user_handler_create_user(char *username, char *password, bool a
 }
 
 static void user_handler_free_user(UserInfoP user) {
-    free(user->username);
-    free(user->password);
     free(user);
 }
