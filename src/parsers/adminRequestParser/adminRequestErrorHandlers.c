@@ -5,7 +5,7 @@ static void admin_request_error_handler_invalid_command(uint8_t type, uint8_t cm
 void admin_request_error_handler_invalid_type(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
 
     outContainer->type = 0xFF;
-    outContainer->cmd = cmd;
+    outContainer->cmd = 0xFF;
     outContainer->currByte = 0;
     outContainer->admin_response_builder = admin_response_builder_simple_error;
     outContainer->admin_response_free_data == NULL;

@@ -124,12 +124,12 @@ Acknowledgments
         |   1  |  1  |
         +------+-----+
     
-    where the invalid field now has the value X'FF' and the other one conserves the value
-    it had on the Request. It is possible for both values to be invalid, and thus both be X'FF'.
+    If and invalid TYPE is sent in the Request, both TYPE and CMD will have the value X'FF' in the Response.
+    If a valid TYPE and an invalid CMD (for that TYPE) is sent in the Request, the Response will have the TYPE field
+    set with the same value as in the Request, and the CMD field set with the value X'FF'.
 
     The values X'FF' and X'FE' for TYPE and CMD SHOULD never be included in a Request message, as they are
     reserved to notify errors.
-
 
 4. Modification Commands
 

@@ -558,7 +558,7 @@ int uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg) {
 int uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg) {
 
 	char message[UINT32_LENGTH];
-
+;
 	uint8_t bytes, bytesSent = 0;
 
 	message[0] = type;
