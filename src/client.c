@@ -78,6 +78,8 @@ int main(int argc, char *argv[]) {
 
 	interactive_client(fd);
 
+	// Close
+
 	return 0;
 }
 
@@ -666,9 +668,12 @@ int receiver_uint8(int fd) {
 }
 
 int receiver_uint32(int fd){
+
+	char buffer[UINT32_LENGTH];
+
 	uint16_t bytes, bytesReceived = 0;
 	uint16_t bytesWritten = 0;
-	char buffer[UINT32_LENGTH];
+	
 	char type, command;
 	uint32_t response;
       
