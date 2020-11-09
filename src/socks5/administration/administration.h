@@ -72,6 +72,8 @@ typedef struct AdministrationHandler {
 
 typedef AdministrationHandler * AdministrationHandlerP;
 
+void administration_init(void);
+
 void admin_passive_accept_ipv4(SelectorEvent *event);
 
 void admin_passive_accept_ipv6(SelectorEvent *event);

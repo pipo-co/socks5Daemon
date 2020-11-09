@@ -23,6 +23,21 @@ static void admin_passive_accept_util(SelectorEvent *event, struct sockaddr *cli
 static void admin_post_read_handler(SelectorEvent *event);
 static void admin_post_write_handler(SelectorEvent *event);
 
+static FdHandler adminHandler;
+static uint32_t sessionInputBufferSize;
+static uint32_t sessionOutputBufferSize;
+
+void administration_init(void) {
+
+    sessionInputBufferSize = DEFAULT_INPUT_BUFFER_SIZE;
+    sessionOutputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
+
+    adminHandler.handle_read = admin_on_read_handler;
+    adminHandler.handle_write = admin_on_write_handler;
+    adminHandler.handle_close = administration_close;
+    adminHandler.handle_block = NULL;
+
+}
 
 static int sctp_accept_connection(int passiveFd, struct sockaddr *cli_addr, socklen_t *clilen) {
 
@@ -67,11 +82,7 @@ static void admin_passive_accept_util(SelectorEvent *event, struct sockaddr *cli
         return;
     }
 
-    adminHandler.handle_read = admin_on_read_handler;
-    adminHandler.handle_write = admin_on_write_handler;
-    adminHandler.handle_close = administration_close;
-    adminHandler.handle_block = NULL;
-
+    
     selector_register(event->s, fd, &adminHandler, OP_READ, adminSession);
 }
 
@@ -96,8 +107,8 @@ static AdministrationHandlerP admin_session_init(void) {
     }
     
     adminSession->currentState = ADMIN_AUTH_ARRIVAL;
-    buffer_init(&adminSession->input, DEFAULT_INPUT_BUFFER_SIZE, inputBuffer);
-    buffer_init(&adminSession->output, DEFAULT_OUTPUT_BUFFER_SIZE, outputBuffer);
+    buffer_init(&adminSession->input, sessionInputBufferSize, inputBuffer);
+    buffer_init(&adminSession->output, sessionOutputBufferSize, outputBuffer);
 
     return adminSession;
 }

@@ -148,6 +148,7 @@ int main(const int argc, char **argv) {
     initialize_users();
 
     socks5_init(&args, DEFAULT_MAX_SESSION_INACTIVITY, selector);
+    administration_init();
 
     cleanupInterval = DEFAULT_SELECT_TIMEOUT;
 
