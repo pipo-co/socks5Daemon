@@ -38,7 +38,7 @@ bool current_connections_sender(int fd){
 	return no_args_builder(fd, CT_QUERY, CQ_CURRENT_CONNECTIONS);
 }
 
-bool max_current_conections_sender(int fd){
+bool max_concurrent_conections_sender(int fd){
 	return no_args_builder(fd, CT_QUERY, CQ_MAX_CURRENT_CONECTIONS);
 }
 
