@@ -15,9 +15,12 @@ static void (*admin_request_parser_get_query_handler(uint8_t b))(uint8_t type, u
 static void (*admin_request_parser_get_modification_handler(uint8_t b))(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
 void admin_request_parser_init(AdminRequestParser *p){
+    p->state = ARP_STATE_TYPE;
+    p->type = 0xFF;
+    p->command = 0xFF;
     p->parserCount = 0;
     p->argLength = -1;
-    p->state = ARP_STATE_TYPE;
+    p->request_handler = admin_request_error_handler_invalid_type;
     memset(&p->args, '\0', sizeof(p->args));
 }
 
