@@ -643,11 +643,15 @@ int receiver_uint8(int fd) {
 	char type, command, response;
       
     do {
-		bytes = recv(fd, buffer, UINT8_LENGTH, MSG_NOSIGNAL);
-		if(bytes < 0){
+		bytes = recv(fd, buffer, UINT8_LENGTH - bytesWritten, MSG_NOSIGNAL);
+		
+		if(bytes == 0){
 			return -1;
 		}
-		bytesReceived += bytes;
+		if(bytes > 0){
+			bytesReceived += bytes;
+		}
+		
 		if (bytesWritten < bytesReceived){
 			if( bytesWritten == 0){
 				type = buffer[bytesWritten++];
