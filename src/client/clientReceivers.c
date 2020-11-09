@@ -1,6 +1,12 @@
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>			// fgets
+#include <stdlib.h>			// strtoul
+#include <sys/types.h>		// send & recv
+#include <sys/socket.h>		// send & recv
+#include <errno.h>
 
 #include "client/clientReceivers.h"
-#include <stdbool.h>
 
 #define NO_ARGS_LENGTH 2
 #define UINT8_LENGTH 3
@@ -15,76 +21,76 @@ static bool receiver_uint32(int fd);
 static bool receiver_uint64(int fd);
 static bool receiver_user_list(int fd);
 
-void add_user_receiver(int fd){
+bool add_user_receiver(int fd){
 	return receiver_uint8(fd);
 }
 
-void remove_user_receiver(int fd){
+bool remove_user_receiver(int fd){
 	return receiver_uint8(fd);
 }
 
-void toggle_password_spoofing_receiver(int fd){
+bool toggle_password_spoofing_receiver(int fd){
 	return receiver_uint8(fd);
 }
 
-void toggle_connection_clean_up_receiver(int fd){
+bool toggle_connection_clean_up_receiver(int fd){
 	return receiver_uint8(fd);
 }
 
-void set_buffer_size_receiver(int fd){
+bool set_buffer_size_receiver(int fd){
 	return receiver_uint8(fd);
 }
 
-void set_selector_timeout_receiver(int fd){
+bool set_selector_timeout_receiver(int fd){
 	return receiver_uint8(fd);
 }
 
-void set_connection_timeout_receiver(int fd){
+bool set_connection_timeout_receiver(int fd){
 	return receiver_uint8(fd);
 	
 }
 
-void list_users_receiver(int fd){
+bool list_users_receiver(int fd){
 	return receiver_user_list(fd);
 }
 
-void total_historic_connections_receiver(int fd){
+bool total_historic_connections_receiver(int fd){
 	return receiver_uint64(fd);
 }
 
-void max_concurrent_conections_receiver(int fd){
+bool max_concurrent_conections_receiver(int fd){
 	return receiver_uint16(fd);
 }
 
-void total_bytes_sent_receiver(int fd){
+bool total_bytes_sent_receiver(int fd){
 	return receiver_uint64(fd);
 }
 
-void total_bytes_received_receiver(int fd){
+bool total_bytes_received_receiver(int fd){
 	return receiver_uint64(fd);
 }
 
-void connected_users_receiver(int fd){
+bool connected_users_receiver(int fd){
 	return receiver_uint64(fd);
 }
 
-void user_count_receiver(int fd){
+bool user_count_receiver(int fd){
 	return receiver_uint8(fd);
 }
 
-void buffer_sizes_receiver(int fd){
+bool buffer_sizes_receiver(int fd){
 	return receiver_uint32(fd);
 }
 
-void selector_timeout_receiver(int fd){
+bool selector_timeout_receiver(int fd){
 	return receiver_uint8(fd);
 }
 
-void connection_timeout_receiver(int fd){
+bool connection_timeout_receiver(int fd){
 	return receiver_uint8(fd);
 }
 
-void user_total_concurrent_connections_receiver(int fd){
+bool user_total_concurrent_connections_receiver(int fd){
 	return receiver_uint8(fd);
 }
 
@@ -92,7 +98,8 @@ static bool receiver_uint8(int fd) {
 	uint16_t bytes, bytesReceived = 0;
 	uint16_t bytesWritten = 0;
 	char buffer[UINT8_LENGTH];
-	char type, command, response;
+	uint16_t type, command;
+	uint8_t response;
       
     do {
 		bytes = recv(fd, buffer, UINT8_LENGTH - bytesWritten, MSG_NOSIGNAL);
