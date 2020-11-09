@@ -720,7 +720,7 @@ int receiver_user_list(int fd){
 
 	bytesWritten = bytesReceived = 0;
 	char userBuffer[MAX_USERNAME + 1] = {0}; //el maximo nombre de usuario mas el ulen
-	char *username = NULL;
+	char username[MAX_USERNAME + 1];
 	char ulen;
 
 	while(ucount > 0){
@@ -736,7 +736,6 @@ int receiver_user_list(int fd){
 				if(ulen < 0){
 					return -1;
 				}
-				username = realloc(username, ulen + 1);//por el \0
 			}
 			else{
 				if(ulen > 0){
@@ -747,15 +746,13 @@ int receiver_user_list(int fd){
 				else{
 					username[bytesWritten - 1] = '\0';
 					memset(userBuffer, 0, bytesWritten);
+					memset(username, 0, bytesWritten);
 					bytesWritten = 0;
 					ucount--;
 					printf("USERNAME: %s\n", username);
 				}
 			}
 		}
-	}
-
-	free(username);
-    
+	}  
     return 0;
 }
