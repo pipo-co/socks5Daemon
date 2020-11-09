@@ -63,7 +63,6 @@ typedef struct ServerHandler {
 
 static Socks5Args args;
 static ServerHandler serverHandler;
-static FdSelector selector;
 static bool done = false;
 
 static double cleanupInterval;
@@ -89,7 +88,7 @@ int main(const int argc, char **argv) {
     SelectorStatus   ss      = SELECTOR_SUCCESS;
     int passiveSocketErrorCount = 0;
     
-    selector = initialize_selector(&err_msg);
+    FdSelector selector = initialize_selector(&err_msg);
     
     if(selector == NULL) {
         goto finally;

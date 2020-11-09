@@ -24,11 +24,12 @@
 #define UINT8_LENGTH 3
 #define UINT32_LENGTH 6
 #define UINT64_LENGTH 10
-#define MASK 0xff
+#define MAX_STR_LEN 255
 #define MAX_USERNAME 255
+#define FULL_USER_MAX_SIZE 513
 
 #define CREDENTIALS_LENGTH 256
-#define AUTH_MESSAGE_LENGTH 512
+#define AUTH_MESSAGE_LENGTH 515
 #define AUTH_RESPONSE_LENGTH 2
 #define PIPO_PROTOCOL_VERSION 1
 
@@ -73,11 +74,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	if(!log_in(fd)){
-		return -1;
+		return 1;
 	}
 
 	interactive_client(fd);
-
 
 	return 0;
 }
@@ -145,34 +145,34 @@ static int new_ipv4_connection(struct in_addr ip, in_port_t port) {
 }
 
 static bool log_in(int fd) {
+
+	size_t i;
+	uint8_t ulen;
+	uint8_t plen;
 	
 	printf("Insert username: (max 255 characters. Finisish with enter)");
 	char username[CREDENTIALS_LENGTH];
-	for (size_t i = 0; i < CREDENTIALS_LENGTH; i++) {
+	for (i = 0; i < CREDENTIALS_LENGTH && username[i] != '\n'; i++) {
 		username[i] = getchar();
-		if(username[i] == '\n'){
-			username[i] = '\0';
-		}
+		ulen++;
 	}
+	username[i] = '\0';
 
-	if(strlen(username) == 0){
+	if(username[0] == '\0'){
 		perror("Invalid username");
 	}
 
 	printf("Insert password: (max 255 characters. Finisish with enter)");
 	char password[CREDENTIALS_LENGTH];
-	for (size_t i = 0; i < CREDENTIALS_LENGTH; i++) {
+	for (i = 0; i < CREDENTIALS_LENGTH && password[i] != '\n'; i++) {
 		password[i] = getchar();
-		if(password[i] == '\n'){
-			password[i] = '\0';
-		}
+		plen++;
 	}
-	if(strlen(password) == 0){
-		perror("Invalid username");
-	}
+	password[i] = '\0';
 
-	uint8_t ulen = (uint8_t) strlen(username);
-	uint8_t plen = (uint8_t) strlen(password);
+	if(password[0] == '\0'){
+		perror("Invalid password");
+	}
 
 	uint8_t authMessage[AUTH_MESSAGE_LENGTH];
 	memset(authMessage, '\0', AUTH_MESSAGE_LENGTH);
@@ -193,35 +193,40 @@ static bool log_in(int fd) {
 		}
 	} while (bytesSent < bytesToSend && (writeBytes != -1 || errno !=  EINTR));
 
-	if(writeBytes == -1 && errno != EINTR){
+	if(writeBytes == -1){
 		perror("Error sending auth");
 	}
 
-	char authAns[AUTH_RESPONSE_LENGTH];
+	uint8_t authAns[AUTH_RESPONSE_LENGTH];
 	ssize_t readBytes;
 	size_t bytesRecieved = 0;
+
 	do {
-		readBytes = read(fd, authMessage + bytesRecieved, AUTH_RESPONSE_LENGTH - bytesRecieved);
+		readBytes = read(fd, authAns + bytesRecieved, AUTH_RESPONSE_LENGTH - bytesRecieved);
 		if(readBytes > 0){
 			bytesRecieved += readBytes;
 		}
 	} while (bytesRecieved < AUTH_RESPONSE_LENGTH && (readBytes != -1 || errno !=  EINTR));
 
-	if(writeBytes == -1 && errno != EINTR){
-		perror("Error sending auth");
+	if(readBytes == -1){
+		perror("Error reading auth response");
 	}
 
-	if(authAns[1] == 0){
+	// Auth successful
+	if(authAns[1] == 0x00){
 		printf("Logged in succesfully\n");
 		return true;
 	}
+
+	// Auth Unsuccessful
 	else {
 		close(fd);
 		printf("Error ocurred during log in: ");
-		if(authAns[1] == '0x01'){
+
+		if(authAns[1] == 0x01){
 			printf("Authentication failed.\n");
 		}
-		else if(authAns[1] == '0x02'){
+		else if(authAns[1] == 0x02){
 			printf("Invalid version.\n");
 		}
 		else {
@@ -234,17 +239,20 @@ static bool log_in(int fd) {
 
 static void interactive_client(int fd) {
 
-	while (1) {
+	while(1) {
 
 		print_help();
 		
 		char command;
 		printf("Insert new command: ");
+
+		// TODO: getchar() ?? - Tobi
 		scanf("%1c", &command);
 
-		if(command == 'x'){
+		if(command == 'x') {
 			break;
 		}
+
 		command -= 'a';
 
 		controllers[command].sender(fd);
@@ -312,8 +320,10 @@ void add_user_sender(int fd){
 	char pass[CREDENTIALS_LENGTH];
 	printf("Insert password: ");
 	scanf("%255c", pass);
+
+	// Check privilege value (0 or 1)??
 	char priv;
-	printf("Insert privilige: ");
+	printf("Insert privilege: ");
 	scanf("%1c", &priv);
 
 	new_user_builder(fd, MODIFICATION, NEW_USER, user, pass, priv);
@@ -446,138 +456,185 @@ void user_total_concurrent_connections_reciever(int fd){
   */
 
 
-int string_builder(int fd, uint8_t type, uint8_t command, char * string){
-	uint16_t length = (4+strlen(string)); // type + command + strlen + string + '\0'
+int string_builder(int fd, uint8_t type, uint8_t command, char * string) {
+
+	char message[MAX_STR_LEN + 3]; // type + command + strlen + string
+
+	uint8_t strLen = (uint8_t) strlen(string);
+	uint16_t messageLen = 3 + strLen;
+
 	uint16_t bytes, bytesSent = 0;
-	char * message = malloc(length);
+
 	message[0] = type;
 	message[1] = command;
-	message[2] = strlen(string);
-	memcpy(message + 3, string, strlen(string) + 1);
+	message[2] = strLen;
+	memcpy(message + 3, string, strLen);
 
 	do{
-		bytes = send(fd, message, length, MSG_NOSIGNAL);
-		if(bytes < 0){
+		bytes = send(fd, message, messageLen - bytesSent, MSG_NOSIGNAL);
+
+		// Closed Connection
+		if(bytes == 0){
 			return -1;
 		}
-		bytesSent += bytes;
-	} while( bytesSent < length);
-	
-	free(message);
 
-	if(bytesSent > length){
+		if(bytes > 0) {
+			bytesSent += bytes;
+		}
+
+	} while(bytesSent < messageLen && (bytes != -1 || errno !=  EINTR));
+
+	if(bytes == -1) {
 		return -1;
 	}
 	
 	return 0;
 }
 
-int no_args_builder (int fd, uint8_t type, uint8_t command){
+int no_args_builder (int fd, uint8_t type, uint8_t command) {
+
 	char message[NO_ARGS_LENGTH];
-	message[0] = type;
-	message[1] = command;
+
 	uint8_t bytes, bytesSent = 0;
 
+	message[0] = type;
+	message[1] = command;
+
 	do {
-		bytes = send(fd, message, NO_ARGS_LENGTH, MSG_NOSIGNAL);
-		if(bytes < 0){
+		bytes = send(fd, message, NO_ARGS_LENGTH - bytesSent, MSG_NOSIGNAL);
+
+		// Closed Connection
+		if(bytes == 0) {
 			return -1;
 		}
-		bytesSent += bytes;
-	} while( bytesSent < NO_ARGS_LENGTH);
-	free(message);
 
-	if(bytesSent > NO_ARGS_LENGTH){
+		if(bytes > 0) {
+			bytesSent += bytes;
+		}
+
+	} while(bytesSent < NO_ARGS_LENGTH && (bytes != -1 || errno !=  EINTR));
+
+	if(bytes == -1) {
 		return -1;
 	}
 
 	return 0;
 }
 
-int uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg){
+int uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg) {
+
 	char message[UINT8_LENGTH];
+
+	uint8_t bytes, bytesSent = 0;
+
 	message[0] = type;
 	message[1] = command;
 	message[2] = arg;
-	uint8_t bytes, bytesSent = 0;
 
 	do {
-		bytes = send(fd, message, UINT8_LENGTH, MSG_NOSIGNAL);
-		if(bytes < 0){
+		bytes = send(fd, message, UINT8_LENGTH - bytesSent, MSG_NOSIGNAL);
+		
+		// Closed Connection
+		if(bytes == 0) {
 			return -1;
 		}
-		bytesSent += bytes;
-	} while( bytesSent < UINT8_LENGTH);
-	free(message);
 
-	if(bytesSent > UINT8_LENGTH){
+		if(bytes > 0) {
+			bytesSent += bytes;
+		}
+
+	} while( bytesSent < UINT8_LENGTH && (bytes != -1 || errno !=  EINTR));
+
+	if(bytes == -1) {
 		return -1;
 	}
 
 	return 0;
 }
 
-int uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg){
+int uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg) {
+
 	char message[UINT32_LENGTH];
-	int i = 0;
-	message[i++] = type;
-	message[i++] = command;
-	do {
-		i++;
-		message[i] = (arg >> ((UINT32_LENGTH - i)* 8)) & MASK;
-	} while(i < 5);
-	
+
 	uint8_t bytes, bytesSent = 0;
 
+	message[0] = type;
+	message[1] = command;
+
+	for(int i = 0; i < sizeof(uint32_t); i++) {
+		message[i + 2] = (arg >> ((sizeof(uint32_t) - i - 1)* 8)) & 0xFF;
+	}
+
 	do {
-		bytes = send(fd, message, UINT8_LENGTH, MSG_NOSIGNAL);
-		if(bytes < 0){
+		bytes = send(fd, message, UINT8_LENGTH - bytesSent, MSG_NOSIGNAL);
+
+		// Closed Connection
+		if(bytes == 0) {
 			return -1;
 		}
-		bytesSent += bytes;
-	} while( bytesSent < UINT32_LENGTH);
-	free(message);
 
-	if(bytesSent > UINT32_LENGTH){
+		if(bytes > 0) {
+			bytesSent += bytes;
+		}
+
+	} while(bytesSent < UINT32_LENGTH && (bytes != -1 || errno !=  EINTR));
+
+	if(bytes == -1) {
 		return -1;
 	}
 
 	return 0;
 }
 
+// TODO: Privilege?? - Tobi
+int user_builder(int fd, uint8_t type, uint8_t command, char * username, char * password, uint8_t privilege) {
 
-int user_builder(int fd, uint8_t type, uint8_t command, char * username, char * password){
-	uint16_t ulen = strlen(username);
-	uint16_t plen = strlen(password);
-	uint16_t length = (6 + ulen + plen ); //1 x type, 1 x command, y 2 extra por cada string, uno para el length y otro para el \0
+	char message[FULL_USER_MAX_SIZE + 2];
+
+	uint8_t ulen = strlen(username);
+	uint8_t plen = strlen(password);
+
+	uint16_t messageLen = 5 + ulen + plen; //1 x type, 1 x command, 1 privilege y 1 x length por cada string
+
 	uint16_t bytes, bytesSent = 0;
 	uint16_t i = 0;
-	char * message = malloc(length);
+
+
 	message[i++] = type;
 	message[i++] = command;
+
 	message[i++] = ulen;
-	memcpy(message + i, username, ulen + 1);
-	i += ulen + 1;
+	memcpy(message + i, username, ulen);
+	i += ulen;
+
 	message[i++] = plen;
-	memcpy(message + i, password, plen + 1);
+	memcpy(message + i, password, plen);
+	i += plen;
+
+	message[i++] = privilege;
 
 	do {
-		bytes = send(fd, message, length, MSG_NOSIGNAL);
-		if(bytes < 0){
+		bytes = send(fd, message, messageLen - bytesSent, MSG_NOSIGNAL);
+
+		// Closed Connection
+		if(bytes == 0) {
 			return -1;
 		}
-		bytesSent += bytes;
-	} while( bytesSent < length);
-	free(message);
 
-	if(bytesSent > length){
+		if(bytes > 0) {
+			bytesSent += bytes;
+		}
+
+	} while(bytesSent < messageLen && (bytes != -1 || errno !=  EINTR));
+
+	if(bytes == -1) {
 		return -1;
 	}
 	
 	return 0;
 }
 
-int receiver_uint8(int fd){
+int receiver_uint8(int fd) {
 	uint16_t bytes, bytesReceived = 0;
 	uint16_t bytesWritten = 0;
 	char buffer[UINT8_LENGTH];
