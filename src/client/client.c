@@ -136,11 +136,7 @@ static bool log_in(int fd) {
 	
 	printf("Insert username: (max 255 characters. Finisish with enter)");
 	char username[CREDENTIALS_LENGTH];
-	for (i = 0; i < CREDENTIALS_LENGTH && username[i] != '\n'; i++) {
-		username[i] = getchar();
-		ulen++;
-	}
-	username[i] = '\0';
+	fgets(username, CREDENTIALS_LENGTH, stdin);
 
 	if(username[0] == '\0'){
 		perror("Invalid username");
@@ -148,11 +144,7 @@ static bool log_in(int fd) {
 
 	printf("Insert password: (max 255 characters. Finisish with enter)");
 	char password[CREDENTIALS_LENGTH];
-	for (i = 0; i < CREDENTIALS_LENGTH && password[i] != '\n'; i++) {
-		password[i] = getchar();
-		plen++;
-	}
-	password[i] = '\0';
+	fgets(password, CREDENTIALS_LENGTH, stdin);
 
 	if(password[0] == '\0'){
 		perror("Invalid password");
@@ -171,7 +163,7 @@ static bool log_in(int fd) {
 	ssize_t writeBytes;
 
 	do {
-		writeBytes = write(fd, authMessage + bytesSent, bytesToSend - bytesSent);
+		writeBytes = send(fd, authMessage + bytesSent, bytesToSend - bytesSent, MSG_NOSIGNAL);
 
 		if(writeBytes > 0){
 			bytesSent += writeBytes;
@@ -188,7 +180,7 @@ static bool log_in(int fd) {
 	size_t bytesRecieved = 0;
 
 	do {
-		readBytes = read(fd, authAns + bytesRecieved, AUTH_RESPONSE_LENGTH - bytesRecieved);
+		readBytes = recv(fd, authAns + bytesRecieved, AUTH_RESPONSE_LENGTH - bytesRecieved, MSG_NOSIGNAL);
 		if(readBytes > 0){
 			bytesRecieved += readBytes;
 		}
@@ -231,8 +223,8 @@ static void interactive_client(int fd) {
 		char command;
 		printf("Insert new command: ");
 
-		// TODO: getchar() ?? - Tobi
-		scanf("%1c", &command);
+		command = getchar();
+ 		while(getchar() != '\n');
 
 		if(command == 'x') {
 			break;

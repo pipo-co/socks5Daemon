@@ -1,6 +1,12 @@
 #include <stdint.h>
+#include <stdio.h>			// fgets
+#include <stdlib.h>			// strtoul
+#include <sys/types.h>		// send & recv
+#include <sys/socket.h>		// send & recv
+#include <errno.h>			// send & recv
 
 #include "client/clientSenders.h"
+#include "client/clientDefs.h"
 
 #define NO_ARGS_LENGTH 2
 #define UINT8_LENGTH 3
@@ -9,115 +15,151 @@
 #define MAX_STR_LEN 255
 #define MAX_USERNAME 255
 #define FULL_USER_MAX_SIZE 513
+#define CREDENTIALS_LENGTH 256
+#define UINT8_BASE_10_SIZE 4
+#define UINT32_BASE_10_SIZE 11
 
-static int no_args_builder (int fd, uint8_t type, uint8_t command);
-static int uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg);
-static int uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg);
-static int user_builder(int fd, uint8_t type, uint8_t command, char * username, char * password, uint8_t privilege);
-static int string_builder(int fd, uint8_t type, uint8_t command, char * string);
+static bool no_args_builder (int fd, uint8_t type, uint8_t command);
+static bool uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg);
+static bool uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg);
+static bool user_builder(int fd, uint8_t type, uint8_t command, char * username, char * password, uint8_t privilege);
+static bool string_builder(int fd, uint8_t type, uint8_t command, char * string);
 
-void list_users_sender(int fd){
-	no_args_builder(fd, QUERY, LIST_USERS);
+
+bool list_users_sender(int fd){
+	return no_args_builder(fd, CT_QUERY, CQ_LIST_USERS);
 }
 
-void total_historic_connections_sender(int fd){
-	no_args_builder(fd, QUERY, TOTAL_CONNECTIONS);
+bool total_historic_connections_sender(int fd){
+	return no_args_builder(fd, CT_QUERY, CQ_TOTAL_HISTORIC_CONNECTIONS);
 }
 
-void current_connections_sender(int fd){
-	
+bool current_connections_sender(int fd){
+	return no_args_builder(fd, CT_QUERY, CQ_CURRENT_CONNECTIONS);
 }
 
-void max_current_conections_sender(int fd){
-	
+bool max_current_conections_sender(int fd){
+	return no_args_builder(fd, CT_QUERY, CQ_MAX_CURRENT_CONECTIONS);
 }
 
-void total_bytes_sent_sender(int fd){
-	
+bool total_bytes_sent_sender(int fd){
+	return no_args_builder(fd, CT_QUERY, CQ_TOTAL_BYTES_SENT);
 }
 
-void total_bytes_received_sender(int fd){
-	
+bool total_bytes_received_sender(int fd){
+	return no_args_builder(fd, CT_QUERY, CQ_TOTAL_BYTES_RECEIVED);
 }
 
-void connected_users_sender(int fd){
-	
+bool connected_users_sender(int fd){
+	return no_args_builder(fd, CT_QUERY, CQ_CONNECTED_USERS);
 }
 
-void user_count_sender(int fd){
-	
+bool user_count_sender(int fd){
+	return no_args_builder(fd, CT_QUERY, CQ_USER_COUNT);
 }
 
-void buffer_sizes_sender(int fd){
-	
+bool buffer_sizes_sender(int fd){
+	return no_args_builder(fd, CT_QUERY, CQ_BUFFER_SIZES);
 }
 
-void selector_timeout_sender(int fd){
-	
+bool selector_timeout_sender(int fd){
+	return no_args_builder(fd, CT_QUERY, CQ_SELECTOR_TIMEOUT);
 }
 
-void connection_timeout_sender(int fd){
-	
+bool connection_timeout_sender(int fd){
+	return no_args_builder(fd, CT_QUERY, CQ_CONNECTION_TIMEOUT);
 }
 
-void user_total_concurrent_connections_sender(int fd){
+bool user_total_concurrent_connections_sender(int fd){
 	
 	char user[CREDENTIALS_LENGTH];
 	printf("Insert username: ");
-	scanf("%255c", user);
-	string_builder(fd, QUERY, TOTAL_CONCURRENT_CONECTON, user);
+	fgets(user, CREDENTIALS_LENGTH, stdin);
+	return string_builder(fd, CT_QUERY, CQ_USER_TOTAL_CONCURRENT_CONNECTIONS, user);
 }
 
-void add_user_sender(int fd){
+bool add_user_sender(int fd){
+	
 	char user[CREDENTIALS_LENGTH];
 	printf("Insert username: ");
-	scanf("%255c", user);
+	fgets(user, CREDENTIALS_LENGTH, stdin);
+
 	char pass[CREDENTIALS_LENGTH];
 	printf("Insert password: ");
-	scanf("%255c", pass);
+	fgets(pass, CREDENTIALS_LENGTH, stdin);
 
 	// Check privilege value (0 or 1)??
 	char priv;
-	printf("Insert privilege: ");
-	scanf("%1c", &priv);
+	printf("Admin privilege?: [y/n] ");
+	priv = getchar();
+	while(getchar() != '\n');
 
-	new_user_builder(fd, MODIFICATION, NEW_USER, user, pass, priv);
+	priv = (priv == 'y' || priv == 'Y');
+
+	return user_builder(fd, CT_MODIFICATION, CM_ADD_USER, user, pass, priv);
 }
 
-void remove_user_sender(int fd){
+bool remove_user_sender(int fd){
+	
 	char user[CREDENTIALS_LENGTH];
 	printf("Insert username: ");
-	scanf("%255c", user);
-	string_builder(fd, MODIFICATION, DELETE_USER, user);
+	fgets(user, CREDENTIALS_LENGTH, stdin);
+	return string_builder(fd, CT_MODIFICATION, CM_REMOVE_USER, user);
 }
 
-void toggle_password_spoofing_sender(int fd){
+bool toggle_password_spoofing_sender(int fd){
+	
 	char toggle;
-	printf("Insert argument: ");
-	scanf("%1c", &toggle);
-	uint8_builder(fd, MODIFICATION, TOGGLE_PASS, toggle);
+	printf("Password sniffing active?: [y/n] ");
+	toggle = getchar();
+	while(getchar() != '\n');
+
+	toggle = (toggle == 'y' || toggle == 'Y');
+
+	return uint8_builder(fd, CT_MODIFICATION, CM_TOGGLE_PASSWORD_SPOOFING, toggle);
 }
 
-void toggle_connection_clean_up_sender(int fd){
+bool toggle_connection_clean_up_sender(int fd){
+	
+	char toggle;
+	printf("Connection clean up active?: [y/n] ");
+	toggle = getchar();
+	while(getchar() != '\n');
 
+	toggle = (toggle == 'y' || toggle == 'Y');
+
+	return uint8_builder(fd, CT_MODIFICATION, CM_TOGGLE_CONNECTION_CLEAN_UN, toggle);
 }
 
-void set_buffer_size_sender(int fd){
-	uint32_t buffSize;
-	printf("Insert username: ");
-	scanf("%u", &buffSize);
-	uint32_builder(fd, MODIFICATION, TOGGLE_PASS, toggle);
+bool set_buffer_size_sender(int fd){
+	
+	char size[UINT32_BASE_10_SIZE];
+	printf("Insert new buffer size: ");
+	fgets(size, UINT32_BASE_10_SIZE, stdin);
+	uint32_t size32 = strtoul(size, NULL, 10);
+	return uint32_builder(fd, CT_MODIFICATION, CM_SET_BUFFER_SIZE, size32);
+	
 }
 
-void set_selector_timeout_sender(int fd){
-
+bool set_selector_timeout_sender(int fd){
+	
+	char timeout[UINT8_BASE_10_SIZE];
+	printf("Insert new selector timeout: ");
+	fgets(timeout, UINT8_BASE_10_SIZE, stdin);
+	uint8_t timeout8 = strtoul(timeout, NULL, 10);
+	return uint32_builder(fd, CT_MODIFICATION, CM_SET_SELECTOR_TIMEOUT, timeout8);
 }
 
-void set_connection_timeout_sender(int fd){
-
+bool set_connection_timeout_sender(int fd){
+	
+	char timeout[UINT8_BASE_10_SIZE];
+	printf("Insert new selector timeout: ");
+	fgets(timeout, UINT8_BASE_10_SIZE, stdin);
+	uint8_t timeout8 = strtoul(timeout, NULL, 10);
+	return uint32_builder(fd, CT_MODIFICATION, CM_SET_CONNECTION_TIMEOUT, timeout8);
 }
 
-static int string_builder(int fd, uint8_t type, uint8_t command, char * string) {
+static bool string_builder(int fd, uint8_t type, uint8_t command, char * string) {
 
 	char message[MAX_STR_LEN + 3]; // type + command + strlen + string
 
@@ -152,7 +194,7 @@ static int string_builder(int fd, uint8_t type, uint8_t command, char * string) 
 	return 0;
 }
 
-static int no_args_builder (int fd, uint8_t type, uint8_t command) {
+static bool no_args_builder (int fd, uint8_t type, uint8_t command) {
 
 	char message[NO_ARGS_LENGTH];
 
@@ -182,7 +224,7 @@ static int no_args_builder (int fd, uint8_t type, uint8_t command) {
 	return 0;
 }
 
-static int uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg) {
+static bool uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg) {
 
 	char message[UINT8_LENGTH];
 
@@ -213,7 +255,7 @@ static int uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg) {
 	return 0;
 }
 
-static int uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg) {
+static bool uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg) {
 
 	char message[UINT32_LENGTH];
 
@@ -247,7 +289,7 @@ static int uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg) 
 	return 0;
 }
 
-static int user_builder(int fd, uint8_t type, uint8_t command, char * username, char * password, uint8_t privilege) {
+static bool user_builder(int fd, uint8_t type, uint8_t command, char * username, char * password, uint8_t privilege) {
 
 	char message[FULL_USER_MAX_SIZE + 2];
 
