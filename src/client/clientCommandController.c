@@ -81,8 +81,8 @@ static void client_command_controller_load_queries(CommandController controllers
     descriptions[index + CQ_CONNECTION_TIMEOUT] = "Get Connection Timeout";
 
     // X'0B'   Get User Total Current Connections
-    controllers[index + CQ_USER_TOTAL_CONCURRENT_CONNECTIONS].sender = user_total_concurrent_connections_sender;
-    controllers[index + CQ_USER_TOTAL_CONCURRENT_CONNECTIONS].receiver = user_total_concurrent_connections_receiver;
+    controllers[index + CQ_USER_TOTAL_CONCURRENT_CONNECTIONS].sender = user_total_current_connections_sender;
+    controllers[index + CQ_USER_TOTAL_CONCURRENT_CONNECTIONS].receiver = user_total_current_connections_receiver;
     descriptions[index + CQ_USER_TOTAL_CONCURRENT_CONNECTIONS] = "Get User Total Current Connections";
 }
 

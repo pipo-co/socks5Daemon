@@ -31,7 +31,7 @@ bool selector_timeout_sender(int fd);
 
 bool connection_timeout_sender(int fd);
 
-bool user_total_concurrent_connections_sender(int fd);
+bool user_total_current_connections_sender(int fd);
 
 bool add_user_sender(int fd);
 
