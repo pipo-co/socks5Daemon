@@ -69,7 +69,6 @@ void admin_passive_accept_ipv6(SelectorEvent *event) {
 static void admin_passive_accept_util(SelectorEvent *event, struct sockaddr *cli_addr, socklen_t *clilen) {
 
     int fd;
-    FdHandler adminHandler;
 
     fd = sctp_accept_connection(event->fd, cli_addr, clilen);
     if(fd < 0){
@@ -153,10 +152,11 @@ static void admin_on_write_handler(SelectorEvent *event){
 
     Buffer * buffer = &adminSession->output;
 
-    // Error
+    // Hace falta entrar para pasar por el auth marshall
+    // no se si es lo mejor que procese y retorne.
     if(!buffer_can_read(buffer)) {
 
-        admin_close_session(event);
+        admin_post_write_handler(event);
         return;
     }
 
@@ -185,16 +185,18 @@ static void admin_post_read_handler(SelectorEvent *event) {
 
         case ADMIN_AUTH_ARRIVAL:
             admin_auth_arrival(event);
+            adminSession->currentState = ADMIN_AUTHENTICATING;
 
         case ADMIN_AUTHENTICATING:
             if(adminSession->currentState = admin_auth_read(event), adminSession->currentState == ADMIN_AUTH_ACK || adminSession->currentState == ADMIN_AUTH_ERROR){
                 selector_set_interest_event(event, OP_WRITE);
             }
-
+            
         break;
 
         case ADMIN_METHOD_ARRIVAL:
             admin_request_arrival(event);
+            adminSession->currentState = ADMIN_METHOD;
 
         case ADMIN_METHOD:
             if(adminSession->currentState = admin_request_read(event), adminSession->currentState == ADMIN_METHOD_RESPONSE){
@@ -228,7 +230,7 @@ static void admin_post_write_handler(SelectorEvent *event) {
         break;
 
         case ADMIN_METHOD_RESPONSE:
-            if(adminSession->currentState = admin_response_write(event), adminSession->currentState == ADMIN_METHOD){
+            if(adminSession->currentState = admin_response_write(event), adminSession->currentState == ADMIN_METHOD_ARRIVAL){
                 selector_set_interest_event(event, OP_READ);
             }
 
@@ -284,7 +286,7 @@ static AdminStateEnum admin_auth_read(SelectorEvent *event) {
     }
 
     h->status = SUCCESS;
-    return ADMIN_METHOD_ARRIVAL;
+    return ADMIN_AUTH_ACK;
 }
 
 static AdminStateEnum auth_write(SelectorEvent *event) {
@@ -361,7 +363,7 @@ static AdminStateEnum admin_response_write(SelectorEvent *event) {
             b->admin_response_free_data(b);
         }
 
-        return ADMIN_METHOD;
+        return ADMIN_METHOD_ARRIVAL;
     }
 
     return adminSession->currentState;

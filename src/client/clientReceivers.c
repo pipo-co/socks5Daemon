@@ -82,7 +82,7 @@ bool total_bytes_received_receiver(int fd){
 }
 
 bool connected_users_receiver(int fd){
-	return receiver_uint64(fd);
+	return receiver_uint8(fd);
 }
 
 bool user_count_receiver(int fd){
@@ -102,7 +102,7 @@ bool connection_timeout_receiver(int fd){
 }
 
 bool user_total_concurrent_connections_receiver(int fd){
-	return receiver_uint8(fd);
+	return receiver_uint16(fd);
 }
 
 static bool receiver_uint8(int fd) {
@@ -125,26 +125,26 @@ static bool receiver_uint8(int fd) {
 				if( bytesWritten == 0){
 					type = buffer[bytesWritten++];
 					if(type == 0xFF){
-						printf("TYPE: %c ", type);
-						printf("CMD: %c\n", type);
+						printf("TYPE: %x ", type);
+						printf("CMD: %x\n", type);
 						return true;
 					}
-					printf("TYPE: %c ", type);
+					printf("TYPE: %x ", type);
 				}
 				else if (bytesWritten == 1){
 					command = buffer[bytesWritten++];
 					if(command == 0xFF){
-						printf("CMD: %c\n", command);
+						printf("CMD: %x\n", command);
 						return true;
 					}
-					printf("CMD: %c ", command);
+					printf("CMD: %x ", command);
 				}
 				else if (bytesWritten == 2 && command == 0xFE){
-					printf("STATUS: %c\n", buffer[bytesWritten]);
+					printf("STATUS: %x\n", buffer[bytesWritten]);
 					return true;
 				}
 				else {
-					printf("RESPONSE: %c\n", buffer[bytesWritten++]);
+					printf("RESPONSE: %x\n", buffer[bytesWritten++]);
 				}
 			}
 		}	
@@ -162,7 +162,7 @@ static bool receiver_uint16(int fd) {
 	ssize_t bytes;
 	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
-	uint16_t response;
+	uint16_t response = 0;
 	char buffer[UINT16_LENGTH];
 	uint8_t type, command;
       
@@ -179,28 +179,28 @@ static bool receiver_uint16(int fd) {
 				if( bytesWritten == 0){
 					type = buffer[bytesWritten++];
 					if(type == 0xFF){
-						printf("TYPE: %c ", type);
-						printf("CMD: %c\n", type);
+						printf("TYPE: %x ", type);
+						printf("CMD: %x\n", type);
 						return true;
 					}
-					printf("TYPE: %c ", type);
+					printf("TYPE: %x ", type);
 				}
 				else if (bytesWritten == 1){
 					command = buffer[bytesWritten++];
 					if(command == 0xFF){
-						printf("CMD: %c\n", command);
+						printf("CMD: %x\n", command);
 						return true;
 					}
-					printf("CMD: %c ", command);
+					printf("CMD: %x ", command);
 				}
 				else if (bytesWritten == 2 && command == 0xFE){
-					printf("STATUS: %c\n", buffer[bytesWritten]);
+					printf("STATUS: %x\n", buffer[bytesWritten]);
 					return true;
 				}
 				else {
-					response = (buffer[bytesWritten] >> ((UINT16_LENGTH - bytesWritten)* 8)) & 0xFF;
-					bytesWritten++;
-					if(bytesReceived == UINT32_LENGTH){
+					response <<= 8;
+					response += buffer[bytesWritten++];
+					if(bytesWritten == UINT16_LENGTH){
 						printf("RESPONSE: %u\n", response);
 					}
 				}
@@ -224,7 +224,7 @@ static bool receiver_uint32(int fd) {
 	uint16_t bytesWritten = 0;
 	
 	uint8_t type, command;
-	uint32_t response;
+	uint32_t response = 0;
       
     do {
 		bytes = recv(fd, buffer, UINT32_LENGTH - bytesReceived, MSG_NOSIGNAL);
@@ -240,28 +240,28 @@ static bool receiver_uint32(int fd) {
 				if(bytesWritten == 0){
 					type = buffer[bytesWritten++];
 					if(type == 0xFF){
-						printf("TYPE: %c ", type);
-						printf("CMD: %c ", type);
+						printf("TYPE: %x ", type);
+						printf("CMD: %x ", type);
 						return true;
 					}
-					printf("TYPE: %c ", type);
+					printf("TYPE: %x ", type);
 				}
 				else if (bytesWritten == 1){
 					command = buffer[bytesWritten++];
 					if(command == 0xFF){
-						printf("CMD: %c\n", command);
+						printf("CMD: %x\n", command);
 						return true;
 					}
-					printf("CMD: %c ", command);
+					printf("CMD: %x ", command);
 				}
 				else if (bytesWritten == 2 && command == 0xFE){
-					printf("STATUS: %c\n", buffer[bytesWritten]);
+					printf("STATUS: %x\n", buffer[bytesWritten]);
 					return true;
 				}
 				else {
-					response = (buffer[bytesWritten] >> ((UINT32_LENGTH - bytesWritten)* 8)) & 0xFF;
-					bytesWritten++;
-					if(bytesReceived == UINT32_LENGTH){
+					response <<= 8;
+					response += buffer[bytesWritten++];
+					if(bytesWritten == UINT32_LENGTH){
 						printf("RESPONSE: %u\n", response);
 					}
 				}
@@ -283,7 +283,7 @@ static bool receiver_uint64(int fd) {
 	uint16_t bytesWritten = 0;
 	char buffer[UINT64_LENGTH];
 	uint8_t type, command;
-	uint64_t response;
+	uint64_t response = 0;
       
     do {
 		bytes = recv(fd, buffer, UINT64_LENGTH - bytesReceived, MSG_NOSIGNAL);
@@ -299,30 +299,30 @@ static bool receiver_uint64(int fd) {
 				if(bytesWritten == 0){
 					type = buffer[bytesWritten++];
 					if(type == 0xFF){
-						printf("TYPE: %c ", type);
-						printf("CMD: %c\n", type);
+						printf("TYPE: %x ", type);
+						printf("CMD: %x\n", type);
 						return true;
 					}
-					printf("TYPE: %c ", type);
+					printf("TYPE: %x ", type);
 				}
 				else if (bytesWritten == 1){
 					command = buffer[bytesWritten++];
 					if(command == 0xFF){
-						printf("CMD: %c\n", command);
+						printf("CMD: %x\n", command);
 						return true;
 					}
-					printf("CMD: %c ", command);
+					printf("CMD: %x ", command);
 				}
 				else if (bytesWritten == 2 && command == 0xFE){
-					printf("STATUS: %c\n", buffer[bytesWritten]);
+					printf("STATUS: %x\n", buffer[bytesWritten]);
 					return true;
 				}
 				else {
-					response = (buffer[bytesWritten] >> ((UINT64_LENGTH - bytesWritten)* 8)) & 0xFF;
-					bytesWritten++;
-					if(bytesReceived == UINT64_LENGTH){
-							printf("RESPONSE: %lu\n", response);
-						}
+					response <<= 8;
+					response += buffer[bytesWritten++];
+					if(bytesWritten == UINT64_LENGTH){
+						printf("RESPONSE: %lu\n", response);
+					}
 				}
 			}
 
@@ -364,19 +364,19 @@ static bool receiver_user_list(int fd) {
 				if(bytesWritten == 0){
 					type = intialBuffer[bytesWritten++];
 					if(type == 0xFF){
-						printf("TYPE: %c ", type);
-						printf("CMD: %c\n", type);
+						printf("TYPE: %x ", type);
+						printf("CMD: %x\n", type);
 						return true;
 					}
-					printf("TYPE: %c ", type);
+					printf("TYPE: %x ", type);
 				}
 				else {
 					command = intialBuffer[bytesWritten++];
 					if(command == 0xFF){
-						printf("CMD: %c\n", command);
+						printf("CMD: %x\n", command);
 						return true;
 					}
-					printf("CMD: %c ", command);
+					printf("CMD: %x ", command);
 				}
 			}
 		}
@@ -400,7 +400,7 @@ static bool receiver_user_list(int fd) {
 	}
 	
 	if(command == 0xFE){
-		printf("STATUS: %c\n", thirdVal);
+		printf("STATUS: %x\n", thirdVal);
 	}
 	else{
 		ucount = thirdVal;

@@ -76,6 +76,10 @@ bool user_total_concurrent_connections_sender(int fd){
 	char user[CREDENTIALS_LENGTH];
 	printf("Insert username: ");
 	fgets(user, CREDENTIALS_LENGTH, stdin);
+	char *newLine = strchr(user, '\n');
+	if(newLine){
+		*newLine = '\0';
+	}
 	return string_builder(fd, CT_QUERY, CQ_USER_TOTAL_CONCURRENT_CONNECTIONS, user);
 }
 
@@ -84,10 +88,20 @@ bool add_user_sender(int fd){
 	char user[CREDENTIALS_LENGTH];
 	printf("Insert username: ");
 	fgets(user, CREDENTIALS_LENGTH, stdin);
+	char *newLine = strchr(user, '\n');
+	if(newLine){
+		*newLine = '\0';
+	}
+
 
 	char pass[CREDENTIALS_LENGTH];
 	printf("Insert password: ");
 	fgets(pass, CREDENTIALS_LENGTH, stdin);
+	newLine = strchr(pass, '\n');
+	if(newLine){
+		*newLine = '\0';
+	}
+
 
 	char priv;
 	printf("Admin privilege?: [y/n] ");
@@ -104,6 +118,10 @@ bool remove_user_sender(int fd){
 	char user[CREDENTIALS_LENGTH];
 	printf("Insert username: ");
 	fgets(user, CREDENTIALS_LENGTH, stdin);
+	char *newLine = strchr(user, '\n');
+	if(newLine){
+		*newLine = '\0';
+	}
 	return string_builder(fd, CT_MODIFICATION, CM_REMOVE_USER, user);
 }
 

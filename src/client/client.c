@@ -137,10 +137,14 @@ static int new_ipv4_connection(struct in_addr ip, in_port_t port) {
 }
 
 static bool log_in(int fd) {
-	
+	char * newLine;
 	printf("Insert username: (max 255 characters. Finisish with enter) ");
 	char username[CREDENTIALS_LENGTH];
 	fgets(username, CREDENTIALS_LENGTH, stdin);
+	newLine = strchr(username, '\n');
+	if(newLine){
+		*newLine = '\0';
+	}
 
 	if(username[0] == '\0'){
 		perror("Invalid username");
@@ -149,6 +153,11 @@ static bool log_in(int fd) {
 	printf("Insert password: (max 255 characters. Finisish with enter) ");
 	char password[CREDENTIALS_LENGTH];
 	fgets(password, CREDENTIALS_LENGTH, stdin);
+	newLine = strchr(password, '\n');
+	if(newLine){
+		*newLine = '\0';
+	}
+
 
 	if(password[0] == '\0'){
 		perror("Invalid password");
@@ -156,15 +165,17 @@ static bool log_in(int fd) {
 
 	uint8_t ulen = strlen(username);
 	uint8_t plen = strlen(password);
-
+	size_t index = 0;
 	uint8_t authMessage[AUTH_MESSAGE_LENGTH];
 
 	memset(authMessage, '\0', AUTH_MESSAGE_LENGTH);
-	authMessage[0] = PIPO_PROTOCOL_VERSION;
-	authMessage[1] = ulen;
-	strcpy((char *) authMessage, username);
-	authMessage[ulen + 2] = plen;
-	strcpy((char *) authMessage, password);
+	authMessage[index++] = PIPO_PROTOCOL_VERSION;
+	authMessage[index++] = ulen;
+	memcpy(authMessage + index, username, ulen);
+	index += ulen;
+	authMessage[index++] = plen;
+	memcpy(authMessage + index, password, plen);
+	index += plen;
 	
 	size_t bytesToSend = ulen + plen + 3;
 	size_t bytesSent = 0;
