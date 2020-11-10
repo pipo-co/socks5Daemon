@@ -78,9 +78,6 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     else if(!errored && (dnsHeaderMe->responseParser.totalQuestions == 0 || dnsHeaderMe->responseParser.totalAnswers == 0)){   
         errored = true;
     }
-    else if(!errored && dnsHeaderMe->responseParser.currentType != SOCKS_5_ADD_TYPE_IP4 && dnsHeaderMe->responseParser.currentType != SOCKS_5_ADD_TYPE_IP6){
-        errored = true;
-    }
 
     /*
      * Termine de parsar. 
@@ -113,15 +110,18 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     }
 
     do{
-        if(dnsHeaderMe->responseParser.currentType == SOCKS_5_ADD_TYPE_IP4){
+        if(dnsHeaderMe->responseParser.addresses[dnsHeaderMe->responseParser.counter].ipType == SOCKS_5_ADD_TYPE_IP4){
             session->serverConnection.fd =
                     new_ipv4_socket(dnsHeaderMe->responseParser.addresses[dnsHeaderMe->responseParser.counter++].addr.ipv4,
                             session->socksHeader.requestHeader.parser.port, (struct sockaddr *)&session->serverConnection.addr);
         }
-        else {
+        else if(dnsHeaderMe->responseParser.addresses[dnsHeaderMe->responseParser.counter].ipType == SOCKS_5_ADD_TYPE_IP6) {
             session->serverConnection.fd =
                     new_ipv6_socket(dnsHeaderMe->responseParser.addresses[dnsHeaderMe->responseParser.counter++].addr.ipv6,
                             session->socksHeader.requestHeader.parser.port, (struct sockaddr *)&session->serverConnection.addr);
+        }
+        else {
+            session->serverConnection.fd = 1;
         }
 
         if (session->serverConnection.fd  == -1) {
@@ -184,9 +184,6 @@ static unsigned response_dns_on_write(SelectorEvent *event) {
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
         }
-
-        // TODO: Free buffer -Tobi
-        // TODO: No hace falta el finally -Tobi
 
         return session->sessionStateMachine.current;
     }

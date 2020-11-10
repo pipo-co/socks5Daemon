@@ -44,8 +44,6 @@ bool http_dns_parser_consume(Buffer *buffer, HttpDnsParser *p, bool *errored);
 
 bool http_dns_parser_is_done(enum HttpDnsParserState state, bool *errored);
 
-bool http_dns_parser_is_done(enum HttpDnsParserState state, bool *errored);
-
 // char * http_dns_parser_error_message(enum HttpDnsParserState state);
 
 #endif

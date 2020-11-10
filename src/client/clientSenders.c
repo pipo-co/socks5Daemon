@@ -54,7 +54,7 @@ bool connected_users_sender(int fd){
 	return no_args_builder(fd, CT_QUERY, CQ_CONNECTED_USERS);
 }
 
-bool user_count_sender(int fd){
+bool total_user_count_sender(int fd){
 	return no_args_builder(fd, CT_QUERY, CQ_USER_COUNT);
 }
 
@@ -70,7 +70,7 @@ bool connection_timeout_sender(int fd){
 	return no_args_builder(fd, CT_QUERY, CQ_CONNECTION_TIMEOUT);
 }
 
-bool user_total_concurrent_connections_sender(int fd){
+bool user_total_current_connections_sender(int fd){
 	
 	char user[CREDENTIALS_LENGTH];
 	printf("Insert username: ");

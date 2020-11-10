@@ -350,52 +350,57 @@ Acknowledgments
 
             The use of this Command will provide a list of all the users in the Server. 
 
-        5.1.2. Get Total Historic Connections
+        5.1.2 Get Current Connections
+
+            The use of this Command will provide an unsigned integer that indicates the current 
+            connections in the Server.
+
+        5.1.3. Get Total Historic Connections
 
             The use of this Command will provide an unsigned integer that indicates the total
             current connections in the Server. 
 
-        5.1.3. Get Max. Concurrent Connections
+        5.1.4. Get Max. Concurrent Connections
 
             The use of this Command will provide an unsigned integer that indicates the maximum
             amount of concurrent connections historically held by the Server. 
                 
-        5.1.4. Get Total Sent Bytes
+        5.1.5. Get Total Sent Bytes
 
             The use of this Command will provide an unsigned integer that indicates the total amount of
             bytes sent by the Server. 
 
-        5.1.5. Get Total Received Bytes
+        5.1.6. Get Total Received Bytes
 
             The use of this Command will provide an unsigned integer that indicates the total amount of
             bytes received by the Server.   
 
-        5.1.6. Get Number of Users Connected
+        5.1.7. Get Number of Users Connected
 
             The use of this Command will provide an unsigned integer that indicates the amount of different
             users connected to the Server.
 
-        5.1.7. Get Total User Count
+        5.1.8. Get Total User Count
 
             The use of this Command will provide an unsigned integer that indicates the amount of users
             registered in the Server. 
 
-        5.1.8. Get I/O Buffer Sizes
+        5.1.9. Get I/O Buffer Sizes
 
             The use of this Command will provide an unsigned integer that indicates the size of the
             I/O buffers used by the Server. 
         
-        5.1.9. Get Selector Timeout
+        5.1.10. Get Selector Timeout
 
             The use of this Command will provide an unsigned integer that indicates the maximum
             amount of seconds a selector is blocked in the Server. 
 
-        5.1.10. Get Connection Timeout
+        5.1.11. Get Connection Timeout
 
             The use of this Command will provide an unsigned integer that indicates the maximum
             amount of seconds a connection can be inactive before it is cleaned-up.
 
-        5.1.11. Get User Total Current Connections
+        5.1.12. Get User Total Current Connections
 
             The use of this Command will provide a number that indicates the number of concurrent
             connections that a user has in the Server.
@@ -426,8 +431,21 @@ Acknowledgments
 
             The message contains that amount of fields ULEN, UNAME and PRIVILEGE, which are the same as
             those defined in 2.2 and 4.1.1.
+
+        5.2.2. Get Current Connections
+        
+            The server sends the following response:
+
+                    +------+-----+----------+
+                    | TYPE | CMD | RESPONSE |
+                    +------+-----+----------+
+                    |  1   |  1  |     2    |
+                    +------+-----+----------+
+
+            Where RESPONSE is a 2 bytes long unsigned integer in network byte order that indicates
+            the maximum concurrent connections the Server had.
                 
-        5.2.2. Get Total Historic Connections
+        5.2.3. Get Total Historic Connections
 
             The server sends the following response:
 
@@ -440,7 +458,7 @@ Acknowledgments
             Where RESPONSE is an 8 bytes long unsigned integer in network byte order that indicates
             the total number of connections the server had.
 
-        5.2.3. Get Max. Concurrent Connections
+        5.2.4. Get Max. Concurrent Connections
         
             The server sends the following response:
 
@@ -450,10 +468,10 @@ Acknowledgments
                     |  1   |  1  |     2    |
                     +------+-----+----------+
 
-            Where RESPONSE is a 4 bytes long unsigned integer in network byte order that indicates
+            Where RESPONSE is a 2 bytes long unsigned integer in network byte order that indicates
             the maximum concurrent connections the Server had.
                 
-        5.2.4. Get Total Sent Bytes
+        5.2.5. Get Total Sent Bytes
 
             The server sends the following response:
 
@@ -466,7 +484,7 @@ Acknowledgments
             Where RESPONSE is an 8 bytes long unsigned integer in network byte order that
             represents the total sent bytes by the Server.
 
-        5.2.5. Get Total Received Bytes
+        5.2.6. Get Total Received Bytes
 
             The server sends the following response:
 
@@ -479,20 +497,20 @@ Acknowledgments
             Where RESPONSE is an 8 bytes long unsigned integer in network byte order that
             represents the total received bytes by the Server.
 
-        5.2.6. Get Number of Users Connected
+        5.2.7. Get Number of Users Connected
 
             The server sends the following response:
 
                     +------+-----+----------+
                     | TYPE | CMD | RESPONSE |
                     +------+-----+----------+
-                    |  1   |  1  |     8    |
+                    |  1   |  1  |     1    |
                     +------+-----+----------+
             
-            Where RESPONSE is an 8 bytes long unsigned integer in network byte order that
-            represents the number of users connected.
+            Where RESPONSE is an unsigned integer that represents the number of users 
+            connected.
 
-        5.2.7. Get Total User Count
+        5.2.8. Get Total User Count
         
             The server sends the following response:
 
@@ -502,9 +520,9 @@ Acknowledgments
                     |  1   |  1  |     1    |
                     +------+-----+----------+
 
-            Where RESPONSE is a 1 byte unsigned integer that indicates the Server's user total count.  
+            Where RESPONSE is an unsigned integer that indicates the Server's user total count.  
 
-        5.2.8. Get I/O Buffer Sizes
+        5.2.9. Get I/O Buffer Sizes
                 
             The server sends the following response:
 
@@ -517,7 +535,7 @@ Acknowledgments
             Where RESPONSE is a 4 bytes long unsigned integer in network byte order that indicates
             the size of the I/O buffers user by the server.
         
-        5.2.9. Get Selector Timeout
+        5.2.10. Get Selector Timeout
                 
             The server sends the following response:
 
@@ -530,7 +548,7 @@ Acknowledgments
             Where RESPONSE is a 1 byte long unsigned integer that indicates the amount of seconds
             a selector can be blocked in the server before being awaken.
 
-        5.2.10. Get Connection Timeout
+        5.2.11. Get Connection Timeout
         
             The server sends the following response:
 
@@ -540,10 +558,10 @@ Acknowledgments
                     |  1   |  1  |     1    |
                     +------+-----+----------+
 
-            Where RESPONSE is 1 byte long unsigned integer that indicates the amount of seconds
+            Where RESPONSE is an unsigned integer that indicates the amount of seconds
             a connection can be blocked in the server before being removed.
 
-        5.2.11. Get User Total Current Connections
+        5.2.12. Get User Total Current Connections
 
             The server sends the following response:
 
@@ -553,10 +571,10 @@ Acknowledgments
                     |  1   |  1  |     1    |
                     +------+-----+----------+
 
-            Where RESPONSE is 1 byte long unsigned integer that indicates the amount concurrent
+            Where RESPONSE is an unsigned integer that indicates the amount concurrent
             connections the the user has currently in server.
 
-        5.2.12. Query Error
+        5.2.13. Query Error
 
             If the server encounters an unexpected error or an Invalid Field Value was included in the Request
             (not including TYPE and CMD, whose error response was already defined), the following response

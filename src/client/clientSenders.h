@@ -23,7 +23,7 @@ bool total_bytes_received_sender(int fd);
 
 bool connected_users_sender(int fd);
 
-bool user_count_sender(int fd);
+bool total_user_count_sender(int fd);
 
 bool buffer_sizes_sender(int fd);
 
@@ -31,7 +31,7 @@ bool selector_timeout_sender(int fd);
 
 bool connection_timeout_sender(int fd);
 
-bool user_total_concurrent_connections_sender(int fd);
+bool user_total_current_connections_sender(int fd);
 
 bool add_user_sender(int fd);
 
