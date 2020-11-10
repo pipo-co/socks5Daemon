@@ -1,4 +1,5 @@
 #include "ipConnect.h"
+#include "states/stateUtilities/request/requestUtilities.h"
 
 static void ip_connect_on_arrival(SelectorEvent *event);
 static unsigned ip_connect_on_write(SelectorEvent *event);
@@ -17,7 +18,7 @@ static unsigned ip_connect_on_write(SelectorEvent *event) {
     socklen_t len = sizeof(error);
 
     if(getsockopt(session->serverConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
-        session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+        session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(error);
         return REQUEST_ERROR;
     }
 

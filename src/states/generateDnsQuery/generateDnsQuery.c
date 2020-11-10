@@ -1,6 +1,7 @@
 #include "generateDnsQuery.h"
 #include "parsers/dns/dohBuilder.h"
 #include "socks5/socks5.h"
+#include "states/stateUtilities/request/requestUtilities.h"
 
 static void generate_dns_query_on_arrival(SelectorEvent *event);
 static unsigned generate_dns_query_on_write(SelectorEvent *event);
@@ -45,7 +46,12 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
     if(dnsHeaderMe->dnsConnection.state == INVALID || getsockopt(dnsHeaderMe->dnsConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
         
         if(dnsHeaderOther->dnsConnection.state == INVALID){
-            session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+            if(error != 0){
+                session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(error);
+            }
+            else {
+                session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+            }
             return REQUEST_ERROR;
         }
 
@@ -62,7 +68,12 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
     if(doh_builder_build(&dnsHeaderMe->buffer, (char *)session->socksHeader.requestHeader.parser.address.domainName, family, socks5_get_args()) != 0) {
         
         if(dnsHeaderOther->dnsConnection.state == INVALID){
-            session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+            if(error != 0){
+                session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(error);
+            }
+            else {
+                session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+            }
             return REQUEST_ERROR;
         }
         
