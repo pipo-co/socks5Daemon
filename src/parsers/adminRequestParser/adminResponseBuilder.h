@@ -13,7 +13,7 @@
 #define MASK 0xff
 #define USER 0
 #define ADMIN 1
-#define INITIAL_HEADER 2
+#define INITIAL_HEADER 4
 typedef struct UserListResponseData {
     int currentUser;
     int totalUsers;

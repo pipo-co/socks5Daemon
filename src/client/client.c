@@ -4,6 +4,7 @@
 #include "buffer/buffer.h"
 #include "client/clientCommandController.h"
 #include "client/clientDefs.h"
+#include "client/clientUtils.h"
 
 #include <arpa/inet.h>
 #include <netinet/in.h> 
@@ -235,19 +236,23 @@ static bool log_in(int fd) {
 
 static void interactive_client(int fd) {
 
+	uint8_t command;
 	while(1) {
 
 		print_help();
 		
-		char command[UINT8_BASE_10_SIZE];
-		printf("Insert new command: ");
-		
-		fgets(command, UINT8_BASE_10_SIZE, stdin);
-		uint8_t commnad8 = strtoul(command, NULL, 10);
+		command = client_read_uint("Insert new command: ", COMMAND_COUNT);
 
-		controllers[commnad8].sender(fd);
-
-		controllers[commnad8].receiver(fd);
+		printf("----------------------------------------\n");
+		if(controllers[command].sender(fd)){
+			if(!controllers[command].receiver(fd)){
+				printf("Error ocurred receiving the request\n");
+			}
+		}
+		else {
+			printf("Error ocurred sending the request\n");
+		}
+		printf("----------------------------------------\n");
 	}
 }
 

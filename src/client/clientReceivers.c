@@ -60,7 +60,6 @@ bool list_users_receiver(int fd){
 
 bool total_historic_connections_receiver(int fd){
 
-
 	return receiver_uint64(fd);
 }
 
@@ -86,7 +85,7 @@ bool connected_users_receiver(int fd){
 }
 
 bool user_count_receiver(int fd){
-	return receiver_uint8(fd);
+	return receiver_uint64(fd);
 }
 
 bool buffer_sizes_receiver(int fd){
@@ -109,11 +108,11 @@ static bool receiver_uint8(int fd) {
 	ssize_t bytes;
 	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
-	char buffer[UINT8_LENGTH];
+	uint8_t buffer[UINT8_LENGTH];
 	uint8_t type, command;
       
     do {
-		bytes = recv(fd, buffer, UINT8_LENGTH - bytesWritten, MSG_NOSIGNAL);
+		bytes = recv(fd, buffer + bytesReceived, UINT8_LENGTH - bytesReceived, MSG_NOSIGNAL);
 		
 		if(bytes == 0){
 			printf("Connection closed\n");
@@ -125,26 +124,26 @@ static bool receiver_uint8(int fd) {
 				if( bytesWritten == 0){
 					type = buffer[bytesWritten++];
 					if(type == 0xFF){
-						printf("TYPE: %x ", type);
-						printf("CMD: %x\n", type);
+						printf("TYPE: %X ", type);
+						printf("CMD: %X\n", type);
 						return true;
 					}
-					printf("TYPE: %x ", type);
+					printf("TYPE: %X ", type);
 				}
 				else if (bytesWritten == 1){
 					command = buffer[bytesWritten++];
 					if(command == 0xFF){
-						printf("CMD: %x\n", command);
+						printf("CMD: %X\n", command);
 						return true;
 					}
-					printf("CMD: %x ", command);
+					printf("CMD: %X ", command);
 				}
 				else if (bytesWritten == 2 && command == 0xFE){
-					printf("STATUS: %x\n", buffer[bytesWritten]);
+					printf("STATUS: %X\n", buffer[bytesWritten]);
 					return true;
 				}
 				else {
-					printf("RESPONSE: %x\n", buffer[bytesWritten++]);
+					printf("RESPONSE: %X\n", buffer[bytesWritten++]);
 				}
 			}
 		}	
@@ -163,11 +162,11 @@ static bool receiver_uint16(int fd) {
 	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
 	uint16_t response = 0;
-	char buffer[UINT16_LENGTH];
+	uint8_t buffer[UINT16_LENGTH];
 	uint8_t type, command;
       
     do {
-		bytes = recv(fd, buffer, UINT16_LENGTH - bytesWritten, MSG_NOSIGNAL);
+		bytes = recv(fd, buffer + bytesReceived, UINT16_LENGTH - bytesReceived, MSG_NOSIGNAL);
 		
 		if(bytes == 0){
 			printf("Connection closed\n");
@@ -179,22 +178,22 @@ static bool receiver_uint16(int fd) {
 				if( bytesWritten == 0){
 					type = buffer[bytesWritten++];
 					if(type == 0xFF){
-						printf("TYPE: %x ", type);
-						printf("CMD: %x\n", type);
+						printf("TYPE: %X ", type);
+						printf("CMD: %X\n", type);
 						return true;
 					}
-					printf("TYPE: %x ", type);
+					printf("TYPE: %X ", type);
 				}
 				else if (bytesWritten == 1){
 					command = buffer[bytesWritten++];
 					if(command == 0xFF){
-						printf("CMD: %x\n", command);
+						printf("CMD: %X\n", command);
 						return true;
 					}
-					printf("CMD: %x ", command);
+					printf("CMD: %X ", command);
 				}
 				else if (bytesWritten == 2 && command == 0xFE){
-					printf("STATUS: %x\n", buffer[bytesWritten]);
+					printf("STATUS: %X\n", buffer[bytesWritten]);
 					return true;
 				}
 				else {
@@ -218,7 +217,7 @@ static bool receiver_uint16(int fd) {
 
 static bool receiver_uint32(int fd) {
 
-	char buffer[UINT32_LENGTH];
+	uint8_t buffer[UINT32_LENGTH];
 	ssize_t bytes;
 	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
@@ -227,7 +226,7 @@ static bool receiver_uint32(int fd) {
 	uint32_t response = 0;
       
     do {
-		bytes = recv(fd, buffer, UINT32_LENGTH - bytesReceived, MSG_NOSIGNAL);
+		bytes = recv(fd, buffer + bytesReceived, UINT32_LENGTH - bytesReceived, MSG_NOSIGNAL);
 		
 		if(bytes == 0){
 			printf("Connection closed\n");
@@ -240,22 +239,22 @@ static bool receiver_uint32(int fd) {
 				if(bytesWritten == 0){
 					type = buffer[bytesWritten++];
 					if(type == 0xFF){
-						printf("TYPE: %x ", type);
-						printf("CMD: %x ", type);
+						printf("TYPE: %X ", type);
+						printf("CMD: %X ", type);
 						return true;
 					}
-					printf("TYPE: %x ", type);
+					printf("TYPE: %X ", type);
 				}
 				else if (bytesWritten == 1){
 					command = buffer[bytesWritten++];
 					if(command == 0xFF){
-						printf("CMD: %x\n", command);
+						printf("CMD: %X\n", command);
 						return true;
 					}
-					printf("CMD: %x ", command);
+					printf("CMD: %X ", command);
 				}
 				else if (bytesWritten == 2 && command == 0xFE){
-					printf("STATUS: %x\n", buffer[bytesWritten]);
+					printf("STATUS: %X\n", buffer[bytesWritten]);
 					return true;
 				}
 				else {
@@ -281,12 +280,12 @@ static bool receiver_uint64(int fd) {
 	ssize_t bytes;
 	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
-	char buffer[UINT64_LENGTH];
+	uint8_t buffer[UINT64_LENGTH];
 	uint8_t type, command;
 	uint64_t response = 0;
       
     do {
-		bytes = recv(fd, buffer, UINT64_LENGTH - bytesReceived, MSG_NOSIGNAL);
+		bytes = recv(fd, buffer + bytesReceived, UINT64_LENGTH - bytesReceived, MSG_NOSIGNAL);
 		
 		if(bytes == 0){
 			printf("Connection closed\n");
@@ -299,22 +298,22 @@ static bool receiver_uint64(int fd) {
 				if(bytesWritten == 0){
 					type = buffer[bytesWritten++];
 					if(type == 0xFF){
-						printf("TYPE: %x ", type);
-						printf("CMD: %x\n", type);
+						printf("TYPE: %X ", type);
+						printf("CMD: %X\n", type);
 						return true;
 					}
-					printf("TYPE: %x ", type);
+					printf("TYPE: %X ", type);
 				}
 				else if (bytesWritten == 1){
 					command = buffer[bytesWritten++];
 					if(command == 0xFF){
-						printf("CMD: %x\n", command);
+						printf("CMD: %X\n", command);
 						return true;
 					}
-					printf("CMD: %x ", command);
+					printf("CMD: %X ", command);
 				}
 				else if (bytesWritten == 2 && command == 0xFE){
-					printf("STATUS: %x\n", buffer[bytesWritten]);
+					printf("STATUS: %X\n", buffer[bytesWritten]);
 					return true;
 				}
 				else {
@@ -334,7 +333,7 @@ static bool receiver_uint64(int fd) {
 		return false;
 	}
     
-    return 0;
+    return true;
 }
 
 static bool receiver_user_list(int fd) {
@@ -348,10 +347,9 @@ static bool receiver_user_list(int fd) {
 	uint8_t type, command, ulen = 0;
 	
 	bool ulenFlag = true;
-	
-      
+
     do {
-		bytes = recv(fd, intialBuffer, NO_ARGS_LENGTH - bytesReceived, MSG_NOSIGNAL);
+		bytes = recv(fd, intialBuffer + bytesReceived, NO_ARGS_LENGTH - bytesReceived, MSG_NOSIGNAL);
 		
 		if(bytes == 0){
 			printf("Connection closed\n");
@@ -364,19 +362,19 @@ static bool receiver_user_list(int fd) {
 				if(bytesWritten == 0){
 					type = intialBuffer[bytesWritten++];
 					if(type == 0xFF){
-						printf("TYPE: %x ", type);
-						printf("CMD: %x\n", type);
+						printf("TYPE: %X ", type);
+						printf("CMD: %X\n", type);
 						return true;
 					}
-					printf("TYPE: %x ", type);
+					printf("TYPE: %X ", type);
 				}
 				else {
 					command = intialBuffer[bytesWritten++];
 					if(command == 0xFF){
-						printf("CMD: %x\n", command);
+						printf("CMD: %X\n", command);
 						return true;
 					}
-					printf("CMD: %x ", command);
+					printf("CMD: %X ", command);
 				}
 			}
 		}
@@ -400,7 +398,7 @@ static bool receiver_user_list(int fd) {
 	}
 	
 	if(command == 0xFE){
-		printf("STATUS: %x\n", thirdVal);
+		printf("STATUS: %X\n", thirdVal);
 	}
 	else{
 		ucount = thirdVal;
@@ -409,7 +407,7 @@ static bool receiver_user_list(int fd) {
 		printf("UCOUNT %d\n", ucount);
 		return true;
 	}
-	printf("UCOUNT %d", ucount);
+	printf("UCOUNT %d\n", ucount);
 
 	bytesWritten = bytesReceived = 0;
 	
@@ -450,12 +448,28 @@ static bool receiver_user_list(int fd) {
 
 		if(bytesReceived == ulen){
 			username[bytesReceived] = '\0'; //aprovecho a poner el 0, imprimir y limpiar el buffer de username 
-			printf("USERNAME: %s", username);
+			printf("USERNAME: %s ", username);
 			memset(username, '\0', bytesReceived);		//reiniciar buffer de entrada
 			ucount--;									//un usuario menos
 			ulenFlag = true;							//volver a buscar el ulen
 			bytesReceived = 0;							//reiniciar contador de bytes recibidos
-		}		
+		}	
+
+		uint8_t priv;
+		bytes = recv(fd, &priv, 1, MSG_NOSIGNAL);
+
+		if(bytes == 0){
+			printf("Connection closed\n");
+			return false;
+		}
+
+		if(bytes == -1) {
+			perror("Connection interrupted\n");
+			return false;
+		}
+
+		printf("PRIV %X\n", priv);
+
 	} while(ucount > 0 && (bytes != -1 || errno !=  EINTR));	
 
 	if(bytes == -1) {
@@ -463,6 +477,6 @@ static bool receiver_user_list(int fd) {
 		return false;
 	}
 
-   return 0;
+   return true;
 }
 

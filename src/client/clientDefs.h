@@ -14,6 +14,7 @@ typedef enum ClientType {
 
 #define UINT8_BASE_10_SIZE 4
 #define UINT32_BASE_10_SIZE 11
+#define UINT64_BASE_10_SIZE 21
 
 typedef enum ClientQuery {
     CQ_LIST_USERS                              = 0x00,

@@ -8,8 +8,7 @@
 
 #include "client/clientSenders.h"
 #include "client/clientDefs.h"
-
-
+#include "client/clientUtils.h"
 
 #define NO_ARGS_LENGTH 2
 #define UINT8_LENGTH 3
@@ -150,34 +149,26 @@ bool toggle_connection_clean_up_sender(int fd){
 }
 
 bool set_buffer_size_sender(int fd){
-	
-	char size[UINT32_BASE_10_SIZE];
-	printf("Insert new buffer size: ");
-	fgets(size, UINT32_BASE_10_SIZE, stdin);
-	uint32_t size32 = strtoul(size, NULL, 10);
 
-	return uint32_builder(fd, CT_MODIFICATION, CM_SET_BUFFER_SIZE, size32);
+	uint32_t size = client_read_uint("Insert new buffer size: ", UINT32_MAX);
+
+	return uint32_builder(fd, CT_MODIFICATION, CM_SET_BUFFER_SIZE, size);
 	
 }
 
 bool set_selector_timeout_sender(int fd){
 	
-	char timeout[UINT8_BASE_10_SIZE];
-	printf("Insert new selector timeout: ");
-	fgets(timeout, UINT8_BASE_10_SIZE, stdin);
-	uint8_t timeout8 = strtoul(timeout, NULL, 10);
+	uint8_t timeout = client_read_uint("Insert new selector timeout: ", UINT8_MAX);
 
-	return uint32_builder(fd, CT_MODIFICATION, CM_SET_SELECTOR_TIMEOUT, timeout8);
+	return uint8_builder(fd, CT_MODIFICATION, CM_SET_SELECTOR_TIMEOUT, timeout);
 }
 
 bool set_connection_timeout_sender(int fd){
 	
-	char timeout[UINT8_BASE_10_SIZE];
-	printf("Insert new selector timeout: ");
-	fgets(timeout, UINT8_BASE_10_SIZE, stdin);
-	uint8_t timeout8 = strtoul(timeout, NULL, 10);
 
-	return uint32_builder(fd, CT_MODIFICATION, CM_SET_CONNECTION_TIMEOUT, timeout8);
+	uint8_t timeout = client_read_uint("Insert new connection timeout: ", UINT8_MAX);
+
+	return uint8_builder(fd, CT_MODIFICATION, CM_SET_CONNECTION_TIMEOUT, timeout);
 }
 
 static bool string_builder(int fd, uint8_t type, uint8_t command, char * string) {
@@ -199,7 +190,7 @@ static bool string_builder(int fd, uint8_t type, uint8_t command, char * string)
 
 		// Closed Connection
 		if(bytes == 0) {
-			return -1;
+			return false;
 		}
 
 		if(bytes > 0) {
@@ -209,10 +200,10 @@ static bool string_builder(int fd, uint8_t type, uint8_t command, char * string)
 	} while(bytesSent < messageLen && (bytes != -1 || errno !=  EINTR));
 
 	if(bytes == -1) {
-		return -1;
+		return false;
 	}
 	
-	return 0;
+	return true;
 }
 
 static bool no_args_builder (int fd, uint8_t type, uint8_t command) {
@@ -225,11 +216,11 @@ static bool no_args_builder (int fd, uint8_t type, uint8_t command) {
 	message[1] = command;
 
 	do {
-		bytes = send(fd, message, NO_ARGS_LENGTH - bytesSent, MSG_NOSIGNAL);
+		bytes = send(fd, message + bytesSent, NO_ARGS_LENGTH - bytesSent, MSG_NOSIGNAL);
 
 		// Closed Connection
 		if(bytes == 0) {
-			return -1;
+			return false;
 		}
 
 		if(bytes > 0) {
@@ -239,10 +230,10 @@ static bool no_args_builder (int fd, uint8_t type, uint8_t command) {
 	} while(bytesSent < NO_ARGS_LENGTH && (bytes != -1 || errno !=  EINTR));
 
 	if(bytes == -1) {
-		return -1;
+		return false;
 	}
 
-	return 0;
+	return true;
 }
 
 static bool uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg) {
@@ -256,7 +247,7 @@ static bool uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg) {
 	message[2] = arg;
 
 	do {
-		bytes = send(fd, message, UINT8_LENGTH - bytesSent, MSG_NOSIGNAL);
+		bytes = send(fd, message + bytesSent, UINT8_LENGTH - bytesSent, MSG_NOSIGNAL);
 		
 		// Closed Connection
 		if(bytes == 0) {
@@ -270,10 +261,10 @@ static bool uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg) {
 	} while( bytesSent < UINT8_LENGTH && (bytes != -1 || errno !=  EINTR));
 
 	if(bytes == -1) {
-		return -1;
+		return false;
 	}
 
-	return 0;
+	return true;
 }
 
 static bool uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg) {
@@ -290,11 +281,11 @@ static bool uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg)
 	}
 
 	do {
-		bytes = send(fd, message, UINT8_LENGTH - bytesSent, MSG_NOSIGNAL);
+		bytes = send(fd, message + bytesSent, UINT32_LENGTH - bytesSent, MSG_NOSIGNAL);
 
 		// Closed Connection
 		if(bytes == 0) {
-			return -1;
+			return false;
 		}
 
 		if(bytes > 0) {
@@ -304,10 +295,10 @@ static bool uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg)
 	} while(bytesSent < UINT32_LENGTH && (bytes != -1 || errno !=  EINTR));
 
 	if(bytes == -1) {
-		return -1;
+		return false;
 	}
 
-	return 0;
+	return true;
 }
 
 static bool user_builder(int fd, uint8_t type, uint8_t command, char * username, char * password, uint8_t privilege) {
@@ -337,11 +328,11 @@ static bool user_builder(int fd, uint8_t type, uint8_t command, char * username,
 	message[i++] = privilege;
 
 	do {
-		bytes = send(fd, message, messageLen - bytesSent, MSG_NOSIGNAL);
+		bytes = send(fd, message + bytesSent, messageLen - bytesSent, MSG_NOSIGNAL);
 
 		// Closed Connection
 		if(bytes == 0) {
-			return -1;
+			return false;
 		}
 
 		if(bytes > 0) {
@@ -351,8 +342,8 @@ static bool user_builder(int fd, uint8_t type, uint8_t command, char * username,
 	} while(bytesSent < messageLen && (bytes != -1 || errno !=  EINTR));
 
 	if(bytes == -1) {
-		return -1;
+		return false;
 	}
 	
-	return 0;
+	return true;
 }

@@ -13,7 +13,7 @@ void admin_request_parser_add_user(uint8_t type, uint8_t cmd, AdminRequestParser
         status = 0xFE;
     }
 
-    else if(!user_handler_user_exists(args->user.uname, NULL)) {
+    else if(user_handler_user_exists(args->user.uname, NULL)) {
         status = 0x01;
     }
 

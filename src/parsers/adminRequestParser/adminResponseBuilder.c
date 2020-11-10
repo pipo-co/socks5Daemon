@@ -1,4 +1,6 @@
-    #include "adminResponseBuilder.h"
+#include "adminResponseBuilder.h"
+
+#include <string.h>
 
 bool admin_response_builder_uint8(AdminResponseBuilderContainer * adminResponse, Buffer * b){
     uint16_t * currByte = &adminResponse->currByte;
@@ -102,8 +104,9 @@ bool admin_response_builder_uint64(AdminResponseBuilderContainer * adminResponse
 bool admin_response_builder_user_list(AdminResponseBuilderContainer * adminResponse, Buffer * b){
     uint16_t * currByte = &adminResponse->currByte;
     int * currentUser = &adminResponse->data.userList.currentUser;
-    int totalUsers = adminResponse->data.userList.totalUsers;
+    uint8_t totalUsers = adminResponse->data.userList.totalUsers;
     char aux;
+    bool putUlen = true;
 
     while(*currentUser < totalUsers && buffer_can_write(b)){
         if(*currByte == 0){
@@ -114,15 +117,25 @@ bool admin_response_builder_user_list(AdminResponseBuilderContainer * adminRespo
             (*currByte)++;
             buffer_write(b, adminResponse->cmd);
         }
+        else if (*currByte == 2){
+            (*currByte)++;
+            buffer_write(b, totalUsers);
+        }
         else {
-            if((aux = adminResponse->data.userList.users[*currentUser].username[*currByte - INITIAL_HEADER]), aux != '\0'){
+            if(putUlen){
+                putUlen = false;
+                (*currByte)++;
+                buffer_write(b, strlen(adminResponse->data.userList.users[*currentUser].username));
+            }
+            else if((aux = adminResponse->data.userList.users[*currentUser].username[*currByte - INITIAL_HEADER]), aux != '\0'){
                 (*currByte)++;
                 buffer_write(b, aux);
             }
             else{
-                buffer_write(b, adminResponse->data.userList.users[*currentUser].admin ? USER:ADMIN);
+                buffer_write(b, adminResponse->data.userList.users[*currentUser].admin ? ADMIN : USER);
                 (*currentUser)++;
-                *currByte = 2;
+                *currByte = 3;
+                putUlen = true;
             }  
         }
     }
