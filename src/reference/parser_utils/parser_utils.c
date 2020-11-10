@@ -78,6 +78,7 @@ struct parser_definition *parser_utils_strcmpi(struct parser_definition *pd, con
     if(pd == NULL){   
         return NULL;
     }
+
     // struct parser_state_transition **states   = calloc(n + 2, sizeof(*states));
     // size_t *nstates                           = calloc(n + 2, sizeof(*nstates));
     // struct parser_state_transition *transitions= calloc(3 *(n + 2),
@@ -101,6 +102,8 @@ struct parser_definition *parser_utils_strcmpi(struct parser_definition *pd, con
     struct parser_state_transition states[MAX_STATES][TRANSITIONS_PER_STATE];
     size_t  nstates[MAX_STATES];
 
+    memset(states, 0, sizeof(states));
+    memset(nstates, 0, sizeof(nstates));
 
     for(size_t i = 0; i < n; i++) {
 

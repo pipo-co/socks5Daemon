@@ -64,7 +64,17 @@ void admin_request_parser_toggle_password_spoofing(uint8_t type, uint8_t cmd, Ad
 
     uint8_t status = 0x00;
 
-    // TODO: code function
+    if(args->uint8 > 1) {
+        status = 0xFE;
+    }
+
+    else {
+
+        Socks5Args *serverArgs = socks5_get_args();
+
+        serverArgs->disectors_enabled = args->uint8;
+    }
+
     outContainer->type = type;
     outContainer->cmd = cmd;
     outContainer->currByte = 0;

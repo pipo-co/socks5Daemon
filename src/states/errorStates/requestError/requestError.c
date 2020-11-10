@@ -13,7 +13,7 @@ static void request_error_on_arrival(SelectorEvent *event) {
     session->socksHeader.requestHeader.bytes = 0;
 
     // TODO revisar validez
-    if(session->socksHeader.requestHeader.rep == 0){
+    if(session->socksHeader.requestHeader.rep == SUCCESSFUL){
         session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
     }
 

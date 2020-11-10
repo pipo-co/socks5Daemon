@@ -18,12 +18,12 @@ typedef enum SpoofingParserState {
 
     // HTTP 1.0 Spoofing
     SP_CONFIRM_HTTP,
-    SP_HTTP_CLIENT_HEADERS,
-    SP_HTTP_CLIENT_BODY,
-    SP_HTTP_SERVER_IGNORE,
-    SP_HTTP_AUTHORIZATION_DETECTED,
-    SP_HTTP_BASIC_CONFIRMED,
-    SP_HTTP_BASE64_STORAGE,
+    SP_HTTP_SEARCHING_AUTH,
+    SP_HTTP_CONFIRM_BASIC_SCHEME,
+    SP_HTTP_CLIENT_BODY_CONSUME,
+    SP_HTTP_SERVER_CONSUME,
+    SP_HTTP_EXTRACTING_CREDENTIALS,
+    SP_HTTP_CLIENT_CONFIRMATION_CONSUME,
     SP_HTTP_CREDENTIAL_CONFIRMATION,
 
     // POP3 Spoofing
@@ -71,7 +71,7 @@ typedef struct SpoofingParser {
 
 // ---- PRIVATE ----
 
-    char base64Credentials[BASE64_ENCODE_SIZE(2*MAX_CREDENTIAL_SIZE)];
+    char base64Credentials[BASE64_ENCODE_SIZE(2*(MAX_CREDENTIAL_SIZE + 1))];
 
     bool areStringParsersInitialized;
 
@@ -80,6 +80,8 @@ typedef struct SpoofingParser {
     struct parser secondaryStringParser;
 
     uint16_t credentialIter;
+
+    bool ignoreSpaces;
 
 } SpoofingParser;
 

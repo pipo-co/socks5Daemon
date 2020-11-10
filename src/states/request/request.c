@@ -49,19 +49,16 @@ static unsigned request_on_read(SelectorEvent *event) {
         return session->sessionStateMachine.current;
     }
     if (errored == true){
-        //loggear ( request_parser_error_message(socks5_p->request_parser.current_state);)
         session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
         return REQUEST_ERROR;
     }
 
     if (session->socksHeader.requestHeader.parser.version != SOCKS_VERSION){
-        //loggear ("Request: Invalid version!")
         session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
         return REQUEST_ERROR;
     }
     
     if (session->socksHeader.requestHeader.parser.cmd != REQUEST_PARSER_COMMAND_CONNECT){
-        //loggear ("Request: Unsupported command!")
         session->socksHeader.requestHeader.rep = COMMAND_NOT_SUPPORTED;
         return REQUEST_ERROR;
     }

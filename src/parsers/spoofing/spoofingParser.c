@@ -1,5 +1,7 @@
 #include "spoofingParser.h"
 
+#include <ctype.h>
+
 typedef SpoofingParserState (*SpoofingParserStateFunction)(SpoofingParser*, SpoofingParserSenderType, uint8_t);
 
 static SpoofingParserStateFunction stateFunctions[SP_FINISH + 1];
@@ -17,40 +19,61 @@ static SpoofingParserState spoofing_state_init(SpoofingParser *parser, SpoofingP
 static SpoofingParserState spoofing_state_confirm_pop(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
 
 // Extracting User
-static SpoofingParserState spoofing_state_user_server_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
-static SpoofingParserState spoofing_state_user_client_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
-static SpoofingParserState spoofing_state_checking_user(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
-static SpoofingParserState spoofing_state_extracting_user(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
-static SpoofingParserState spoofing_state_checking_user_response(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_pop_user_server_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_pop_user_client_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_pop_checking_user(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_pop_extracting_user(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_pop_checking_user_response(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
 
 // Extracting Pass
-static SpoofingParserState spoofing_state_pass_server_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
-static SpoofingParserState spoofing_state_pass_client_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
-static SpoofingParserState spoofing_state_checking_pass(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
-static SpoofingParserState spoofing_state_extracting_pass(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
-static SpoofingParserState spoofing_state_checking_pass_response(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_pop_pass_server_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_pop_pass_client_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_pop_checking_pass(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_pop_extracting_pass(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_pop_checking_pass_response(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+
+// HTTP Spoofing
+static SpoofingParserState spoofing_state_confirm_http(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_http_searching_auth(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_http_client_body_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_http_server_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_http_confirm_basic_scheme(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_http_extracting_credentials(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_http_client_confirmation_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
+static SpoofingParserState spoofing_state_http_credential_confirmation(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
 
 
 static void spoofing_parser_load(void) {
 
-    stateFunctions[SP_INIT]                         = spoofing_state_init;
+    stateFunctions[SP_INIT]                             = spoofing_state_init;
 
     // POP3 Spoofing
-    stateFunctions[SP_CONFIRM_POP]                  = spoofing_state_confirm_pop;
+    stateFunctions[SP_CONFIRM_POP]                      = spoofing_state_confirm_pop;
 
     // User Extraction
-    stateFunctions[SP_POP_USER_SERVER_CONSUME]      = spoofing_state_user_server_consume;
-    stateFunctions[SP_POP_USER_CLIENT_CONSUME]      = spoofing_state_user_client_consume;
-    stateFunctions[SP_POP_CHECKING_USER]            = spoofing_state_checking_user;
-    stateFunctions[SP_POP_EXTRACTING_USER]          = spoofing_state_extracting_user;
-    stateFunctions[SP_POP_CHECKING_USER_RESPONSE]   = spoofing_state_checking_user_response;
+    stateFunctions[SP_POP_USER_SERVER_CONSUME]          = spoofing_state_pop_user_server_consume;
+    stateFunctions[SP_POP_USER_CLIENT_CONSUME]          = spoofing_state_pop_user_client_consume;
+    stateFunctions[SP_POP_CHECKING_USER]                = spoofing_state_pop_checking_user;
+    stateFunctions[SP_POP_EXTRACTING_USER]              = spoofing_state_pop_extracting_user;
+    stateFunctions[SP_POP_CHECKING_USER_RESPONSE]       = spoofing_state_pop_checking_user_response;
 
     // Pass Extraction
-    stateFunctions[SP_POP_PASS_SERVER_CONSUME]      = spoofing_state_pass_server_consume;
-    stateFunctions[SP_POP_PASS_CLIENT_CONSUME]      = spoofing_state_pass_client_consume;
-    stateFunctions[SP_POP_CHECKING_PASS]            = spoofing_state_checking_pass;
-    stateFunctions[SP_POP_EXTRACTING_PASS]          = spoofing_state_extracting_pass;
-    stateFunctions[SP_POP_CHECKING_PASS_RESPONSE]   = spoofing_state_checking_pass_response;
+    stateFunctions[SP_POP_PASS_SERVER_CONSUME]          = spoofing_state_pop_pass_server_consume;
+    stateFunctions[SP_POP_PASS_CLIENT_CONSUME]          = spoofing_state_pop_pass_client_consume;
+    stateFunctions[SP_POP_CHECKING_PASS]                = spoofing_state_pop_checking_pass;
+    stateFunctions[SP_POP_EXTRACTING_PASS]              = spoofing_state_pop_extracting_pass;
+    stateFunctions[SP_POP_CHECKING_PASS_RESPONSE]       = spoofing_state_pop_checking_pass_response;
+
+    // HTTP Spoofing
+    stateFunctions[SP_CONFIRM_HTTP]                     = spoofing_state_confirm_http;
+    stateFunctions[SP_HTTP_SEARCHING_AUTH]              = spoofing_state_http_searching_auth;
+    stateFunctions[SP_HTTP_CONFIRM_BASIC_SCHEME]        = spoofing_state_http_confirm_basic_scheme;
+    stateFunctions[SP_HTTP_CLIENT_BODY_CONSUME]         = spoofing_state_http_client_body_consume;
+    stateFunctions[SP_HTTP_SERVER_CONSUME]              = spoofing_state_http_server_consume;
+    stateFunctions[SP_HTTP_EXTRACTING_CREDENTIALS]      = spoofing_state_http_extracting_credentials;
+    stateFunctions[SP_HTTP_CLIENT_CONFIRMATION_CONSUME] = spoofing_state_http_client_confirmation_consume;
+    stateFunctions[SP_HTTP_CREDENTIAL_CONFIRMATION]     = spoofing_state_http_credential_confirmation;
+    
 
     isParserLoaded = true;
 }
@@ -65,6 +88,7 @@ void spoofing_parser_init(SpoofingParser *parser) {
     parser->success = false;
     parser->areStringParsersInitialized = false;
     parser->credentialIter = 0;
+    parser->ignoreSpaces = false;
 }
 
 void spoofing_parser_spoof(SpoofingParser *parser, uint8_t *buffer, size_t bytes, SpoofingParserSenderType senderType) {
@@ -116,6 +140,7 @@ static SpoofingParserState spoofing_state_init(SpoofingParser *parser, SpoofingP
 
 static SpoofingParserState spoofing_state_confirm_pop(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
 
+    // Not POP3
     if(senderType == SPOOF_CLIENT) {
         return SP_FINISH;
     }
@@ -144,7 +169,7 @@ static SpoofingParserState spoofing_state_confirm_pop(SpoofingParser *parser, Sp
     }
 }
 
-static SpoofingParserState spoofing_state_user_server_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+static SpoofingParserState spoofing_state_pop_user_server_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
 
     if(senderType == SPOOF_SERVER) {
         return parser->currentState;
@@ -156,7 +181,7 @@ static SpoofingParserState spoofing_state_user_server_consume(SpoofingParser *pa
     }
 }
 
-static SpoofingParserState spoofing_state_user_client_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+static SpoofingParserState spoofing_state_pop_user_client_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
 
     if(senderType == SPOOF_CLIENT) {
         return parser->currentState;
@@ -168,7 +193,7 @@ static SpoofingParserState spoofing_state_user_client_consume(SpoofingParser *pa
     }
 }
 
-static SpoofingParserState spoofing_state_checking_user(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+static SpoofingParserState spoofing_state_pop_checking_user(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
 
     if(senderType == SPOOF_SERVER) {
         parser->areStringParsersInitialized = false;
@@ -199,7 +224,7 @@ static SpoofingParserState spoofing_state_checking_user(SpoofingParser *parser, 
     }
 }
 
-static SpoofingParserState spoofing_state_extracting_user(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+static SpoofingParserState spoofing_state_pop_extracting_user(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
 
     // Not POP3
     if(senderType == SPOOF_SERVER) {
@@ -225,9 +250,9 @@ static SpoofingParserState spoofing_state_extracting_user(SpoofingParser *parser
     }
 }
 
-static SpoofingParserState spoofing_state_checking_user_response(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+static SpoofingParserState spoofing_state_pop_checking_user_response(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
 
-    // Not POP3
+    // Pipelining Detected
     if(senderType == SPOOF_CLIENT) {
         return SP_FINISH;
     }
@@ -246,7 +271,7 @@ static SpoofingParserState spoofing_state_checking_user_response(SpoofingParser 
     }
 }
 
-static SpoofingParserState spoofing_state_pass_server_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+static SpoofingParserState spoofing_state_pop_pass_server_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
 
     if(senderType == SPOOF_SERVER) {
         return parser->currentState;
@@ -258,7 +283,7 @@ static SpoofingParserState spoofing_state_pass_server_consume(SpoofingParser *pa
     }
 }
 
-static SpoofingParserState spoofing_state_pass_client_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+static SpoofingParserState spoofing_state_pop_pass_client_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
 
     if(senderType == SPOOF_CLIENT) {
         return parser->currentState;
@@ -270,7 +295,7 @@ static SpoofingParserState spoofing_state_pass_client_consume(SpoofingParser *pa
     }
 }
 
-static SpoofingParserState spoofing_state_checking_pass(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+static SpoofingParserState spoofing_state_pop_checking_pass(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
 
     if(senderType == SPOOF_SERVER) {
         parser->areStringParsersInitialized = false;
@@ -308,7 +333,7 @@ static SpoofingParserState spoofing_state_checking_pass(SpoofingParser *parser, 
     }
 }
 
-static SpoofingParserState spoofing_state_extracting_pass(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+static SpoofingParserState spoofing_state_pop_extracting_pass(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
 
     // Not POP3
     if(senderType == SPOOF_SERVER) {
@@ -334,9 +359,9 @@ static SpoofingParserState spoofing_state_extracting_pass(SpoofingParser *parser
     }
 }
 
-static SpoofingParserState spoofing_state_checking_pass_response(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+static SpoofingParserState spoofing_state_pop_checking_pass_response(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
 
-    // Not POP3
+    // Pipelining Detected
     if(senderType == SPOOF_CLIENT) {
         return SP_FINISH;
     }
@@ -358,3 +383,269 @@ static SpoofingParserState spoofing_state_checking_pass_response(SpoofingParser 
         return SP_FINISH;
     }
 }
+
+static SpoofingParserState spoofing_state_confirm_http(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+
+    // Not HTTP
+    if(senderType == SPOOF_SERVER) {
+        return SP_FINISH;
+    }
+
+    if(!parser->areStringParsersInitialized) {
+
+        // Supporting HTTP 1.0 and 1.1
+        spoofing_parser_init_string_parsers(parser, "HTTP/1.", NULL);
+    }
+
+    // Not HTTP. No detectamos el header HTTP/1.* en la primera linea de los headers
+    if(byte == '\n') {
+        return SP_FINISH;
+    }
+
+    struct parser_event *event = parser_feed(&parser->primaryStringParser, byte);
+
+    if(event->type == STRING_CMP_EQ) {
+
+        parser->protocol = SPOOF_HTTP;
+        parser->areStringParsersInitialized = false;
+        return SP_HTTP_SEARCHING_AUTH;
+    }
+
+    else if(event->type == STRING_CMP_NEQ) {
+
+        parser_reset(&parser->primaryStringParser);
+        return parser->currentState;
+    }
+
+    else {
+        return parser->currentState;
+    }
+}
+
+static SpoofingParserState spoofing_state_http_searching_auth(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+
+    // Not HTTP or Error. Auth is not present in server messages. 
+    // CRLFCRLF (header ending) must reach before server response
+    if(senderType == SPOOF_SERVER) {
+        return SP_FINISH;
+    }
+
+    if(!parser->areStringParsersInitialized) {
+
+        spoofing_parser_init_string_parsers(parser, "Authorization: ", "\r\n\r\n"); // CRLFCRLF
+    }
+
+    struct parser_event *foundEvent = parser_feed(&parser->primaryStringParser, byte);
+    struct parser_event *notFoundEvent = parser_feed(&parser->secondaryStringParser, byte);
+
+    // Authorixation found
+    if(foundEvent->type == STRING_CMP_EQ) {
+
+        parser->areStringParsersInitialized = false;
+        parser->ignoreSpaces = true;
+        return SP_HTTP_CONFIRM_BASIC_SCHEME;
+    }
+
+    // Authorization not found
+    else if(notFoundEvent->type == STRING_CMP_EQ) {
+
+        parser->areStringParsersInitialized = false;
+        return SP_HTTP_CLIENT_BODY_CONSUME;
+    }
+
+    // Keep looking for Auth until a parser matches or the server sends a response (error)
+    if(foundEvent->type == STRING_CMP_NEQ) {
+
+        parser_reset(&parser->primaryStringParser);
+    }
+
+    if(foundEvent->type == STRING_CMP_NEQ) {
+
+        parser_reset(&parser->primaryStringParser);
+    }
+
+    return parser->currentState;
+}
+
+static SpoofingParserState spoofing_state_http_client_body_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+
+    if(senderType == SPOOF_CLIENT) {
+        return parser->currentState;
+    }
+
+    else {
+        parser->currentState = SP_HTTP_SERVER_CONSUME;
+        return spoofing_parser_spoof_byte(parser, senderType, byte);
+    }
+}
+
+static SpoofingParserState spoofing_state_http_server_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+
+    if(senderType == SPOOF_SERVER) {
+        return parser->currentState;
+    }
+
+    else {
+        parser->currentState = SP_HTTP_SEARCHING_AUTH;
+        return spoofing_parser_spoof_byte(parser, senderType, byte);
+    }
+}
+
+static SpoofingParserState spoofing_state_http_confirm_basic_scheme(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+
+    // Not HTTP or Error. CRLFCRLF (header ending) must reach before server response
+    if(senderType == SPOOF_SERVER) {
+        return SP_FINISH;
+    }
+
+    // Ignore leading spaces
+    if(parser->ignoreSpaces && isblank(byte)) {
+        return parser->currentState;
+    }
+
+    if(parser->ignoreSpaces && !isblank(byte)) {
+        parser->ignoreSpaces = false;
+    }
+
+    if(!parser->areStringParsersInitialized) {
+
+        // Supporting HTTP 1.0 and 1.1
+        spoofing_parser_init_string_parsers(parser, "Basic ", NULL);
+    }
+
+    struct parser_event *event = parser_feed(&parser->primaryStringParser, byte);
+
+    if(event->type == STRING_CMP_EQ) {
+
+        parser->areStringParsersInitialized = false;
+        parser->ignoreSpaces = true;
+        return SP_HTTP_EXTRACTING_CREDENTIALS;
+    }
+
+    // Cannot Spoof. 
+    // Basic not found in authorization header, the only scheme supported
+    // Note: Authorization headers only support one scheme
+    else if(event->type == STRING_CMP_NEQ) {
+        return SP_FINISH;
+    }
+
+    else {
+        return parser->currentState;
+    }
+}
+
+static SpoofingParserState spoofing_state_http_extracting_credentials(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+
+    // Not HTTP or Error. CRLFCRLF (header ending) must reach before server response
+    if(senderType == SPOOF_SERVER) {
+        return SP_FINISH;
+    }
+
+    // Ignore leading spaces
+    if(parser->ignoreSpaces && isblank(byte)) {
+        return parser->currentState;
+    }
+
+    if(parser->ignoreSpaces && !isblank(byte)) {
+        parser->ignoreSpaces = false;
+    }
+
+    // Finish Extracting
+    if(byte == ' ' || byte == '\t' || byte == '\n' || byte == '\r') {
+
+        parser->base64Credentials[parser->credentialIter] = 0;
+
+        // Decode Credentials
+        size_t len = base64_decode(parser->base64Credentials, (uint8_t*) parser->base64Credentials);
+
+        // Copy decoded base64 to username and password (separated by :)
+        size_t i;
+
+        // Copy username until :
+        for(i = 0; i < len && parser->base64Credentials[i] != ':'; i++) {
+
+            parser->username[i] = parser->base64Credentials[i];
+        }
+
+        parser->username[i] = 0;
+
+        size_t offset = i + 1;
+
+        len -= offset;
+
+        // Copy rest to password
+        for(i = 0; i < len; i++) {
+
+            parser->password[i] = parser->base64Credentials[i + offset];
+        }
+
+        parser->password[i] = 0;
+
+        parser->ignoreSpaces = false;
+        parser->credentialIter = 0;
+        return SP_HTTP_CLIENT_CONFIRMATION_CONSUME;
+    }
+
+    // Is valid base64 char
+    else if(isalnum(byte) || byte == '+' || byte == '/' || byte == '=') {
+
+        parser->base64Credentials[parser->credentialIter++] = (char) byte;
+        return parser->currentState;
+    }
+
+    // Not a valid base64 char - Error
+    else {
+
+        parser->ignoreSpaces = false;
+        parser->credentialIter = 0;
+        return SP_HTTP_CLIENT_BODY_CONSUME;
+    }
+}
+
+static SpoofingParserState spoofing_state_http_client_confirmation_consume(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+
+    if(senderType == SPOOF_CLIENT) {
+        return parser->currentState;
+    }
+
+    else {
+        parser->currentState = SP_HTTP_CREDENTIAL_CONFIRMATION;
+        return spoofing_parser_spoof_byte(parser, senderType, byte);
+    }
+}
+
+static SpoofingParserState spoofing_state_http_credential_confirmation(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
+
+    // Not HTTP or Error. Unexpected Client Message
+    if(senderType == SPOOF_CLIENT) {
+        return SP_FINISH;
+    }
+
+    if(!parser->areStringParsersInitialized) {
+
+        spoofing_parser_init_string_parsers(parser, "HTTP/1.1 2", "HTTP/1.0 2");
+    }
+
+    struct parser_event *event1 = parser_feed(&parser->primaryStringParser, byte);
+    struct parser_event *event0 = parser_feed(&parser->secondaryStringParser, byte);
+
+    // Server Confirmed Credentials!
+    if(event1->type == STRING_CMP_EQ || event0->type == STRING_CMP_EQ) {
+
+        parser->areStringParsersInitialized = false;
+        parser->success = true;
+        return SP_FINISH;
+    }
+
+    // Invalid Credentials :(
+    else if(event1->type == STRING_CMP_NEQ && event0->type == STRING_CMP_NEQ) {
+
+        parser->areStringParsersInitialized = false;
+        return SP_HTTP_SERVER_CONSUME;
+    }
+
+    else {
+        return parser->currentState;
+    }
+}
+
