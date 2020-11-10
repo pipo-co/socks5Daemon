@@ -99,14 +99,14 @@ parser_reset    (struct parser *p);
  * de parsing. Los eventos son reusado entre llamadas por lo que si se desea
  * capturar los datos se debe clonar.
  */
-const struct parser_event *
-parser_feed     (struct parser *p, const uint8_t c);
+struct parser_event *
+parser_feed     (struct parser *p, uint8_t c);
 
 /**
  * En caso de la aplicación no necesite clases caracteres, se
  * provee dicho arreglo para ser usando en `parser_init'
  */
-const unsigned *
+unsigned *
 parser_no_classes(void);
 
 

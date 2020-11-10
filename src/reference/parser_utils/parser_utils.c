@@ -162,10 +162,3 @@ struct parser_definition *parser_utils_strcmpi(struct parser_definition *pd, con
 
     return pd;
 }
-
-void
-parser_utils_strcmpi_destroy(const struct parser_definition *p) {
-    free((void *)p->states[0]);
-    free((void *)p->states);
-    free((void *)p->states_n);
-}

@@ -140,6 +140,7 @@ static unsigned dns_connection_handling (SelectorEvent * event){
         return REQUEST_ERROR;      
     }
 
+    session->clientInfo.addressTypeSelected = SOCKS_5_ADD_TYPE_DOMAIN_NAME;
     socks5_register_dns(session);
 
     return GENERATE_DNS_QUERY; 

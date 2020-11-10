@@ -82,9 +82,6 @@ void socks5_init(Socks5Args *argsParam, double maxSessionInactivityParam, FdSele
     DNSHandler.handle_block = NULL;
 
     socks5_session_state_machine_builder_init();
-
-    // Load Parsers
-    auth_request_parser_load();
 }
 
 uint32_t socks5_get_io_buffer_size(void) {
@@ -260,6 +257,10 @@ static void socks5_server_read(SelectorEvent *event){
         }
 
         statistics_add_bytes_received(readBytes);
+
+        if(selector_state_machine_state(&session->sessionStateMachine) == FORWARDING) {
+            session->socksHeader.spoofingHeader.bytesRead = (size_t) readBytes;
+        }
             
         if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
@@ -361,6 +362,10 @@ static void socks5_client_read(SelectorEvent *event){
         }
 
         statistics_add_bytes_received(readBytes);
+
+        if(selector_state_machine_state(&session->sessionStateMachine) == FORWARDING) {
+            session->socksHeader.spoofingHeader.bytesRead = (size_t) readBytes;
+        }
 
         if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
