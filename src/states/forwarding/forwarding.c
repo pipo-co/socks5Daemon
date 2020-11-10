@@ -1,12 +1,28 @@
 #include "forwarding.h"
 
+#include "argsHandler/argsHandler.h"
+#include "socks5/socks5.h"
+#include "states/stateUtilities/request/requestUtilities.h"
+
 static unsigned forwarding_on_read(SelectorEvent *event);
 static unsigned forwarding_on_write(SelectorEvent *event);
 static void forwarding_on_arrival(SelectorEvent *event);
 static void forwarding_calculate_new_fd_interest(SelectorEvent *event);
 
 static void forwarding_on_arrival(SelectorEvent *event) {
+    SessionHandlerP session = (SessionHandlerP) event->data;
+
     forwarding_calculate_new_fd_interest(event);
+
+    Socks5Args *args = socks5_get_args();
+
+    session->socksHeader.spoofingHeader.spoofingEnabled = args->disectors_enabled;
+
+    if(session->socksHeader.spoofingHeader.spoofingEnabled) {
+
+        session->socksHeader.spoofingHeader.bytesRead = 0;
+        spoofing_parser_init(&session->socksHeader.spoofingHeader.parser);
+    }
 }
 
 static unsigned forwarding_on_read(SelectorEvent *event) {
@@ -17,6 +33,37 @@ static unsigned forwarding_on_read(SelectorEvent *event) {
     }
 
     forwarding_calculate_new_fd_interest(event);
+
+    if(session->socksHeader.spoofingHeader.spoofingEnabled && !spoofing_parser_is_done(&session->socksHeader.spoofingHeader.parser)) {
+
+        SpoofingParserSenderType senderType;
+        Buffer *spoofingBuffer;
+        size_t nbytes; // Not used
+
+        if(event->fd == session->clientConnection.fd) {
+            senderType = SPOOF_CLIENT;
+            spoofingBuffer = &session->input;
+        }
+
+        else {
+            senderType = SPOOF_SERVER;
+            spoofingBuffer = &session->output;
+        }
+
+        size_t bytesRead = session->socksHeader.spoofingHeader.bytesRead;
+
+        uint8_t *spoofingDataEnd = buffer_write_ptr(spoofingBuffer, &nbytes);
+
+        uint8_t *spoofingDataStart = spoofingDataEnd - bytesRead;
+
+        spoofing_parser_spoof(&session->socksHeader.spoofingHeader.parser, spoofingDataStart, bytesRead, senderType);
+
+        // Done Spoofing
+        if(spoofing_parser_is_done(&session->socksHeader.spoofingHeader.parser) && session->socksHeader.spoofingHeader.parser.success) {
+
+            log_credential_spoofing(session);
+        }
+    }
 
     return session->sessionStateMachine.current;   
 }

@@ -8,12 +8,15 @@ static AuthRequestParserState auth_request_state_ulen(AuthRequestParser *p, uint
 static AuthRequestParserState auth_request_state_uname(AuthRequestParser *p, uint8_t byte);
 static AuthRequestParserState auth_request_state_plen(AuthRequestParser *p, uint8_t byte);
 static AuthRequestParserState auth_request_state_password(AuthRequestParser *p, uint8_t byte);
+static void auth_request_parser_load(void);
 
 typedef AuthRequestParserState (*AuthRequestStateFunction)(AuthRequestParser*, uint8_t);
 
 static AuthRequestStateFunction stateFunctions[AUTH_REQUEST_PARSER_INVALID_STATE + 1];
 
-void auth_request_parser_load() {
+static bool isParserLoaded = false;
+
+static void auth_request_parser_load(void) {
     stateFunctions[AUTH_REQUEST_PARSER_VERSION]         = auth_request_state_version;
     stateFunctions[AUTH_REQUEST_PARSER_ULEN]            = auth_request_state_ulen;
     stateFunctions[AUTH_REQUEST_PARSER_UNAME]           = auth_request_state_uname;
@@ -21,9 +24,16 @@ void auth_request_parser_load() {
     stateFunctions[AUTH_REQUEST_PARSER_PASSWORD]        = auth_request_state_password;
     stateFunctions[AUTH_REQUEST_PARSER_SUCCESS]         = NULL;
     stateFunctions[AUTH_REQUEST_PARSER_INVALID_STATE]   = NULL;
+
+    isParserLoaded = true;
 }
 
-void auth_request_parser_init(AuthRequestParser *p){
+void auth_request_parser_init(AuthRequestParser *p) {
+
+    if(!isParserLoaded) {
+        auth_request_parser_load();
+    }
+
     p->errorType = AUTH_REQUEST_VALID;
     p->currentState = AUTH_REQUEST_PARSER_VERSION;
 }

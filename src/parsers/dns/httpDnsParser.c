@@ -36,7 +36,7 @@ enum HttpDnsParserState http_dns_parser_feed(HttpDnsParser *p, uint8_t b) {
             if(event = parser_feed(&p->statusCodeParser, b), event->type == STRING_CMP_NEQ){
                 parser_reset(&p->statusCodeParser);
             }
-            else if ( event->type == STRING_CMP_EQ ){
+            else if (event->type == STRING_CMP_EQ ){
                 p->currentState = HTTP_CONTENT_LENGTH;
             }
                 

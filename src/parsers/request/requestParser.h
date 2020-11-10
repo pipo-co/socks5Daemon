@@ -43,7 +43,7 @@ typedef struct RequestParser {
 
     uint8_t cmd;
 
-    uint8_t addressType;
+    Socks5AddressTypes addressType;
 
     union RequestParserAddress address;
 

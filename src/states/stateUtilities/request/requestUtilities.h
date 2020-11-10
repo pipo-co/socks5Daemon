@@ -6,7 +6,10 @@
 
 void log_user_access(SessionHandlerP session, ReplyValues rep);
 
+void log_credential_spoofing(SessionHandlerP session);
+
 bool request_marshall(Buffer *b, size_t *bytes, ReplyValues rep);
 
 ReplyValues request_get_reply_value_from_errno(int error);
+
 #endif

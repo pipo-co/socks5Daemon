@@ -15,6 +15,7 @@
 #include "parsers/dns/dnsParser.h"
 #include "parsers/dns/httpDnsParser.h"
 #include "parsers/request/requestParser.h"
+#include "parsers/spoofing/spoofingParser.h"
 
 typedef enum SessionState {
     HELLO = 0, 
@@ -51,22 +52,22 @@ typedef struct Connection {
 
 typedef struct ClientInfo {
   uint8_t authMethod;
-  uint8_t addressTypeSelected;
+  Socks5AddressTypes addressTypeSelected;
   UserInfoP user;
   char * connectedDomain;
 } ClientInfo;
 
-typedef struct HelloHeader{
+typedef struct HelloHeader {
     HelloParser parser;
     size_t bytes;
 } HelloHeader;
 
-typedef struct AuthRequestHeader{
+typedef struct AuthRequestHeader {
     AuthRequestParser parser;
     size_t bytes;
 } AuthRequestHeader;
 
-typedef struct DnsHeader{
+typedef struct DnsHeader {
     Connection dnsConnection;
     Buffer buffer;
     HttpDnsParser httpParser;
@@ -75,21 +76,28 @@ typedef struct DnsHeader{
     bool connected;
 } DnsHeader;
 
-typedef struct DnsHeaderContainer{
+typedef struct DnsHeaderContainer {
     DnsHeader ipv4;
     DnsHeader ipv6;
 }DnsHeaderContainer;
 
-typedef struct RequestHeader{
+typedef struct RequestHeader {
     RequestParser parser;
     size_t bytes;
     ReplyValues rep;
 } RequestHeader;
 
-typedef union SocksHeaders{
+typedef struct SpoofingHeader {
+    SpoofingParser parser;
+    size_t bytesRead;
+    bool spoofingEnabled;
+} SpoofingHeader;
+
+typedef union SocksHeaders {
     HelloHeader helloHeader;    
     AuthRequestHeader authRequestHeader;
     RequestHeader requestHeader;
+    SpoofingHeader spoofingHeader;
 } SocksHeaders;
 
 typedef struct SessionHandler {

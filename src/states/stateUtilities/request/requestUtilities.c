@@ -8,15 +8,17 @@
 #define DATE_SIZE 30
 #define REPLY_SIZE 10
 
-#define LOG_MAX_SIZE 600
+#define ACCESS_LOG_MAX_SIZE (DATE_SIZE + CREDENTIAL_MAX_SIZE + SOCKADDR_TO_HUMAN_MIN + DOMAIN_NAME_MAX_LENGTH + 5)
+#define CREDENTIAL_SPOOFING_LOG_MAX_SIZE (DATE_SIZE + CREDENTIAL_MAX_SIZE + 4 + DOMAIN_NAME_MAX_LENGTH + CREDENTIAL_MAX_SIZE + CREDENTIAL_MAX_SIZE + 5)
 
+// TODO: Cuando imprime domain name tambien tiene que imprimir puerto (ambos logs)
 void log_user_access(SessionHandlerP session, ReplyValues rep) {
 
     char date[DATE_SIZE];
     char clientAddress[SOCKADDR_TO_HUMAN_MIN];
-    char serverAddress[DOMAIN_NAME_MAX_LENGTH + 1];
+    char serverAddress[SOCKADDR_TO_HUMAN_MIN];
 
-    char *printableServerAddres;
+    char *printableServerAddress;
     
     time_t now = time(NULL);
     struct tm *nowTm = localtime(&now);
@@ -25,30 +27,70 @@ void log_user_access(SessionHandlerP session, ReplyValues rep) {
 
     sockaddr_to_human(clientAddress, SOCKADDR_TO_HUMAN_MIN, (struct sockaddr *)&session->clientConnection.addr);
 
-    if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP4 || session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP6) {
+    if(session->clientInfo.addressTypeSelected == SOCKS_5_ADD_TYPE_IP4 || session->clientInfo.addressTypeSelected == SOCKS_5_ADD_TYPE_IP6) {
         
         // TODO En los casos de error faltaria que se imprima bien la IP
         sockaddr_to_human(serverAddress, SOCKADDR_TO_HUMAN_MIN, (struct sockaddr *)&session->serverConnection.addr);
-        printableServerAddres = serverAddress;
+        printableServerAddress = serverAddress;
     }
 
     //! connectedDomain no deberia ser NULL en este estado.
     else {
-        printableServerAddres = session->clientInfo.connectedDomain;
+        printableServerAddress = session->clientInfo.connectedDomain;
     }
 
-    char printBuffer[LOG_MAX_SIZE];
+    char printBuffer[ACCESS_LOG_MAX_SIZE];
     int logLen;
 
-    for(int i = 0; i < 20; i++){
-    logLen = snprintf(printBuffer, LOG_MAX_SIZE, "%s\t%s\tA\t%s\t%s\t%d\n", date, session->clientInfo.user->username, clientAddress, printableServerAddres, rep);
+    // dateSize (DATE_SIZE) + user (CREDENTIAL_MAX_SIZE) + clientAddress (SOCKADDR_TO_HUMAN_MIN) + printableServerAddress (DOMAIN_NAME_MAX_LENGTH + 1) + rep (1)
+    logLen = snprintf(printBuffer, ACCESS_LOG_MAX_SIZE, "%s\t%s\tA\t%s\t%s\t%d\n", date, session->clientInfo.user->username, clientAddress, printableServerAddress, rep);
 
-    if(logLen > LOG_MAX_SIZE) {
-        logLen = LOG_MAX_SIZE;
+    if(logLen > ACCESS_LOG_MAX_SIZE) {
+        logLen = ACCESS_LOG_MAX_SIZE;
     }
 
     logger_non_blocking_log(STDOUT_FILENO, printBuffer, logLen);
+}
+
+void log_credential_spoofing(SessionHandlerP session) {
+
+    char date[DATE_SIZE];
+    char serverAddress[SOCKADDR_TO_HUMAN_MIN];
+
+    char *printableServerAddress;
+
+    time_t now = time(NULL);
+    struct tm *nowTm = localtime(&now);
+
+    strftime(date, DATE_SIZE, "%FT%TZ", nowTm);
+
+    char* protocol = (session->socksHeader.spoofingHeader.parser.protocol == SPOOF_POP)? "POP3" : "HTTP";
+
+    if(session->clientInfo.addressTypeSelected == SOCKS_5_ADD_TYPE_IP4 || session->clientInfo.addressTypeSelected == SOCKS_5_ADD_TYPE_IP6) {
+        
+        sockaddr_to_human(serverAddress, SOCKADDR_TO_HUMAN_MIN, (struct sockaddr *)&session->serverConnection.addr);
+        printableServerAddress = serverAddress;
     }
+
+    //! connectedDomain no deberia ser NULL en este estado.
+    else {
+        printableServerAddress = session->clientInfo.connectedDomain;
+    }
+
+    char *username = session->socksHeader.spoofingHeader.parser.username;
+    char *password = session->socksHeader.spoofingHeader.parser.password;
+
+    char printBuffer[CREDENTIAL_SPOOFING_LOG_MAX_SIZE];
+    int logLen;
+
+    // dateSize (DATE_SIZE) + user (CREDENTIAL_MAX_SIZE) + protocol (4) + printableServerAddress (DOMAIN_NAME_MAX_LENGTH + 1) + username (CREDENTIAL_MAX_SIZE) + password (CREDENTIAL_MAX_SIZE)
+    logLen = snprintf(printBuffer, CREDENTIAL_SPOOFING_LOG_MAX_SIZE, "%s\t%s\tP\t%s\t%s\t%s\t%s\n", date, session->clientInfo.user->username, protocol, printableServerAddress, username, password);
+
+    if(logLen > CREDENTIAL_SPOOFING_LOG_MAX_SIZE) {
+        logLen = CREDENTIAL_SPOOFING_LOG_MAX_SIZE;
+    }
+
+    logger_non_blocking_log(STDOUT_FILENO, printBuffer, logLen);
 }
 
 bool request_marshall(Buffer *b, size_t *bytes, ReplyValues rep) {

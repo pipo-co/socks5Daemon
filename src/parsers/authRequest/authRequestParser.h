@@ -47,8 +47,6 @@ typedef struct AuthRequestParser {
 
 }AuthRequestParser;
 
-void auth_request_parser_load(void);
-
 void auth_request_parser_init(AuthRequestParser *p);
 
 enum AuthRequestParserState auth_request_parser_feed(AuthRequestParser *p, uint8_t byte);
