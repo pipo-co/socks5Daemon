@@ -23,7 +23,7 @@ bool total_bytes_received_sender(int fd);
 
 bool connected_users_sender(int fd);
 
-bool user_count_sender(int fd);
+bool total_user_count_sender(int fd);
 
 bool buffer_sizes_sender(int fd);
 

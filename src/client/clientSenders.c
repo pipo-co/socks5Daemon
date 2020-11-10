@@ -54,7 +54,7 @@ bool connected_users_sender(int fd){
 	return no_args_builder(fd, CT_QUERY, CQ_CONNECTED_USERS);
 }
 
-bool user_count_sender(int fd){
+bool total_user_count_sender(int fd){
 	return no_args_builder(fd, CT_QUERY, CQ_USER_COUNT);
 }
 
