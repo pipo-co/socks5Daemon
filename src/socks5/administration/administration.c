@@ -17,7 +17,6 @@ static void admin_auth_marshall(Buffer *b, size_t *bytes, AuthCodesStateEnum sta
 static void admin_request_arrival(SelectorEvent *event);
 static AdminStateEnum admin_request_read(SelectorEvent *event);
 static AdminStateEnum admin_response_write(SelectorEvent *event);
-static void admin_close_session(SelectorEvent *event);
 static void administration_close(SelectorEvent *event);
 static void admin_passive_accept_util(SelectorEvent *event, struct sockaddr *cli_addr, socklen_t *clilen);
 static void admin_post_read_handler(SelectorEvent *event);
@@ -372,7 +371,7 @@ static AdminStateEnum admin_response_write(SelectorEvent *event) {
     return adminSession->currentState;
 }
 
-static void admin_close_session(SelectorEvent *event) {
+void admin_close_session(SelectorEvent *event) {
     selector_unregister_fd(event->s, event->fd);
 }
 
