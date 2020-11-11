@@ -18,7 +18,7 @@ void admin_request_parser_total_bytes_received(uint8_t type, uint8_t cmd, AdminR
 
 void admin_request_parser_connected_users(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
-void admin_request_parser_user_count(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
+void admin_request_parser_total_user_count(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
 void admin_request_parser_buffer_sizes(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
@@ -26,6 +26,6 @@ void admin_request_parser_selector_timeout(uint8_t type, uint8_t cmd, AdminReque
 
 void admin_request_parser_connection_timeout(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
-void admin_request_parser_user_total_concurrent_connections(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
+void admin_request_parser_user_total_current_connections(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer);
 
 #endif

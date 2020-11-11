@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
 
 #include "dnsParser.h"
 
@@ -231,10 +232,10 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
             
             p->dataLenght += b;
             
-            if(p->dataLenght == 4){
-                if(p->currentType == A){
+            if(p->dataLenght == DNS_IP4_ADD_LENGTH){
+                if(p->currentType == DNS_QUERY_A){
                     
-                    p->addresses[p->currentAnswers].ipType = IPV4;
+                    p->addresses[p->currentAnswers].ipType = DNS_IP4_ADD_TYPE;
                     p->counter = 4;
                     p->currentState = RESPONSE_DNS_IPV4_ADDRESS;
                 }
@@ -243,10 +244,10 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                     p->currentState = RESPONSE_DNS_CNAME;
                 }   
             }
-            else if (p->dataLenght == 16){
-                if(p->currentType == AAAA){
+            else if (p->dataLenght == DNS_IP6_ADD_LENGTH){
+                if(p->currentType == DNS_QUERY_AAAA){
     
-                    p->addresses[p->currentAnswers].ipType = IPV6;
+                    p->addresses[p->currentAnswers].ipType = DNS_IP6_ADD_TYPE;
                     p->counter = p->dataLenght;
                     p->currentState = RESPONSE_DNS_IPV6_ADDRESS;
                 }

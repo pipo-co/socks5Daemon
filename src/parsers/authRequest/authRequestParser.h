@@ -6,7 +6,7 @@
 
 #include "buffer/buffer.h"
 
-#define CREDENTIAL_MAX_SIZE 255
+#define UINT8_STR_MAX_LENGTH 256
 
 typedef enum AuthRequestParserState {
     AUTH_REQUEST_PARSER_VERSION,
@@ -33,11 +33,11 @@ typedef struct AuthRequestParser {
 
     uint8_t ulen;
 
-    char username[CREDENTIAL_MAX_SIZE + 1];
+    char username[UINT8_STR_MAX_LENGTH];
 
     uint8_t plen;
 
-    char password[CREDENTIAL_MAX_SIZE + 1];
+    char password[UINT8_STR_MAX_LENGTH];
 
 //  --- PRIVATE ---
 

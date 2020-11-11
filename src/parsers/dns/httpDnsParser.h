@@ -5,11 +5,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <arpa/inet.h>
-#define STATUS_CODE 3
 
 #include "buffer/buffer.h"
 #include "reference/parser/parser.h"
 #include "reference/parser_utils/parser_utils.h"
+#include "dnsDefs.h"
 
 
 typedef enum HttpDnsParserState{
