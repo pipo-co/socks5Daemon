@@ -388,8 +388,6 @@ static int generate_new_socket(struct sockaddr *addr, socklen_t addrLen,char ** 
 }
 
 static void sigterm_handler(const int signal) {
-    int sig = signal;
-    sig = sig;
     done = true;
 }
 

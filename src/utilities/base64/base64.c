@@ -48,11 +48,11 @@ size_t base64_encode(uint8_t in[], size_t len, char out[], bool trail) {
         if(inIter < len) {
             out[outIter++] = encodingTable[((in[inIter - 1] & 0x03) << 4) | ((in[inIter] & 0xF0) >> 4)];
             out[outIter++] = encodingTable[(in[inIter] & 0x0F) << 2];
-            inIter++;
         }
         
-        else
+        else {
             out[outIter++] = encodingTable[(in[inIter - 1] & 0x03) << 4];
+        }
     }
 
     if(trail) {

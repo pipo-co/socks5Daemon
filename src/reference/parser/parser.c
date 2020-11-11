@@ -7,13 +7,6 @@
 
 /* CDT del parser */
 
-
-void parser_destroy(struct parser *p) {
-    if(p != NULL) {
-        free(p);
-    }
-}
-
 struct parser * parser_init(struct parser * p, const unsigned *classes, const struct parser_definition *def) {
     
     if(p == NULL)
@@ -46,10 +39,8 @@ struct parser_event * parser_feed(struct parser *p, uint8_t c) {
             matched = (c == when);
         } else if(state[i].when == ANY) {
             matched = true;
-        } else if(state[i].when > 0xFF) {
+        } else { 
             matched = (type & when);
-        } else {
-            matched = false;
         }
 
         if(matched) {

@@ -48,7 +48,7 @@ struct dns_header {
 };
 
 struct dns_question {
-	uint8_t *qname;
+	// uint8_t *qname; No se usa pero era parte de la estructura
 	u_int16_t qtype;
 	u_int16_t qclass;
 };

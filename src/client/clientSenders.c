@@ -242,7 +242,7 @@ static bool uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg) {
 		
 		// Closed Connection
 		if(bytes == 0) {
-			return -1;
+			return false;
 		}
 
 		if(bytes > 0) {

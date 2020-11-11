@@ -87,8 +87,6 @@ START_TEST (request_successful_test_core_on_write_success) {
     Connection serverConnection;
     UserInfo * user = malloc(sizeof(*user));
 
-    char buffer[10];
-    user->username = buffer;
     user->connectionCount = 0;
     memcpy(user->username, "tobi", sizeof("tobi"));
     

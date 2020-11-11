@@ -10,7 +10,7 @@ uint64_t client_read_uint(char * message, uint64_t max){
 	char * end;
 	char num[UINT64_BASE_10_SIZE];
 	uint64_t num64;
-	char c;
+	int c;
 
 	do {
 		printf("%s", message);

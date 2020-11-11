@@ -172,7 +172,7 @@ static bool log_in(int fd) {
 	memcpy(authMessage + index, password, plen);
 	index += plen;
 	
-	size_t bytesToSend = ulen + plen + 3;
+	size_t bytesToSend = index;
 	size_t bytesSent = 0;
 	ssize_t writeBytes;
 
@@ -229,10 +229,9 @@ static bool log_in(int fd) {
 }
 
 static void interactive_client(int fd) {
-
 	uint8_t command;
 	while(1) {
-
+		
 		print_help();
 		
 		command = client_read_uint("Insert new command: ", COMMAND_COUNT);
@@ -254,6 +253,6 @@ static void print_help(){
 
 	printf("Client help\n");
 	for (size_t i = 0; i < COMMAND_COUNT; i++){
-		printf("Command number: %ld. Desc: %s\n", i, descriptions[i]);
+		printf("Command number: %lu. Desc: %s\n", (unsigned long)i, descriptions[i]);
 	}
 }

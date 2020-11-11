@@ -83,10 +83,6 @@ struct parser {
 struct parser *
 parser_init    (struct parser * p, const unsigned *classes, const struct parser_definition *def);
 
-/** destruye el parser */
-void
-parser_destroy  (struct parser *p);
-
 /** permite resetear el parser al estado inicial */
 void
 parser_reset    (struct parser *p);
