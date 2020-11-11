@@ -9,6 +9,8 @@
 
 #include "netutils.h"
 
+#include <netinet/tcp.h>
+
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 
 extern const char *
@@ -123,6 +125,9 @@ int new_ipv4_socket(struct in_addr ip, in_port_t port, struct sockaddr *outAddr)
 
     selector_fd_set_nio(sock);
 
+    int synRetries = 2; // Send a total of 3 SYN packets => Timeout ~7s
+    setsockopt(sock, IPPROTO_TCP, TCP_SYNCNT, &synRetries, sizeof(synRetries));
+
     int ans;
 
     do{
@@ -157,6 +162,9 @@ int new_ipv6_socket(struct in6_addr ip, in_port_t port, struct sockaddr *outAddr
     } 
     
     selector_fd_set_nio(sock);
+
+    int synRetries = 2; // Send a total of 3 SYN packets => Timeout ~7s
+    setsockopt(sock, IPPROTO_TCP, TCP_SYNCNT, &synRetries, sizeof(synRetries));
 
     int ans;
 

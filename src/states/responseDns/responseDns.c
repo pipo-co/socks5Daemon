@@ -62,10 +62,13 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
         /* si la otra conexion tambien es invalida estamos en problemas,
          * no se podra recuperar la ip del servidor pedido por el
          * cliente y se llega a un estado de error */
-        if(dnsHeaderOther->dnsConnection.state == INVALID) {
+        if(!dnsHeaderOther->connected && dnsHeaderOther->dnsConnection.state == INVALID) {
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
+        } else if(dnsHeaderOther->connected) {
+            return DNS_CONNECT;
         }
+        
 
         /* si la otra conexion todavia puede ser valida solo me limpio yo y le dejo a
          * la otra conexion la posibilidad de obtener la ip del servidor pedido por el 
@@ -101,9 +104,11 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
         /* si hubo un error y la otra conexion tambien es invalida estamos en problemas,
          * no se podra recuperar la ip del servidor pedido por el
          * cliente y se llega a un estado de error */
-        if(dnsHeaderOther->dnsConnection.state == INVALID) {
+        if(!dnsHeaderOther->connected && dnsHeaderOther->dnsConnection.state == INVALID) {
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
+        } else if(dnsHeaderOther->connected) {
+            return DNS_CONNECT;
         }
 
         free(dnsHeaderMe->responseParser.addresses);
