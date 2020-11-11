@@ -6,7 +6,7 @@
 #define DEFAULT_OUTPUT_BUFFER_SIZE 512
 #define AUTH_ACK_SIZE 2
 
-static AdministrationHandlerP admin_session_init(void);
+static AdministrationSessionP admin_session_init(void);
 static void admin_on_read_handler(SelectorEvent *event);
 static void admin_on_write_handler(SelectorEvent *event);
 static void admin_auth_arrival(SelectorEvent *event);
@@ -75,7 +75,7 @@ static void admin_passive_accept_util(SelectorEvent *event, struct sockaddr *cli
         return;
     }
 
-    AdministrationHandlerP adminSession = admin_session_init();
+    AdministrationSessionP adminSession = admin_session_init();
     if(adminSession == NULL) {
         close(fd);
         return;
@@ -85,9 +85,9 @@ static void admin_passive_accept_util(SelectorEvent *event, struct sockaddr *cli
     selector_register(event->s, fd, &adminHandler, OP_READ, adminSession);
 }
 
-static AdministrationHandlerP admin_session_init(void) {
+static AdministrationSessionP admin_session_init(void) {
 
-    AdministrationHandlerP adminSession = calloc(1, sizeof(*adminSession));
+    AdministrationSessionP adminSession = calloc(1, sizeof(*adminSession));
     if(adminSession == NULL){
         return NULL;
     }
@@ -105,7 +105,10 @@ static AdministrationHandlerP admin_session_init(void) {
         return NULL;
     }
     
+    adminSession->sessionType = SOCKS5_ADMINISTRATION_SESSION;
+
     adminSession->currentState = ADMIN_AUTH_ARRIVAL;
+
     buffer_init(&adminSession->input, sessionInputBufferSize, inputBuffer);
     buffer_init(&adminSession->output, sessionOutputBufferSize, outputBuffer);
 
@@ -114,7 +117,7 @@ static AdministrationHandlerP admin_session_init(void) {
 
 static void admin_on_read_handler(SelectorEvent *event){
 
-    AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+    AdministrationSessionP adminSession = (AdministrationSessionP) event->data;
     
     Buffer * bufferInput = &adminSession->input;
     
@@ -148,7 +151,7 @@ static void admin_on_read_handler(SelectorEvent *event){
 
 static void admin_on_write_handler(SelectorEvent *event){
 
-    AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+    AdministrationSessionP adminSession = (AdministrationSessionP) event->data;
 
     Buffer * buffer = &adminSession->output;
 
@@ -179,7 +182,7 @@ static void admin_on_write_handler(SelectorEvent *event){
 
 static void admin_post_read_handler(SelectorEvent *event) {
 
-    AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+    AdministrationSessionP adminSession = (AdministrationSessionP) event->data;
         
     switch (adminSession->currentState) {
 
@@ -211,7 +214,7 @@ static void admin_post_read_handler(SelectorEvent *event) {
 
 static void admin_post_write_handler(SelectorEvent *event) {
 
-    AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+    AdministrationSessionP adminSession = (AdministrationSessionP) event->data;
 
     switch (adminSession->currentState) {
 
@@ -242,7 +245,7 @@ static void admin_post_write_handler(SelectorEvent *event) {
 
 static void admin_auth_arrival(SelectorEvent *event) {
     
-    AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+    AdministrationSessionP adminSession = (AdministrationSessionP) event->data;
 
     auth_request_parser_init(&adminSession->adminHeader.authHeader.authParser);
 
@@ -251,7 +254,7 @@ static void admin_auth_arrival(SelectorEvent *event) {
 
 static AdminStateEnum admin_auth_read(SelectorEvent *event) {
 
-    AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+    AdministrationSessionP adminSession = (AdministrationSessionP) event->data;
     AdminAuthHeader * h = &adminSession->adminHeader.authHeader;
     bool errored;
 
@@ -291,7 +294,7 @@ static AdminStateEnum admin_auth_read(SelectorEvent *event) {
 
 static AdminStateEnum auth_write(SelectorEvent *event) {
 
-    AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+    AdministrationSessionP adminSession = (AdministrationSessionP) event->data;
     
     admin_auth_marshall(&adminSession->output, &adminSession->adminHeader.authHeader.bytes, adminSession->adminHeader.authHeader.status); 
 
@@ -304,7 +307,7 @@ static AdminStateEnum auth_write(SelectorEvent *event) {
 
 static AdminStateEnum auth_write_error(SelectorEvent *event) {
 
-    AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+    AdministrationSessionP adminSession = (AdministrationSessionP) event->data;
     
     admin_auth_marshall(&adminSession->output, &adminSession->adminHeader.authHeader.bytes, adminSession->adminHeader.authHeader.status); 
 
@@ -331,14 +334,14 @@ static void admin_auth_marshall(Buffer *b, size_t *bytes, AuthCodesStateEnum sta
 
 static void admin_request_arrival(SelectorEvent *event){
 
-    AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+    AdministrationSessionP adminSession = (AdministrationSessionP) event->data;
 
     admin_request_parser_init(&adminSession->adminHeader.requestHeader.requestParser);
 
 }
 
 static AdminStateEnum admin_request_read(SelectorEvent *event){
-    AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+    AdministrationSessionP adminSession = (AdministrationSessionP) event->data;
     AdminRequestHeader * h = &adminSession->adminHeader.requestHeader;
     bool errored;
 
@@ -353,7 +356,7 @@ static AdminStateEnum admin_request_read(SelectorEvent *event){
 
 static AdminStateEnum admin_response_write(SelectorEvent *event) {
 
-    AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+    AdministrationSessionP adminSession = (AdministrationSessionP) event->data;
 
     AdminResponseBuilderContainer * b = &adminSession->adminHeader.requestHeader.responseBuilder; 
 
@@ -375,7 +378,7 @@ static void admin_close_session(SelectorEvent *event) {
 
 static void administration_close(SelectorEvent *event){
     
-    AdministrationHandlerP adminSession = (AdministrationHandlerP) event->data;
+    AdministrationSessionP adminSession = (AdministrationSessionP) event->data;
 
     close(event->fd);
 

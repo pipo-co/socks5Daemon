@@ -19,6 +19,7 @@
 #include "selector/selector.h"
 #include "netutils/netutils.h"
 #include "socks5/socks5.h"
+#include "socks5/abstractSession.h"
 
 #define QUERY_BUFFER 128
 
@@ -58,7 +59,9 @@ typedef union AdminHeaders{
     AdminRequestHeader requestHeader;
 } AdminHeaders;
 
-typedef struct AdministrationHandler {
+typedef struct AdministrationSession {
+    SessionType sessionType;
+
     Buffer input;
     Buffer output;
     
@@ -68,9 +71,9 @@ typedef struct AdministrationHandler {
 
     UserInfoP user;
     
-} AdministrationHandler;
+} AdministrationSession;
 
-typedef AdministrationHandler * AdministrationHandlerP;
+typedef AdministrationSession * AdministrationSessionP;
 
 void administration_init(void);
 

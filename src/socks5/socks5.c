@@ -554,6 +554,8 @@ static SessionHandlerP socks5_session_init(void) {
         return NULL;
     }
 
+    session->sessionType = SOCKS5_CLIENT_SESSION;
+
     buffer_init(&session->input, sessionInputBufferSize, inputBuffer);
     buffer_init(&session->output, sessionOutputBufferSize, outputBuffer);
 
@@ -682,23 +684,27 @@ void socks5_selector_cleanup(void) {
 // TODO: Update clean-up
 static void socks5_cleanup_session(SelectorEvent *event, void *maxSessionInactivityParam) {
 
-    double maxSessionInactivity = *((double*)maxSessionInactivityParam);
-
-    // TODO: Ignore administrators
-
     // Socket pasivo
     if(event->data == NULL) {
         return;
     }
 
-    SessionHandlerP session = (SessionHandlerP) event->data;
-    // fprintf(stderr, "Try clean of %d. Session: %p.\n", event->fd, (void *) session);
-    
-    if(event->fd == session->clientConnection.fd && difftime(time(NULL), session->lastInteraction) >= maxSessionInactivity) {
+    double maxSessionInactivity = *((double*)maxSessionInactivityParam);
+
+    AbstractSession *absSession = (AbstractSession*) event->data;
+
+    if(absSession->sessionType == SOCKS5_CLIENT_SESSION) {
+
+        SessionHandlerP session = (SessionHandlerP) absSession;
+
+        if(event->fd == session->clientConnection.fd && difftime(time(NULL), session->lastInteraction) >= maxSessionInactivity) {
         
-        // fprintf(stderr, "Cleaned Up Session of Client Socket %d\n", event->fd);
-        selector_unregister_fd(event->s, event->fd);
+            selector_unregister_fd(event->s, event->fd);
+        }
     }
+
+    // If absSession is SOCKS5_ADMINISTRATIVE_SESSION
+        // Don't Clean Up
 }
 
 void socks5_close_user_sessions(UserInfoP user) {
