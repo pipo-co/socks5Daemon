@@ -16,6 +16,7 @@ static void method_announcement_on_arrival(SelectorEvent *event) {
 
     session->socksHeader.helloHeader.bytes = 0;
 
+    /* Primer escritura del mensaje antes de hacerle el primer send al cliente */
     hello_marshall(&session->output, &session->socksHeader.helloHeader.bytes, session->clientInfo.authMethod); 
 
     selector_set_interest_event(event, OP_WRITE);

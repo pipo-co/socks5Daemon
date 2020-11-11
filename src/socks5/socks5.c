@@ -439,6 +439,8 @@ static void socks5_dns_read(SelectorEvent *event){
     
     SessionHandlerP session = (SessionHandlerP) event->data;
 
+    session->lastInteraction = time(NULL);
+
     DnsHeader *header;
 
     if(event->fd == session->dnsHeaderContainer->ipv4.dnsConnection.fd) {
@@ -479,6 +481,8 @@ static void socks5_dns_read(SelectorEvent *event){
 static void socks5_dns_write(SelectorEvent *event){
     
     SessionHandlerP session = (SessionHandlerP) event->data;
+
+    session->lastInteraction = time(NULL);
 
     DnsHeader *header;
 

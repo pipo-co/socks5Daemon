@@ -38,15 +38,15 @@ static unsigned flush_closer_on_read(SelectorEvent *event) {
         closerState = &session->clientConnection.state;
     }
 
-    // State Transition
+    // Transicion de estados 
     if(*closyState == CLOSING) {
 
-        // If either connection need flushing, we are done
+        /* Si ninguno de los dos buffer necesita ser vaciado, ya terminamos */
         if(*closerState == CLOSED && !buffer_can_read(&closyBuffer)) {
-
+            /*Se le realiza el shutdown al fd indicando que no se escribira mas por ahi */
             shutdown(closerFd, SHUT_WR);
             *closyState = CLOSED;
-
+            /* El estado finish se ocupara de liberar los datos necesarios */
             return FINISH;
         }
 
@@ -110,12 +110,12 @@ static unsigned flush_closer_on_write(SelectorEvent *event) {
         closerInterest |= OP_WRITE;
     }
 
-    // Si todavia hay cosas que flushear de closer
+    /* Si todavia hay cosas que vaciar de closer */
     if(buffer_can_read(&closerBuffer)) {
         closyInterest |= OP_WRITE;
     }
 
-    // Si ya no hay nada que mandarle al closer pero todavía no le mandamos el shutdown
+    /* Si ya no hay nada que mandarle al closer pero todavía no le mandamos el shutdown */
     else if(*closerStateP == CLOSING) {
         shutdown(closyFd, SHUT_WR);
         *closerStateP = CLOSED;

@@ -41,9 +41,13 @@ static unsigned flush_closy_on_write(SelectorEvent *event) {
         }
         selector_set_interest(event->s, clientFd, OP_NOOP);
     }
-
-    if(*clientState == CLOSED && *serverState == CLOSED)
+    /* Cuando finalmente los dos estan cerrados, se termino la conexion */
+    if(*clientState == CLOSED && *serverState == CLOSED){
+    
+        /*El estado finish se ocupara de liberar los datos necesarios */
         return FINISH;
+    }
+        
 
     return session->sessionStateMachine.current;
 }

@@ -12,11 +12,13 @@ static void hello_error_on_arrival(SelectorEvent *event) {
 
     session->socksHeader.helloHeader.bytes = 0;
 
+    /* Primer escritura del mensaje antes de hacerle el primer send al cliente */
     hello_error_marshall(&session->output, &session->socksHeader.helloHeader.bytes);
 
     selector_set_interest(event->s, session->clientConnection.fd, OP_WRITE);
 }
 
+/* Una vez que envie el mensaje de error me voy al estado finnish que se ocupara de liberar los recursos de mi session */
 static unsigned hello_error_on_write(SelectorEvent *event) {
 
     SessionHandlerP session = (SessionHandlerP) event->data;

@@ -25,11 +25,13 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
     DnsHeader *ipv4 = &session->dnsHeaderContainer->ipv4;
     DnsHeader *ipv6 = &session->dnsHeaderContainer->ipv6;
 
+    /* Se revisa si la conexion aun sigue en progreso, de no estarlo, se debe probar con otra conexion */
     if(getsockopt(session->serverConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
-        
+        /* Ya no es valido el fd de la conexion, tengo que obtener otro */
         selector_unregister_fd(event->s, event->fd);
 
         if(ipv4->responseParser.addresses != NULL && ipv4->responseParser.counter < ipv4->responseParser.totalAnswers){
+            /* Intentar establecer otra conexion con alguno de los ips de la lista obtenidas en la query dns */
             
             do {
                 session->serverConnection.fd =
@@ -40,7 +42,8 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
                     session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(errno); 
                 }
             } while(session->serverConnection.fd  == -1 && ipv4->responseParser.counter < ipv4->responseParser.totalAnswers);
-                        
+            /* si sali por la condicion de un fd distinto de -1 lo debo registrar y volver a revisar la conexion cuando
+             * vuelvan a despertarme */          
             if(session->serverConnection.fd != -1) {
                 socks5_register_server(session);
                 return session->sessionStateMachine.current;
@@ -58,13 +61,14 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
                     session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(errno); 
                 }
             } while(session->serverConnection.fd  == -1 && ipv6->responseParser.counter < ipv6->responseParser.totalAnswers);
-                        
+            /* idem caso anterior */           
             if(session->serverConnection.fd != -1) {
                 socks5_register_server(session);
                 return session->sessionStateMachine.current;
             }
         }
-        
+        /* si falle estableciendo otra conexion envio directamente el error que me envio el socket de mi evento */
+        session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(error); 
         return REQUEST_ERROR;
     }
     

@@ -34,6 +34,7 @@
 #include "statistics/statistics.h"
 
 #define SERVER_BACKLOG 20
+#define SELECTOR_MAX_ENTRIES 1024
 
 #define DEFAULT_SELECT_TIMEOUT 7
 #define DEFAULT_MAX_SESSION_INACTIVITY 15
@@ -222,7 +223,7 @@ static FdSelector initialize_selector(char ** errorMessage) {
         return NULL;
     }
 
-    FdSelector selector = selector_new(1024);
+    FdSelector selector = selector_new(SELECTOR_MAX_ENTRIES);
     if(selector == NULL) {
         *errorMessage = "Unable to create selector";
         return NULL;
@@ -284,6 +285,7 @@ static int generate_register_ipv6_socket(FdSelector selector, char **errorMessag
 }
 
 static int generate_administration_socket(FdSelector selector, char **errorMessage) {
+    
     int ret, fd;
     struct in_addr ipv4addr;
     struct in6_addr ipv6addr;

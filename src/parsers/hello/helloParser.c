@@ -3,7 +3,6 @@
 
 #include "helloParser.h"
 
-
 void hello_parser_init(HelloParser *p, bool (*on_auth_method)(HelloParser *p, uint8_t currentMethod), void * data) {
 
     p->current_state = HELLO_PARSER_VERSION;

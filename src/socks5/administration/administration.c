@@ -26,6 +26,7 @@ static FdHandler adminHandler;
 static uint32_t sessionInputBufferSize;
 static uint32_t sessionOutputBufferSize;
 
+
 void administration_init(void) {
 
     sessionInputBufferSize = DEFAULT_INPUT_BUFFER_SIZE;
