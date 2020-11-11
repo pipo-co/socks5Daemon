@@ -48,7 +48,7 @@ sockaddr_to_human(char *buff, const size_t buffsize,
     const size_t len = strlen(buff);
 
     if(handled) {
-        snprintf(buff + len, buffsize - len, ":%d", ntohs(port));
+        snprintf(buff + len, buffsize - len, "\t%d", ntohs(port));
     }
     buff[buffsize - 1] = 0;
 
@@ -108,6 +108,12 @@ int new_ipv4_socket(struct in_addr ip, in_port_t port, struct sockaddr *outAddr)
 
 	int sock;
 	struct sockaddr_in addr; 
+	memset(&addr, '\0',sizeof(addr)); 
+
+    addr.sin_family = AF_INET;
+    addr.sin_port = port; 
+	addr.sin_addr = ip;
+    memcpy(outAddr, (struct sockaddr*) &addr, sizeof(addr));
     
     // socket create and varification 
     sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
@@ -116,12 +122,6 @@ int new_ipv4_socket(struct in_addr ip, in_port_t port, struct sockaddr *outAddr)
     } 
 
     selector_fd_set_nio(sock);
-    
-	memset(&addr, '\0',sizeof(addr)); 
-
-    addr.sin_family = AF_INET;
-    addr.sin_port = port; 
-	addr.sin_addr = ip;
 
     int ans;
 
@@ -132,7 +132,6 @@ int new_ipv4_socket(struct in_addr ip, in_port_t port, struct sockaddr *outAddr)
         close(sock);
         return -1;
     }
-    memcpy(outAddr, (struct sockaddr*) &addr, sizeof(addr));
 	return sock;
 }
 
@@ -144,6 +143,12 @@ int new_ipv6_socket(struct in6_addr ip, in_port_t port, struct sockaddr *outAddr
 
 	int sock;
 	struct sockaddr_in6 addr; 
+	memset(&addr, '\0',sizeof(addr));
+
+    addr.sin6_family = AF_INET6;
+    addr.sin6_port = port; 
+	addr.sin6_addr = ip;
+    memcpy(outAddr, (struct sockaddr*) &addr, sizeof(addr));
   
     // socket create and varification 
     sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP); 
@@ -152,12 +157,6 @@ int new_ipv6_socket(struct in6_addr ip, in_port_t port, struct sockaddr *outAddr
     } 
     
     selector_fd_set_nio(sock);
-
-	memset(&addr, '\0',sizeof(addr));
-
-    addr.sin6_family = AF_INET6;
-    addr.sin6_port = port; 
-	addr.sin6_addr = ip;
 
     int ans;
 
