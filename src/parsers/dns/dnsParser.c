@@ -239,8 +239,7 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                     p->counter = 4;
                     p->currentState = RESPONSE_DNS_IPV4_ADDRESS;
                 }
-                else
-                {
+                else {
                     p->totalAnswers--;
                     p->currentState = RESPONSE_DNS_CNAME;
                 }   
@@ -343,6 +342,9 @@ bool response_dns_parser_consume(Buffer *buffer, ResponseDnsParser *p, bool *err
         response_dns_parser_feed(p, byte); 
     }
 
+    if(*errored){
+        fprintf(stderr, "Error state: %d\n",p->currentState);
+    }
     return response_dns_parser_is_done(p->currentState, errored);
 }
 
