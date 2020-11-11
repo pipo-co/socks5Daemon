@@ -6,7 +6,7 @@ START_TEST (request_successful_test_core_request_marshall_incomplete) {
     buffer_init(&buff, 4, dummyBuffer);
     size_t bytes = 0;
 
-   // request_marshall(&buff, &bytes);
+    request_marshall(&buff, &bytes, RESPONSE_SUCCESS_MESSAGE);
 
     ck_assert_uint_eq(bytes, 4);
     ck_assert_uint_eq(buffer_read(&buff), SOCKS_VERSION);
@@ -24,7 +24,7 @@ START_TEST (request_successful_test_core_request_marshall_complete) {
     buffer_init(&buff, 11, dummyBuffer);
     size_t bytes = 0;
 
-   // request_marshall(&buff, &bytes,);
+   request_marshall(&buff, &bytes, RESPONSE_SUCCESS_MESSAGE);
 
     ck_assert_uint_eq(bytes, 10);
     ck_assert_uint_eq(buffer_read(&buff), SOCKS_VERSION);
@@ -57,7 +57,9 @@ START_TEST (request_successful_test_core_on_write_success) {
     session->sessionStateMachine = stm;
 
     RequestHeader requestHeader;
-    requestHeader.bytes = AUTH_REPLY_SIZE;
+    requestHeader.bytes = 0;
+    requestHeader.rep = SUCCESSFUL;
+    
     
     session->socksHeader.requestHeader = requestHeader;
 

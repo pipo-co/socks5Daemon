@@ -59,6 +59,7 @@ START_TEST (request_error_test_core_on_write_success) {
     socks5_p->sessionStateMachine = stm;
 
     RequestHeader requestHeader;
+    requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
     //requestHeader.bytes = REQUEST_ERROR_SIZE;
     
     socks5_p->socksHeader.requestHeader = requestHeader;
