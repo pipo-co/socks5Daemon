@@ -14,6 +14,7 @@
 #include "netutils/netutils.h"
 #include "stateMachineBuilder/stateMachineBuilder.h"
 #include "statistics/statistics.h"
+#include "administration/administration.h"
 
 #define DEFAULT_INPUT_BUFFER_SIZE 512
 #define DEFAULT_OUTPUT_BUFFER_SIZE 512
@@ -554,6 +555,8 @@ static SessionHandlerP socks5_session_init(void) {
         return NULL;
     }
 
+    session->sessionType = SOCKS5_CLIENT_SESSION;
+
     buffer_init(&session->input, sessionInputBufferSize, inputBuffer);
     buffer_init(&session->output, sessionOutputBufferSize, outputBuffer);
 
@@ -584,16 +587,10 @@ static void socks5_client_close(SelectorEvent *event){
         
         if(session->dnsHeaderContainer->ipv4.dnsConnection.state != INVALID) {
             selector_unregister_fd(event->s, session->dnsHeaderContainer->ipv4.dnsConnection.fd);
-        } 
-        else {
-            // fprintf(stderr, "DNS was already invalid. Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv4.dnsConnection.fd, session->sessionStateMachine.current);
         }
         
         if(session->dnsHeaderContainer->ipv6.dnsConnection.state != INVALID) {
             selector_unregister_fd(event->s, session->dnsHeaderContainer->ipv6.dnsConnection.fd);
-        }
-        else {
-            // fprintf(stderr, "DNS was already invalid. Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv6.dnsConnection.fd, session->sessionStateMachine.current);
         }
 
         if(session->dnsHeaderContainer->ipv4.buffer.data != NULL) {
@@ -656,12 +653,12 @@ static void socks5_dns_close(SelectorEvent *event) {
 
     close(event->fd);
     
-    // fprintf(stderr, "DNS closed. Fd: %d. State: %d\n", event->fd, session->sessionStateMachine.current);
     statistics_dec_current_connection();
     
     if(session->dnsHeaderContainer->ipv4.dnsConnection.fd == event->fd) {
         session->dnsHeaderContainer->ipv4.dnsConnection.state = INVALID;
     }
+
     else {
         session->dnsHeaderContainer->ipv6.dnsConnection.state = INVALID;
     }
@@ -679,48 +676,63 @@ void socks5_selector_cleanup(void) {
     selector_fd_cleanup(selector, socks5_cleanup_session, (void*) &maxSessionInactivity);
 }
 
-// TODO: Update clean-up
 static void socks5_cleanup_session(SelectorEvent *event, void *maxSessionInactivityParam) {
-
-    double maxSessionInactivity = *((double*)maxSessionInactivityParam);
-
-    // TODO: Ignore administrators
 
     // Socket pasivo
     if(event->data == NULL) {
         return;
     }
 
-    SessionHandlerP session = (SessionHandlerP) event->data;
-    // fprintf(stderr, "Try clean of %d. Session: %p.\n", event->fd, (void *) session);
-    
-    if(event->fd == session->clientConnection.fd && difftime(time(NULL), session->lastInteraction) >= maxSessionInactivity) {
+    double maxSessionInactivity = *((double*)maxSessionInactivityParam);
+
+    AbstractSession *absSession = (AbstractSession*) event->data;
+
+    if(absSession->sessionType == SOCKS5_CLIENT_SESSION) {
+
+        SessionHandlerP session = (SessionHandlerP) absSession;
+
+        if(event->fd == session->clientConnection.fd && difftime(time(NULL), session->lastInteraction) >= maxSessionInactivity) {
         
-        // fprintf(stderr, "Cleaned Up Session of Client Socket %d\n", event->fd);
-        selector_unregister_fd(event->s, event->fd);
+            socks5_close_session(event);
+        }
     }
+
+    // If absSession is SOCKS5_ADMINISTRATIVE_SESSION
+        // Don't Clean Up
 }
 
 void socks5_close_user_sessions(UserInfoP user) {
     selector_fd_cleanup(selector, socks5_close_user_sessions_util, (void*) user);
 }
 
-// TODO: Update user clean-up
 static void socks5_close_user_sessions_util(SelectorEvent *event, void *userParam) {
-
-    UserInfoP user = (UserInfoP) userParam;
-
-    // TODO: Handle Administrators
 
     // Socket pasivo
     if(event->data == NULL) {
         return;
     }
 
-    SessionHandlerP session = (SessionHandlerP) event->data;
+    UserInfoP user = (UserInfoP) userParam;
+
+    AbstractSession *absSession = (AbstractSession*) event->data;
+
+    if(absSession->sessionType == SOCKS5_CLIENT_SESSION) {
+
+        SessionHandlerP session = (SessionHandlerP) absSession;
     
-    if(event->fd == session->clientConnection.fd && session->clientInfo.user == user) {
+        if(event->fd == session->clientConnection.fd && session->clientInfo.user == user) {
         
-        selector_unregister_fd(event->s, event->fd);
+            socks5_close_session(event);
+        }
+    }
+
+    else if(absSession->sessionType == SOCKS5_ADMINISTRATION_SESSION) {
+
+        AdministrationSessionP session = (AdministrationSessionP) absSession;
+
+        if(session->user == user) {
+
+            admin_close_session(event);
+        }
     }
 }

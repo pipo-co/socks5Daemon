@@ -62,6 +62,8 @@ static unsigned request_on_read(SelectorEvent *event) {
         session->socksHeader.requestHeader.rep = COMMAND_NOT_SUPPORTED;
         return REQUEST_ERROR;
     }
+
+    session->clientInfo.port = session->socksHeader.requestHeader.parser.port;
     
     if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_DOMAIN_NAME){
         return dns_connection_handling(event);
@@ -78,6 +80,7 @@ static unsigned dns_connection_handling (SelectorEvent * event){
     struct in_addr ipv4addr;
     struct in6_addr ipv6addr;
 
+    session->clientInfo.addressTypeSelected = SOCKS_5_ADD_TYPE_DOMAIN_NAME;
     session->clientInfo.connectedDomain = malloc(DOMAIN_NAME_MAX_LENGTH);
     if(session->clientInfo.connectedDomain == NULL){
         session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
@@ -141,7 +144,6 @@ static unsigned dns_connection_handling (SelectorEvent * event){
         return REQUEST_ERROR;      
     }
 
-    session->clientInfo.addressTypeSelected = SOCKS_5_ADD_TYPE_DOMAIN_NAME;
     socks5_register_dns(session);
 
     /* tendre que realizar un pedido al servidor doh para conseguir la ip del dominio enviado por el cliente */
@@ -150,6 +152,7 @@ static unsigned dns_connection_handling (SelectorEvent * event){
 
 static unsigned ip_connection_handling(SelectorEvent * event){
     SessionHandlerP session = (SessionHandlerP) event->data;
+    session->clientInfo.addressTypeSelected = session->socksHeader.requestHeader.parser.addressType;
 
     /* para todas las conexiones, en primer instancia se debera realizar un connect trial. Si el connect no falla, cuando nos vuelvan a llamar
      * en un estado proximo, revisaremos las opciones del socket para ver si verdaderamente sI la conexion sigue en proceso */
@@ -177,7 +180,6 @@ static unsigned ip_connection_handling(SelectorEvent * event){
         return REQUEST_ERROR;      
     }
 
-    session->clientInfo.addressTypeSelected = session->socksHeader.requestHeader.parser.addressType;
     socks5_register_server(session);
 
     return IP_CONNECT;

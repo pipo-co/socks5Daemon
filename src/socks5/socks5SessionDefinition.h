@@ -9,6 +9,7 @@
 #include "buffer/buffer.h"
 #include "stateMachine/selectorStateMachine.h"
 #include "userHandler/userHandler.h"
+#include "socks5/abstractSession.h"
 
 #include "parsers/hello/helloParser.h"
 #include "parsers/authRequest/authRequestParser.h"
@@ -54,6 +55,7 @@ typedef struct ClientInfo {
   uint8_t authMethod;
   Socks5AddressTypes addressTypeSelected;
   UserInfoP user;
+  in_port_t port;
   char * connectedDomain;
 } ClientInfo;
 
@@ -101,6 +103,8 @@ typedef union SocksHeaders {
 } SocksHeaders;
 
 typedef struct SessionHandler {
+    SessionType sessionType;
+
     Buffer input;
     Buffer output;
 
@@ -120,4 +124,5 @@ typedef struct SessionHandler {
 } SessionHandler;
 
 typedef SessionHandler * SessionHandlerP;
+
 #endif

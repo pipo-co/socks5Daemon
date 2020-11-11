@@ -19,6 +19,7 @@
 #include "selector/selector.h"
 #include "netutils/netutils.h"
 #include "socks5/socks5.h"
+#include "socks5/abstractSession.h"
 
 
 
@@ -86,8 +87,9 @@ typedef union AdminHeaders{
 /* Caracteriza una sesion de un cliente con el administrador con sus buffer
 de entrada y salida, el encabezado correspondiente al estado en que se encuentra
 la conexion y el usuario que esta conectado */
+typedef struct AdministrationSession {
+    SessionType sessionType;
 
-typedef struct AdministrationHandler {
     Buffer input;
     Buffer output;
     
@@ -97,9 +99,9 @@ typedef struct AdministrationHandler {
 
     UserInfoP user;
     
-} AdministrationHandler;
+} AdministrationSession;
 
-typedef AdministrationHandler * AdministrationHandlerP;
+typedef AdministrationSession * AdministrationSessionP;
 
 /* encargado de inicializar el handler que se usara para las conexiones con el 
 administrador */
@@ -113,5 +115,7 @@ void admin_passive_accept_ipv4(SelectorEvent *event);
 /* encargado de aceptar conexiones para ipv6, generarles su sesion y cargarlos
 en el selector */
 void admin_passive_accept_ipv6(SelectorEvent *event);
+
+void admin_close_session(SelectorEvent *event);
 
 #endif

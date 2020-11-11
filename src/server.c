@@ -37,7 +37,7 @@
 #define SELECTOR_MAX_ENTRIES 1024
 
 #define DEFAULT_SELECT_TIMEOUT 7
-#define DEFAULT_MAX_SESSION_INACTIVITY 7
+#define DEFAULT_MAX_SESSION_INACTIVITY 15
 
 static int generate_new_socket(struct sockaddr *addr, socklen_t addrLen,char ** errorMessage);
 static void sigterm_handler(const int signal);
