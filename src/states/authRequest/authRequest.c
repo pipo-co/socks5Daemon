@@ -29,12 +29,10 @@ static unsigned auth_request_on_read(SelectorEvent *event) {
     }
 
     if(errored == true) {
-        // loggear ( auth_request_parser_error_message(socks5_p->auth_parser.current_state);)
         return AUTH_ERROR;
     }
 
     if(h->parser.version != AUTH_VERSION) {
-        //loggear ("AuthRequest: Invalid version!")
         return AUTH_ERROR;
     }
 
