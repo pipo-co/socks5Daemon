@@ -4,6 +4,8 @@
 #include "userHandler/userHandler.h"
 #include "socks5/socks5.h"
 
+#include <string.h>
+
 
 void admin_request_parser_add_user(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
 
@@ -41,12 +43,17 @@ void admin_request_parser_remove_user(uint8_t type, uint8_t cmd, AdminRequestPar
 
     uint8_t status = 0x00;
 
-    if(!user_handler_user_exists(args->user.uname, NULL)) {
+    if(args->string == NULL || args->string[0] == 0 || strcmp(args->string, ANONYMOUS_USER_CREDENTIALS) == 0) {
+        status = 0xFE;
+    }
+
+    else if(!user_handler_user_exists(args->string, NULL)) {
         status = 0x01;
     }
 
     else {
         bool deleteStatus = user_handler_delete_user(args->string);
+
         if(deleteStatus == false) {
             status = 0xFF;
         }

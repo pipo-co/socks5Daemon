@@ -339,13 +339,20 @@ static void admin_request_arrival(SelectorEvent *event){
 
 }
 
-static AdminStateEnum admin_request_read(SelectorEvent *event){
+static AdminStateEnum admin_request_read(SelectorEvent *event) {
+
     AdministrationSessionP adminSession = (AdministrationSessionP) event->data;
     AdminRequestHeader * h = &adminSession->adminHeader.requestHeader;
     bool errored;
 
     if(!admin_request_parser_consume(&h->requestParser, &adminSession->input, &errored)) {
         return adminSession->currentState;
+    }
+
+    // Validate if trying to remove current user - Patch
+    // TYPE and CMD of Remove User Command
+    if(h->requestParser.type == ARP_MODIFICATION && h->requestParser.command == ARP_REMOVE_USER) {
+        h->requestParser.args.string[0] = 0;
     }
 
     h->requestParser.request_handler(h->requestParser.type, h->requestParser.command, &h->requestParser.args, &h->responseBuilder);

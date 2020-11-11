@@ -105,7 +105,7 @@ UserInfoP user_handler_add_user(char *username, char *password, bool admin) {
 
 bool user_handler_delete_user(char *username) {
 
-    if(username == NULL || *username == 0) {
+    if(username == NULL || *username == 0 || strcmp(username, ANONYMOUS_USER_CREDENTIALS) == 0) {
         return false;
     }
 
