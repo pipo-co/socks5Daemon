@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +22,7 @@
 #define DEFAULT_DNS_BUFFER_SIZE 512
 
 #define MIN_IO_BUFFER_SIZE 50
-#define MAX_IO_BUFFER_SIZE 1*1024*1024
+#define MAX_IO_BUFFER_SIZE (1*1024*1024)
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 

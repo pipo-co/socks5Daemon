@@ -1,3 +1,4 @@
+
 #include "parsers/adminRequestParser/adminRequestModifierHandlers.h"
 #include "adminResponseBuilder.h"
 
@@ -43,7 +44,7 @@ void admin_request_parser_remove_user(uint8_t type, uint8_t cmd, AdminRequestPar
 
     uint8_t status = 0x00;
 
-    if(args->string == NULL || args->string[0] == 0 || strcmp(args->string, ANONYMOUS_USER_CREDENTIALS) == 0) {
+    if(args->string[0] == 0 || strcmp(args->string, ANONYMOUS_USER_CREDENTIALS) == 0) {
         status = 0xFE;
     }
 
@@ -101,7 +102,7 @@ void admin_request_parser_toggle_connection_clean_up(uint8_t type, uint8_t cmd, 
     else {
         Socks5Args *serverArgs = socks5_get_args();
 
-        serverArgs->disectors_enabled = args->uint8;
+        serverArgs->cleanupEnable = args->uint8;
     }
 
     outContainer->type = type;

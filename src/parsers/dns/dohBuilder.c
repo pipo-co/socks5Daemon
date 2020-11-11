@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -75,7 +76,7 @@ static size_t doh_builder_build_dns_query(char * domain, uint16_t qtype, uint8_t
 static void doh_builder_add_header_value(uint8_t *buff, size_t *size, char *header, char *value);
 static void doh_builder_add_request_line(uint8_t *buff, size_t *size, char *method, char *path, char *version);
 
-int doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args * args, size_t bufSize) {
+bool doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args * args, size_t bufSize) {
 
     // Socks5Args * args = socks5_get_args();
     struct doh *doh = &args->doh;
@@ -86,7 +87,7 @@ int doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args *
     } else if(qtype == AF_INET6) {
         qtype = DNS_QUERY_AAAA;
     } else {
-        return -1;
+        return false;
     }
 
     size_t size = 0;
@@ -95,7 +96,7 @@ int doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args *
     uint8_t dnsQuery[MAX_DNS_QUERY_SIZE];
     size_t querySize = doh_builder_build_dns_query(domain, qtype, dnsQuery, MAX_DNS_QUERY_SIZE);
     if(querySize == 0) {
-        return -1;
+        return false;
     }
         
     char path[MAX_PATH_SIZE];
@@ -134,7 +135,7 @@ int doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args *
 
     uint8_t *ans = malloc(MAX(size, bufSize));
     if(ans == NULL) {
-        return -1;
+        return false;
     }
 
 
@@ -142,7 +143,7 @@ int doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args *
     buffer_init(buff, size, ans);
     buffer_write_adv(buff, size);
 
-    return 0;
+    return true;
 }
 
 static size_t doh_builder_build_dns_query(char * domain, uint16_t qtype, uint8_t *buffer, size_t size) {

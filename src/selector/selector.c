@@ -278,6 +278,7 @@ ensure_capacity(FdSelector s, const size_t n) {
     } else {
         // hay que agrandar...
         const size_t new_size = next_capacity(n);
+        //raro, pvs-studio lo detecta como siempre falso
         if (new_size > SIZE_MAX/element_size) { // ver MEM07-C
             ret = SELECTOR_ENOMEM;
         } else {
@@ -560,6 +561,7 @@ handle_block_notifications(FdSelector s) {
         .s = s,
     };
     pthread_mutex_lock(&s->resolution_mutex);
+    //Hace free y despues pregunta por el estado de j, pvs studio lo detecta como error
     for(struct BlockingJob *j = s->resolution_jobs;
         j != NULL ;
         j  = j->next) {

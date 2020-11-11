@@ -86,13 +86,17 @@ static unsigned dns_connection_handling (SelectorEvent * event){
         session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
         return REQUEST_ERROR;
     }
-    strcpy(session->clientInfo.connectedDomain, (char *) session->socksHeader.requestHeader.parser.address.domainName);
+    strncpy(session->clientInfo.connectedDomain, (char *) session->socksHeader.requestHeader.parser.address.domainName, UINT8_STR_MAX_LENGTH - 1);
 
 
     // Verificar la IP del servidor DoH. (IPv4 o IPv6)
     if (inet_pton(AF_INET, args->doh.ip, &ipv4addr)) {
         
         session->dnsHeaderContainer = calloc(1, sizeof(*session->dnsHeaderContainer));
+        if(session->dnsHeaderContainer == NULL){
+            session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+            return REQUEST_ERROR;
+        }
         /* para todas las conexiones, en primer instancia se debera realizar un connect trial. Si el connect no falla, cuando nos vuelvan a llamar
          * en un estado proximo, revisaremos las opciones del socket para ver si verdaderamente sI la conexion sigue en proceso */
 
@@ -105,11 +109,14 @@ static unsigned dns_connection_handling (SelectorEvent * event){
         session->dnsHeaderContainer->ipv6.dnsConnection.state = OPEN;
         session->dnsHeaderContainer->ipv6.dnsConnection.fd =
             new_ipv4_socket(ipv4addr, htons(args->doh.port), (struct sockaddr *)&session->dnsHeaderContainer->ipv6.dnsConnection.addr); 
-
     } 
     else if (inet_pton(AF_INET6, args->doh.ip, &ipv6addr)) {
         
         session->dnsHeaderContainer = calloc(1, sizeof(*session->dnsHeaderContainer));
+        if(session->dnsHeaderContainer == NULL){
+            session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
+            return REQUEST_ERROR;
+        }
         
         // Conexion para solicitud A
         session->dnsHeaderContainer->ipv4.dnsConnection.state = OPEN;
@@ -120,7 +127,6 @@ static unsigned dns_connection_handling (SelectorEvent * event){
         session->dnsHeaderContainer->ipv6.dnsConnection.state = OPEN;
         session->dnsHeaderContainer->ipv6.dnsConnection.fd = 
             new_ipv6_socket(ipv6addr, htons(args->doh.port), (struct sockaddr *)&session->dnsHeaderContainer->ipv6.dnsConnection.addr);
-
     } 
     else {
         session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;

@@ -40,13 +40,13 @@ typedef enum ResponseDnsParserState {
 
 } ResponseDnsParserState;
 
-struct IpAddress{
+typedef struct IpAddress{
     uint8_t ipType;
     union {
         struct in6_addr ipv6;
         struct in_addr ipv4;
     } addr;
-};
+}IpAddress;
 
 typedef struct ResponseDnsParser {
     

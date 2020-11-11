@@ -1,3 +1,4 @@
+
 /**
  * main.c - servidor proxy socks concurrente
  *
@@ -160,7 +161,7 @@ int main(const int argc, char **argv) {
         ss = selector_select(selector);
 
         // Cleanup selector sockets every cleanupInterval seconds
-        if(!args.debugEnable && difftime(time(NULL), lastFdCleanup) >= cleanupInterval) {
+        if(args.cleanupEnable && difftime(time(NULL), lastFdCleanup) >= cleanupInterval) {
             // fprintf(stderr, "Initializing Selector Cleanup\n");
             socks5_selector_cleanup();
             lastFdCleanup = time(NULL);

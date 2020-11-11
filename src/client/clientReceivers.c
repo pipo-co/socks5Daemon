@@ -1,3 +1,4 @@
+
 #include <stdbool.h>		// bool
 #include <stdint.h>			// uint
 #include <stdio.h>			// fgets
@@ -454,11 +455,6 @@ static bool receiver_user_list(int fd) {
 
 		if(bytes == 0){
 			printf("Connection closed\n");
-			return false;
-		}
-
-		if(bytes == -1) {
-			perror("Connection interrupted\n");
 			return false;
 		}
 

@@ -1,3 +1,4 @@
+
 #include <stdio.h>     /* for printf */
 #include <stdlib.h>    /* for exit */
 #include <limits.h>    /* LONG_MIN et al */
@@ -87,6 +88,7 @@ parse_args(const int argc, char **argv, Socks5Args *args) {
     args->mng_port   = 8080;
 
     args->disectors_enabled = true;
+    args->cleanupEnable = true;
 
     args->doh.host = "localhost";
     args->doh.ip   = "127.0.0.1";
@@ -155,7 +157,7 @@ parse_args(const int argc, char **argv, Socks5Args *args) {
                 exit(0);
                 break;
             case 'D':
-                args->debugEnable = true;
+                args->cleanupEnable = false;
                 break;
             case 0xD001:
                 args->doh.ip = optarg;
