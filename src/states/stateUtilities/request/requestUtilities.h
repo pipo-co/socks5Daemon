@@ -1,8 +1,14 @@
 #ifndef REQUEST_UTILITIES_H_a7f0b7011d5bc49decb646a7852c4531c07e17b5
 #define REQUEST_UTILITIES_H_a7f0b7011d5bc49decb646a7852c4531c07e17b5
 
-#include "socksDefs.h"
 #include "socks5/socks5SessionDefinition.h"
+
+typedef enum RequestUtilitiesSize {
+    RU_DATE_SIZE                               = 30,
+    RU_REPLY_SIZE                              = 10,
+    RU_CREDENTIAL_MAX_SIZE                     = 255,
+    RU_DOMAIN_NAME_MAX_LENGTH                  = 256,
+} RequestUtilitiesSize;
 
 void log_user_access(SessionHandlerP session, ReplyValues rep);
 

@@ -1,7 +1,7 @@
 #include "authRequestParser.h"
+#include "socksDefs.h"
 
 #include <string.h>
-#include "socksDefs.h"
 
 static AuthRequestParserState auth_request_state_version(AuthRequestParser *p, uint8_t byte);
 static AuthRequestParserState auth_request_state_ulen(AuthRequestParser *p, uint8_t byte);

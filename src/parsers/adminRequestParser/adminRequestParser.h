@@ -28,38 +28,38 @@ typedef enum AdminRequestParserState {
 } AdminRequestParserState;
 
 typedef enum AdminRequestParserType {
-    QUERY               = 0x00,
-    MODIFICATION        = 0x01,
-    INVALID_TYPE        = 0xFF,
+    ARP_QUERY               = 0x00,
+    ARP_MODIFICATION        = 0x01,
+    ARP_INVALID_TYPE        = 0xFF,
 } AdminRequestParserType;
 
 typedef enum AdminRequestParserQuery {
-    LIST_USERS                              = 0x00,
-    TOTAL_HISTORIC_CONNECTIONS              = 0x01,
-    CURRENT_CONNECTIONS                     = 0x02,
-    MAX_CURRENT_CONECTIONS                  = 0x03,
-    TOTAL_BYTES_SENT                        = 0x04,
-    TOTAL_BYTES_RECEIVED                    = 0x05,
-    CONNECTED_USERS                         = 0x06,
-    USER_COUNT                              = 0x07,
-    BUFFER_SIZES                            = 0x08,
-    SELECTOR_TIMEOUT                        = 0x09,
-    CONNECTION_TIMEOUT                      = 0x0A,
-    USER_TOTAL_CONCURRENT_CONNECTIONS       = 0x0B,
-    INVALID_PARAM                           = 0xFE,
-    INVALID_QUERY                           = 0xFF,
+    ARP_LIST_USERS                                  = 0x00,
+    ARP_TOTAL_HISTORIC_CONNECTIONS                  = 0x01,
+    ARP_CURRENT_CONNECTIONS                         = 0x02,
+    ARP_MAX_CONCURRENT_CONECTIONS                   = 0x03,
+    ARP_TOTAL_BYTES_SENT                            = 0x04,
+    ARP_TOTAL_BYTES_RECEIVED                        = 0x05,
+    ARP_CONNECTED_USERS                             = 0x06,
+    ARP_TOTAL_USER_COUNT                            = 0x07,
+    ARP_BUFFER_SIZES                                = 0x08,
+    ARP_SELECTOR_TIMEOUT                            = 0x09,
+    ARP_CONNECTION_TIMEOUT                          = 0x0A,
+    ARP_USER_TOTAL_CURRENT_CONNECTIONS              = 0x0B,
+    ARP_INVALID_PARAM                               = 0xFE,
+    ARP_INVALID_QUERY                               = 0xFF,
 
 } AdminRequestParserQuery;
 
 typedef enum AdminRequestParserModification {
-    ADD_USER                                = 0x00,
-    REMOVE_USER                             = 0x01,
-    TOGGLE_PASSWORD_SPOOFING                = 0x02,
-    TOGGLE_CONNECTION_CLEAN_UN              = 0x03,
-    SET_BUFFER_SIZE                         = 0x04,
-    SET_SELECTOR_TIMEOUT                    = 0x05,
-    SET_CONNECTION_TIMEOUT                  = 0x06,
-    INVALID_MODIFICATION                    = 0xFF,
+    ARP_ADD_USER                                = 0x00,
+    ARP_REMOVE_USER                             = 0x01,
+    ARP_TOGGLE_PASSWORD_SPOOFING                = 0x02,
+    ARP_TOGGLE_CONNECTION_CLEAN_UN              = 0x03,
+    ARP_SET_BUFFER_SIZE                         = 0x04,
+    ARP_SET_SELECTOR_TIMEOUT                    = 0x05,
+    ARP_SET_CONNECTION_TIMEOUT                  = 0x06,
+    ARP_INVALID_MODIFICATION                    = 0xFF,
 } AdminRequestParserModification;
 
 typedef struct AdminRequestParserUserInfo{

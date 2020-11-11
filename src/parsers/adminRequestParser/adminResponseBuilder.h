@@ -10,7 +10,6 @@
 #define UINT16_RESPONSE_SIZE 4
 #define UINT32_RESPONSE_SIZE 6
 #define UINT64_RESPONSE_SIZE 10
-#define MASK 0xff
 #define USER 0
 #define ADMIN 1
 #define INITIAL_HEADER 4

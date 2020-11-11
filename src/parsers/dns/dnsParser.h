@@ -7,10 +7,7 @@
 #include <arpa/inet.h>
 
 #include "buffer/buffer.h"
-#define IPV4 0x01
-#define IPV6 0x04
-#define A 0x01
-#define AAAA 0x1c
+#include "dnsDefs.h"
 
 typedef enum ResponseDnsParserState {
     RESPONSE_DNS_TRANSACTION_STATE,

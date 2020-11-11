@@ -12,9 +12,33 @@ typedef enum ClientType {
 #define CTCC_MODIFICATIONS_COUNT 7
 #define COMMAND_COUNT (CTCC_QUERY_COUNT + CTCC_MODIFICATIONS_COUNT)
 
-#define UINT8_BASE_10_SIZE 4
-#define UINT32_BASE_10_SIZE 11
-#define UINT64_BASE_10_SIZE 21
+// Client Specific
+#define BUFSIZE 512
+#define PIPO_PROTOCOL_VERSION 1
+
+typedef enum AuthLengths{
+    AUTH_MESSAGE_LENGTH          = 515,
+    AUTH_RESPONSE_LENGTH         = 2,
+} AuthLengths;
+ 
+
+// Client Sender and receivers
+typedef enum UintBaseSize {
+    UINT8_BASE_10_SIZE          = 4,
+    UINT32_BASE_10_SIZE         = 11,
+    UINT64_BASE_10_SIZE         = 21,
+} UintBaseSize;
+
+typedef enum MessagesLength {
+    NO_ARGS_LENGTH              = 2,
+    UINT8_LENGTH                = 3,
+    UINT16_LENGTH               = 4,
+    UINT32_LENGTH               = 6,
+    UINT64_LENGTH               = 10,
+} MessagesLength;
+
+#define UINT8_STR_MAX_LENGTH 256
+#define FULL_USER_MAX_SIZE 513
 
 typedef enum ClientQuery {
     CQ_LIST_USERS                              = 0x00,

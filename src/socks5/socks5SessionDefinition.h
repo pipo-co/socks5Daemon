@@ -55,6 +55,7 @@ typedef struct ClientInfo {
   uint8_t authMethod;
   Socks5AddressTypes addressTypeSelected;
   UserInfoP user;
+  in_port_t port;
   char * connectedDomain;
 } ClientInfo;
 

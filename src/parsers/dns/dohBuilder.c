@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <arpa/inet.h>
 
 #include "utilities/base64/base64.h"
 #include "parsers/dns/dohBuilder.h"
-#include "socks5/socks5.h"
+#include "dnsDefs.h"
 
 static char crlf[] = "\r\n";
 static char acceptMessage[] = "Accept: application/dns-message";
@@ -79,9 +80,9 @@ int doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args *
     char *method = doh->method == GET ? "GET" : "POST";
 
     if(qtype == AF_INET){
-        qtype = A;
+        qtype = DNS_QUERY_A;
     } else if(qtype == AF_INET6) {
-        qtype = AAAA;
+        qtype = DNS_QUERY_AAAA;
     } else {
         return -1;
     }

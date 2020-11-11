@@ -37,11 +37,11 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
     switch (p->state) {
         
         case ARP_STATE_TYPE:
-            if(b == QUERY){
+            if(b == ARP_QUERY){
                 p->type = b;
                 p->state = ARP_STATE_QUERY;
             }
-            else if(b == MODIFICATION){
+            else if(b == ARP_MODIFICATION){
                 p->type = b;
                 p->state = ARP_STATE_MODIFICATION;
             }
@@ -211,21 +211,21 @@ bool admin_request_parser_is_done(AdminRequestParser *p, bool *errored) {
 static AdminRequestParserState admin_request_parser_get_arg_state_modifications(AdminRequestParserModification m) {
 
     switch (m) {
-         case ADD_USER:
+         case ARP_ADD_USER:
             return ARP_PARSE_ADD_USER;
         break;
-        case REMOVE_USER:
+        case ARP_REMOVE_USER:
             return ARP_PARSE_STRING;
         break;
 
-        case TOGGLE_PASSWORD_SPOOFING:
-        case TOGGLE_CONNECTION_CLEAN_UN:
-        case SET_SELECTOR_TIMEOUT:
-        case SET_CONNECTION_TIMEOUT:
+        case ARP_TOGGLE_PASSWORD_SPOOFING:
+        case ARP_TOGGLE_CONNECTION_CLEAN_UN:
+        case ARP_SET_SELECTOR_TIMEOUT:
+        case ARP_SET_CONNECTION_TIMEOUT:
             return ARP_PARSE_UINT_8;
         break;
 
-        case SET_BUFFER_SIZE:
+        case ARP_SET_BUFFER_SIZE:
             return ARP_PARSE_UINT_32;
         break;
             
@@ -238,20 +238,20 @@ static AdminRequestParserState admin_request_parser_get_arg_state_modifications(
 static AdminRequestParserState admin_request_parser_get_arg_state_queries(AdminRequestParserQuery q) {
 
     switch (q) {
-        case LIST_USERS:
-        case TOTAL_HISTORIC_CONNECTIONS:
-        case CURRENT_CONNECTIONS:
-        case MAX_CURRENT_CONECTIONS:
-        case TOTAL_BYTES_SENT:
-        case TOTAL_BYTES_RECEIVED:
-        case CONNECTED_USERS:
-        case USER_COUNT:
-        case BUFFER_SIZES:
-        case SELECTOR_TIMEOUT:
-        case CONNECTION_TIMEOUT:
+        case ARP_LIST_USERS:
+        case ARP_TOTAL_HISTORIC_CONNECTIONS:
+        case ARP_CURRENT_CONNECTIONS:
+        case ARP_MAX_CONCURRENT_CONECTIONS:
+        case ARP_TOTAL_BYTES_SENT:
+        case ARP_TOTAL_BYTES_RECEIVED:
+        case ARP_CONNECTED_USERS:
+        case ARP_TOTAL_USER_COUNT:
+        case ARP_BUFFER_SIZES:
+        case ARP_SELECTOR_TIMEOUT:
+        case ARP_CONNECTION_TIMEOUT:
             return ARP_STATE_DONE;
         
-        case USER_TOTAL_CONCURRENT_CONNECTIONS:
+        case ARP_USER_TOTAL_CURRENT_CONNECTIONS:
             return ARP_PARSE_STRING;
         
         default:
@@ -262,41 +262,41 @@ static AdminRequestParserState admin_request_parser_get_arg_state_queries(AdminR
 static void (*admin_request_parser_get_query_handler(uint8_t b))(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
 
     switch (b){
-        case LIST_USERS:
+        case ARP_LIST_USERS:
             return admin_request_parser_list_users;
             break;
-        case TOTAL_HISTORIC_CONNECTIONS:
+        case ARP_TOTAL_HISTORIC_CONNECTIONS:
             return admin_request_parser_total_historic_connections;
             break;
-        case CURRENT_CONNECTIONS:
+        case ARP_CURRENT_CONNECTIONS:
             return admin_request_parser_current_connections;
             break;
-        case MAX_CURRENT_CONECTIONS:
+        case ARP_MAX_CONCURRENT_CONECTIONS:
             return admin_request_parser_max_current_conections;
             break;
-        case TOTAL_BYTES_SENT:
+        case ARP_TOTAL_BYTES_SENT:
             return admin_request_parser_total_bytes_sent;
             break;
-        case TOTAL_BYTES_RECEIVED:
+        case ARP_TOTAL_BYTES_RECEIVED:
             return admin_request_parser_total_bytes_received;
             break;
-        case CONNECTED_USERS:
+        case ARP_CONNECTED_USERS:
             return admin_request_parser_connected_users;
             break;
-        case USER_COUNT:
-            return admin_request_parser_user_count;
+        case ARP_TOTAL_USER_COUNT:
+            return admin_request_parser_total_user_count;
             break;
-        case BUFFER_SIZES:
+        case ARP_BUFFER_SIZES:
             return admin_request_parser_buffer_sizes;
             break;
-        case SELECTOR_TIMEOUT:
+        case ARP_SELECTOR_TIMEOUT:
             return admin_request_parser_selector_timeout;
             break;
-        case CONNECTION_TIMEOUT:
+        case ARP_CONNECTION_TIMEOUT:
             return admin_request_parser_connection_timeout;
         break;
-        case USER_TOTAL_CONCURRENT_CONNECTIONS:
-            return admin_request_parser_user_total_concurrent_connections;
+        case ARP_USER_TOTAL_CURRENT_CONNECTIONS:
+            return admin_request_parser_user_total_current_connections;
         break;
     
         default:
@@ -308,25 +308,25 @@ static void (*admin_request_parser_get_query_handler(uint8_t b))(uint8_t type, u
 static void (*admin_request_parser_get_modification_handler(uint8_t b))(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {
 
     switch (b){
-        case ADD_USER:
+        case ARP_ADD_USER:
             return admin_request_parser_add_user;
             break;
-        case REMOVE_USER:
+        case ARP_REMOVE_USER:
             return admin_request_parser_remove_user;
             break;
-        case TOGGLE_PASSWORD_SPOOFING:
+        case ARP_TOGGLE_PASSWORD_SPOOFING:
             return admin_request_parser_toggle_password_spoofing;
             break;
-        case TOGGLE_CONNECTION_CLEAN_UN:
+        case ARP_TOGGLE_CONNECTION_CLEAN_UN:
             return admin_request_parser_toggle_connection_clean_up;
             break;
-        case SET_BUFFER_SIZE:
+        case ARP_SET_BUFFER_SIZE:
             return admin_request_parser_set_buffer_size;
             break;
-        case SET_SELECTOR_TIMEOUT:
+        case ARP_SET_SELECTOR_TIMEOUT:
             return admin_request_parser_set_selector_timeout;
             break;
-        case SET_CONNECTION_TIMEOUT:
+        case ARP_SET_CONNECTION_TIMEOUT:
             return admin_request_parser_set_connection_timeout;
             break;
     

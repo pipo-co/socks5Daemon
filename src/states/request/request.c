@@ -62,6 +62,8 @@ static unsigned request_on_read(SelectorEvent *event) {
         session->socksHeader.requestHeader.rep = COMMAND_NOT_SUPPORTED;
         return REQUEST_ERROR;
     }
+
+    session->clientInfo.port = session->socksHeader.requestHeader.parser.port;
     
     if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_DOMAIN_NAME){
         return dns_connection_handling(event);
@@ -78,6 +80,7 @@ static unsigned dns_connection_handling (SelectorEvent * event){
     struct in_addr ipv4addr;
     struct in6_addr ipv6addr;
 
+    session->clientInfo.addressTypeSelected = SOCKS_5_ADD_TYPE_DOMAIN_NAME;
     session->clientInfo.connectedDomain = malloc(DOMAIN_NAME_MAX_LENGTH);
     if(session->clientInfo.connectedDomain == NULL){
         session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
@@ -137,7 +140,6 @@ static unsigned dns_connection_handling (SelectorEvent * event){
         return REQUEST_ERROR;      
     }
 
-    session->clientInfo.addressTypeSelected = SOCKS_5_ADD_TYPE_DOMAIN_NAME;
     socks5_register_dns(session);
 
     return GENERATE_DNS_QUERY; 
@@ -145,6 +147,7 @@ static unsigned dns_connection_handling (SelectorEvent * event){
 
 static unsigned ip_connection_handling(SelectorEvent * event){
     SessionHandlerP session = (SessionHandlerP) event->data;
+    session->clientInfo.addressTypeSelected = session->socksHeader.requestHeader.parser.addressType;
 
     if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP4){
         session->serverConnection.fd = 
@@ -169,7 +172,6 @@ static unsigned ip_connection_handling(SelectorEvent * event){
         return REQUEST_ERROR;      
     }
 
-    session->clientInfo.addressTypeSelected = session->socksHeader.requestHeader.parser.addressType;
     socks5_register_server(session);
 
     return IP_CONNECT;

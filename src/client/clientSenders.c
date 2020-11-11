@@ -10,15 +10,6 @@
 #include "client/clientDefs.h"
 #include "client/clientUtils.h"
 
-#define NO_ARGS_LENGTH 2
-#define UINT8_LENGTH 3
-#define UINT32_LENGTH 6
-#define UINT64_LENGTH 10
-#define MAX_STR_LEN 255
-#define MAX_USERNAME 255
-#define FULL_USER_MAX_SIZE 513
-#define CREDENTIALS_LENGTH 256
-
 static bool no_args_builder (int fd, uint8_t type, uint8_t command);
 static bool uint8_builder (int fd, uint8_t type, uint8_t command, uint8_t arg);
 static bool uint32_builder (int fd, uint8_t type, uint8_t command, uint32_t arg);
@@ -72,9 +63,9 @@ bool connection_timeout_sender(int fd){
 
 bool user_total_current_connections_sender(int fd){
 	
-	char user[CREDENTIALS_LENGTH];
+	char user[UINT8_STR_MAX_LENGTH];
 	printf("Insert username: ");
-	fgets(user, CREDENTIALS_LENGTH, stdin);
+	fgets(user, UINT8_STR_MAX_LENGTH, stdin);
 	char *newLine = strchr(user, '\n');
 	if(newLine){
 		*newLine = '\0';
@@ -84,18 +75,18 @@ bool user_total_current_connections_sender(int fd){
 
 bool add_user_sender(int fd){
 	
-	char user[CREDENTIALS_LENGTH];
+	char user[UINT8_STR_MAX_LENGTH];
 	printf("Insert username: ");
-	fgets(user, CREDENTIALS_LENGTH, stdin);
+	fgets(user, UINT8_STR_MAX_LENGTH, stdin);
 	char *newLine = strchr(user, '\n');
 	if(newLine){
 		*newLine = '\0';
 	}
 
 
-	char pass[CREDENTIALS_LENGTH];
+	char pass[UINT8_STR_MAX_LENGTH];
 	printf("Insert password: ");
-	fgets(pass, CREDENTIALS_LENGTH, stdin);
+	fgets(pass, UINT8_STR_MAX_LENGTH, stdin);
 	newLine = strchr(pass, '\n');
 	if(newLine){
 		*newLine = '\0';
@@ -114,9 +105,9 @@ bool add_user_sender(int fd){
 
 bool remove_user_sender(int fd){
 	
-	char user[CREDENTIALS_LENGTH];
+	char user[UINT8_STR_MAX_LENGTH];
 	printf("Insert username: ");
-	fgets(user, CREDENTIALS_LENGTH, stdin);
+	fgets(user, UINT8_STR_MAX_LENGTH, stdin);
 	char *newLine = strchr(user, '\n');
 	if(newLine){
 		*newLine = '\0';
@@ -173,7 +164,7 @@ bool set_connection_timeout_sender(int fd){
 
 static bool string_builder(int fd, uint8_t type, uint8_t command, char * string) {
 
-	char message[MAX_STR_LEN + 3]; // type + command + strlen + string
+	char message[UINT8_STR_MAX_LENGTH + 3]; 
 
 	uint8_t strLen = (uint8_t) strlen(string);
 	uint16_t messageLen = 3 + strLen;
