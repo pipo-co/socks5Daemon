@@ -79,8 +79,6 @@ static unsigned dns_connect_on_write(SelectorEvent *event) {
     session->dnsHeaderContainer->ipv4.responseParser.addresses = NULL;
     free(session->dnsHeaderContainer->ipv6.responseParser.addresses);
     session->dnsHeaderContainer->ipv6.responseParser.addresses = NULL;
-    // fprintf(stderr, "DNSContainer set NULL. IPv4. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv4.dnsConnection.fd, session->dnsHeaderContainer->ipv4.dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
-    // fprintf(stderr, "DNSContainer set NULL. IPv6. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", session->dnsHeaderContainer->ipv6.dnsConnection.fd, session->dnsHeaderContainer->ipv6.dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
     free(session->dnsHeaderContainer);
     session->dnsHeaderContainer = NULL;
     return REQUEST_SUCCESSFUL;

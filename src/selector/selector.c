@@ -626,13 +626,13 @@ selector_select(FdSelector s) {
             case EBADF:
                 // ayuda a encontrar casos donde se cierran los fd pero no
                 // se desregistraron
-                for(int i = 0 ; i < s->max_fd; i++) {
-                    if(FD_ISSET(i, &s->master_r)|| FD_ISSET(i, &s->master_w)) {
-                        if(-1 == fcntl(i, F_GETFD, 0)) {
-                            fprintf(stderr, "Bad descriptor detected: %d\n", i);
-                        }
-                    }
-                }
+                // for(int i = 0 ; i < s->max_fd; i++) {
+                //     if(FD_ISSET(i, &s->master_r)|| FD_ISSET(i, &s->master_w)) {
+                //         if(-1 == fcntl(i, F_GETFD, 0)) {
+                //             fprintf(stderr, "Bad descriptor detected: %d\n", i);
+                //         }
+                //     }
+                // }
                 ret = SELECTOR_IO;
                 break;
             default:

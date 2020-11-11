@@ -40,8 +40,6 @@ static uint32_t dnsBufferSize;
 
 static double maxSessionInactivity;
 
-static int stateLogCount;
-
 static SessionHandlerP socks5_session_init(void);
 static void socks5_server_read(SelectorEvent *event);
 static void socks5_server_write(SelectorEvent *event);
@@ -60,7 +58,6 @@ static void socks5_close_user_sessions_util(SelectorEvent *event, void *userPara
 void socks5_init(Socks5Args *argsParam, double maxSessionInactivityParam, FdSelector selectorParam) {
 
     args = argsParam;
-    stateLogCount = 0;
     maxSessionInactivity = maxSessionInactivityParam;
     selector = selectorParam;
 
@@ -157,7 +154,6 @@ void socks5_passive_accept_ipv4(SelectorEvent *event){
     SessionHandlerP session = socks5_session_init();
     if(session == NULL) {
         close(fd);
-        fprintf(stderr, "Session initialization failed: Not enough memory.\n");
         return;
     }
 
@@ -166,8 +162,6 @@ void socks5_passive_accept_ipv4(SelectorEvent *event){
     memcpy(&session->clientConnection.addr, (struct sockaddr *)&cli_addr, clilen);
 
     selector_register(event->s, session->clientConnection.fd, &clientHandler, OP_READ, session);
-
-    // fprintf(stderr, "Registered new client %d\n", fd);
 }
 
 void socks5_passive_accept_ipv6(SelectorEvent *event){
@@ -184,7 +178,6 @@ void socks5_passive_accept_ipv6(SelectorEvent *event){
     SessionHandlerP session = socks5_session_init();
     if(session == NULL) {
         close(fd);
-        // fprintf(stderr, "Session initialization failed: Not enough memory.\n");
         return;
     }
 
@@ -201,8 +194,6 @@ void socks5_register_server(SessionHandlerP session){
     statistics_inc_current_connection();
 
     selector_register(selector, session->serverConnection.fd, &serverHandler, OP_WRITE, session);
-
-    // fprintf(stderr, "Registered new server %d\n", session->serverConnection.fd);
 }
 
 void socks5_register_dns(SessionHandlerP session){
@@ -210,13 +201,11 @@ void socks5_register_dns(SessionHandlerP session){
     if(session->dnsHeaderContainer->ipv4.dnsConnection.state == OPEN) {
         statistics_inc_current_connection();
         selector_register(selector, session->dnsHeaderContainer->ipv4.dnsConnection.fd, &DNSHandler, OP_WRITE, session);
-        // fprintf(stderr, "IPv4 - Registered new dns. Fd: %d. Session %p. Client Fd: %d.\n", session->dnsHeaderContainer->ipv4.dnsConnection.fd, (void *) session, session->clientConnection.fd);
     }
 
     if(session->dnsHeaderContainer->ipv6.dnsConnection.state == OPEN) {
         statistics_inc_current_connection();
         selector_register(selector, session->dnsHeaderContainer->ipv6.dnsConnection.fd, &DNSHandler, OP_WRITE, session);
-        // fprintf(stderr, "IPv6 - Registered new dns. Fd: %d. Session %p. Client Fd: %d.\n", session->dnsHeaderContainer->ipv6.dnsConnection.fd, (void *)session, session->clientConnection.fd);
     }
 }
 
@@ -233,7 +222,6 @@ static void socks5_server_read(SelectorEvent *event){
     unsigned state;
 
     if(!buffer_can_write(buffer)) {
-        // fprintf(stderr, "ERROR: Read server socket %d was registered on pselect, but there was no space in buffer\n", event->fd);
 
         socks5_close_session(event);
         return;
@@ -250,7 +238,6 @@ static void socks5_server_read(SelectorEvent *event){
         if(readBytes == 0) {
 
             if(selector_state_machine_state(&session->sessionStateMachine) < FORWARDING) {
-                // fprintf(stderr, "ERROR: Unexpected Server Closing %d\n", session->clientConnection.fd);
                 socks5_close_session(event);
                 return;
             }
@@ -266,9 +253,6 @@ static void socks5_server_read(SelectorEvent *event){
             
         if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
-
-        // fprintf(stderr, "%d: Server Read, State %ud\n", stateLogCount, state);
-        stateLogCount++;
     }
 
     else {
@@ -287,13 +271,9 @@ static void socks5_server_write(SelectorEvent *event){
     unsigned state;
 
     if(!buffer_can_read(buffer)) {
-        // fprintf(stderr, "Write server socket %d was registered on pselect, but there was nothing on buffer\n", event->fd);
 
         if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
-
-        // fprintf(stderr, "%d: Server Write, State %ud\n", stateLogCount, state);
-        stateLogCount++;
 
         return;
     }
@@ -309,22 +289,10 @@ static void socks5_server_write(SelectorEvent *event){
 
         if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
-
-        // fprintf(stderr, "%d: Server Write, State %ud\n", stateLogCount, state);
-        stateLogCount++;
-    }
-
-    else if (writeBytes == 0){
-        // fprintf(stderr, "%d wrote 0 bytes\n", session->serverConnection.fd);
     }
 
     else {
         if(errno != EINTR) {
-
-            if(errno == EPIPE) {
-                // fprintf(stderr, "Cierre forzoso de parte de server\n");
-            }
-
             socks5_close_session(event);
         }
     }
@@ -339,8 +307,6 @@ static void socks5_client_read(SelectorEvent *event){
     unsigned state;
 
     if(!buffer_can_write(buffer)) {
-        // fprintf(stderr, "ERROR: Read client socket %d was registered on pselect, but there was no space in buffer\n", event->fd);
-
         socks5_close_session(event);
         return;
     }
@@ -355,7 +321,6 @@ static void socks5_client_read(SelectorEvent *event){
         if(readBytes == 0) {
 
             if(selector_state_machine_state(&session->sessionStateMachine) < FORWARDING) {
-                // fprintf(stderr, "Unexpected Client Closing %d\n", session->clientConnection.fd);
                 socks5_close_session(event);
                 return;
             }
@@ -371,9 +336,6 @@ static void socks5_client_read(SelectorEvent *event){
 
         if(state = selector_state_machine_proccess_read(&session->sessionStateMachine, event), state == FINISH)
             socks5_close_session(event);
-
-        // fprintf(stderr, "%d: Client Read, State %ud\n", stateLogCount, state);
-        stateLogCount++;
     }
 
     else {
@@ -393,12 +355,10 @@ static void socks5_client_write(SelectorEvent *event){
     unsigned state;
 
     if(!buffer_can_read(buffer)) {
-        // fprintf(stderr, "Write client socket %d was registered on pselect, but there was no space in buffer\n", event->fd);
 
         if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH){
             socks5_close_session(event);
         }
-            
 
         return;
     }
@@ -415,22 +375,10 @@ static void socks5_client_write(SelectorEvent *event){
         if(state = selector_state_machine_proccess_write(&session->sessionStateMachine, event), state == FINISH){
             socks5_close_session(event);
         }
-            
+    }
 
-        // fprintf(stderr, "%d: Client Write, State %u\n", stateLogCount, state);
-        stateLogCount++;
-    }
-    else if (writeBytes == 0){
-        // fprintf(stderr, "%d wrote 0 bytes\n", session->clientConnection.fd);
-    }
-    else
-    {
+    else {
         if(errno != EINTR) {
-
-            if(errno == EPIPE) {
-                // fprintf(stderr, "Cierre forzoso de parte de client\n");
-            }
-
             socks5_close_session(event);
         }
     }
@@ -447,6 +395,7 @@ static void socks5_dns_read(SelectorEvent *event){
     if(event->fd == session->dnsHeaderContainer->ipv4.dnsConnection.fd) {
         header = &session->dnsHeaderContainer->ipv4;
     }
+
     else {
         header = &session->dnsHeaderContainer->ipv6;
     }
@@ -454,7 +403,6 @@ static void socks5_dns_read(SelectorEvent *event){
     Buffer * buffer = &header->buffer;
 
     if(!buffer_can_write(buffer)) {
-
         socks5_close_session(event);
         return;
     }
@@ -490,6 +438,7 @@ static void socks5_dns_write(SelectorEvent *event){
     if(event->fd == session->dnsHeaderContainer->ipv4.dnsConnection.fd) {
         header = &session->dnsHeaderContainer->ipv4;
     }
+
     else {
         header = &session->dnsHeaderContainer->ipv6;
     }
@@ -518,24 +467,15 @@ static void socks5_dns_write(SelectorEvent *event){
         statistics_add_bytes_sent(writeBytes);
 
         selector_state_machine_proccess_write(&session->sessionStateMachine, event);
-
-        stateLogCount++;
-    }
-
-    else if (writeBytes == 0){
-        // fprintf(stderr, "%d wrote 0 bytes\n", session->serverConnection.fd);
     }
 
     else {
         if(errno != EINTR) {
 
-        // fprintf(stderr, "Write: DNS Connection was unexpectedly closed. Fd: %d. State: %d\n", event->fd, session->sessionStateMachine.current);
+            // Unexpected DNS Close
+            selector_unregister_fd(event->s, event->fd);
 
-        // Unexpected DNS Close
-        // header->dnsConnection.state = INVALID;
-        selector_unregister_fd(event->s, event->fd);
-
-        selector_state_machine_proccess_write(&session->sessionStateMachine, event);
+            selector_state_machine_proccess_write(&session->sessionStateMachine, event);
         }
     }
 }
@@ -681,6 +621,7 @@ void socks5_selector_cleanup(void) {
     selector_fd_cleanup(selector, socks5_cleanup_session, (void*) &maxSessionInactivity);
 }
 
+// TODO: Don't clean up pending connections to servers (they may take a long time)
 static void socks5_cleanup_session(SelectorEvent *event, void *maxSessionInactivityParam) {
 
     // Socket pasivo

@@ -32,6 +32,4 @@ void statistics_inc_current_user_count(void);
 
 void statistics_dec_current_user_count(void);
 
-void statistics_print();
-
 #endif

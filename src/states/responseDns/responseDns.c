@@ -120,7 +120,6 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     if(dnsHeaderOther->connected){
 
         // Los dos termianron de parsear y el otro ya pudo hacer primer conncet ->  DNS_CONNECT
-        // fprintf(stderr, "Leaving to DNS_CONNECT other connected. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
         return DNS_CONNECT;
     }
@@ -174,12 +173,8 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
     selector_set_interest_event(event, OP_NOOP);
 
     if(dnsHeaderOther->dnsConnection.state == OPEN){
-        // fprintf(stderr, "Connected, waiting for brother. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
-
         return session->sessionStateMachine.current;
     }
-
-    // fprintf(stderr, "Leaving to DNS_CONNECT me connected. Fd: %d. Fd.State: %d. Client Fd: %d. State: %d\n", dnsHeaderMe->dnsConnection.fd, dnsHeaderMe->dnsConnection.state, session->clientConnection.fd, session->sessionStateMachine.current);
 
     return DNS_CONNECT;
 }

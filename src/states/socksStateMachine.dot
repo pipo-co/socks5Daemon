@@ -1,0 +1,105 @@
+digraph g {
+    rankdir=LR;
+    // size= "8.27,11.69";
+
+    node       [shape = circle];
+
+
+// Definitions
+
+    // Initial State
+    HELLO         [label = "Hello", shape = doublecircle];
+    HELLO_ERROR         [label = "Hello\nError"];
+
+    // Authentication Path
+    AUTH_METHOD_ANNOUNCEMENT         [label = "Authentication\nMethod\nAnnouncement"];
+    AUTH_REQUEST            [label = "Authentication\nRequest"];
+
+    // Obtain Request Information
+    REQUEST                 [label = "Request"];
+    
+    // Auth Status
+    AUTH_ERROR         [label = "Auth.\nError"];
+    AUTH_SUCCESSFULL         [label = "Auth.\nSuccessfull"];
+
+    // IP Path
+    IP_CONNECT         [label = "Ip\nConnect"];
+
+    // DNS Path
+    GENERATE_DNS_QUERY [label = "Generate\nDNS\nQuery"];
+    RESPONSE_DNS       [label = "DNS\nResponse"];
+    DNS_CONNECT        [label = "DNS\nConnect"];
+
+    // Request Status
+    REQUEST_ERROR         [label = "Request\nError"];
+    REQUEST_SUCCESSFUL [label = "Request\nSuccessful"];
+
+    // Main State
+    FORWARDING          [label = "Forwarding"];
+
+    // Closing Path
+    FLUSH_CLOSER        [label = "Flush\nCloser"];
+    FLUSH_CLOSY        [label = "Flush\nClosy"];
+    
+    FINISH        [label = "Finish", shape = doublecircle];
+
+// Transitions
+
+    // Hello
+    HELLO -> HELLO_ERROR   [label= "Error"];
+    HELLO -> AUTH_METHOD_ANNOUNCEMENT  [label="Success"];
+
+    // Hello Error
+    HELLO_ERROR -> FINISH  [label="Finish"];
+
+    // Auth Method Announcement
+    AUTH_METHOD_ANNOUNCEMENT -> AUTH_REQUEST   [label= "Auth. User & Pass"];
+    AUTH_METHOD_ANNOUNCEMENT -> REQUEST  [label="No Auth. (Anonymous User)"];
+
+    // Auth Request
+    AUTH_REQUEST -> AUTH_ERROR   [label= "Auth. Invalid"];
+    AUTH_REQUEST -> AUTH_SUCCESSFULL  [label="Auth. Valid"];
+
+    // Auth Error
+    AUTH_ERROR -> FINISH  [label= "Finished sending Auth. Error Message"];
+
+    // Auth Successful
+    AUTH_SUCCESSFULL -> REQUEST  [label= "Sent Auth. Successful Response"];
+
+    // Request
+    REQUEST -> REQUEST_ERROR  [label= "Invalid Request Message or Alloc Failed"];
+    REQUEST -> IP_CONNECT  [label= "Request method == IP"];
+    REQUEST -> GENERATE_DNS_QUERY  [label= "Request method == DNS"];
+
+    // IP Connect
+    IP_CONNECT -> REQUEST_ERROR  [label= "Connection to IP failed"];
+    IP_CONNECT -> REQUEST_SUCCESSFUL  [label= "Connection to IP succeded"];
+
+    // Generate DNS Query
+    GENERATE_DNS_QUERY -> REQUEST_ERROR  [label= "Connection to DNS Server (IP 4 or 6)\ncould not be established"];
+    GENERATE_DNS_QUERY -> RESPONSE_DNS  [label= "Connection to DNS Server established"];
+
+    // Response DNS
+    RESPONSE_DNS -> REQUEST_ERROR  [label= "Neither IP4 or IP6 response queries were\nfully sent or received (DNS connections closed)\nor parsed correctly (malformed)"];
+    RESPONSE_DNS -> DNS_CONNECT  [label= "All server IPs (4 and 6) have been obtained.\nDNS connections closed"];
+
+    // DNS Connect
+    DNS_CONNECT -> REQUEST_ERROR  [label= "Couldn't connect\nto any obtained IP"];
+    DNS_CONNECT -> REQUEST_SUCCESSFUL  [label= "Connected to\nan obtained server IP"];
+
+    // Request Error
+    REQUEST_ERROR -> FINISH  [label= "Finished Sending Request Error Message"];
+
+    // Request Successful
+    REQUEST_SUCCESSFUL -> FORWARDING  [label= "Finished Sending Request Successful Message"];
+
+    // Forwarding
+    FORWARDING -> FLUSH_CLOSER  [label= "Server or Client decided to close connection"];
+
+    // Flush Closer
+    FLUSH_CLOSER -> FLUSH_CLOSY  [label= "The other host decided to close too,\nbut there is still data in buffers"];
+    FLUSH_CLOSER -> FINISH  [label= "The other host decided to close too,\nand there is no data left in buffers"];
+
+    // Flush Closy
+    FLUSH_CLOSY -> FINISH  [label= "Both Client and Server have closed and their buffers have no data"];
+}

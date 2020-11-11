@@ -103,19 +103,15 @@ int main(const int argc, char **argv) {
         serverHandler.ipv4addr.s_addr = htonl(INADDR_ANY);
 
         if(generate_register_ipv4_socket(selector, &err_msg) != 0) {
-            // fprintf(stderr, "Error registering IPv4 listening socket\n");
             perror(err_msg);
-            // fprintf(stderr, "Trying with IPv6\n\n");
             
             passiveSocketErrorCount++;
         }
 
         if(generate_register_ipv6_socket(selector, &err_msg) != 0) {
-            // fprintf(stderr, "Error registering IPv6 listening socket\n");
 
             if(passiveSocketErrorCount == 0) {
                 perror(err_msg);
-                // fprintf(stderr, "Continuing with just IPv4\n");
             }
             else {
                 goto finally;
@@ -162,7 +158,6 @@ int main(const int argc, char **argv) {
 
         // Cleanup selector sockets every cleanupInterval seconds
         if(args.cleanupEnable && difftime(time(NULL), lastFdCleanup) >= cleanupInterval) {
-            // fprintf(stderr, "Initializing Selector Cleanup\n");
             socks5_selector_cleanup();
             lastFdCleanup = time(NULL);
         }
