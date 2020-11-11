@@ -4,6 +4,6 @@
 #include "argsHandler/argsHandler.h"
 #include "buffer/buffer.h"
 
-int doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args * args);
+int doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args * args, size_t bufSize);
 
 #endif

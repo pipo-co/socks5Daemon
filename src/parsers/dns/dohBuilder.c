@@ -7,6 +7,8 @@
 #include "parsers/dns/dohBuilder.h"
 #include "dnsDefs.h"
 
+#define MAX(x, y) (x >= y ? x : y)
+
 static char crlf[] = "\r\n";
 static char acceptMessage[] = "Accept: application/dns-message";
 static char contentType[] = "Content-type: application/dns-message";
@@ -73,7 +75,7 @@ static size_t doh_builder_build_dns_query(char * domain, uint16_t qtype, uint8_t
 static void doh_builder_add_header_value(uint8_t *buff, size_t *size, char *header, char *value);
 static void doh_builder_add_request_line(uint8_t *buff, size_t *size, char *method, char *path, char *version);
 
-int doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args * args) {
+int doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args * args, size_t bufSize) {
 
     // Socks5Args * args = socks5_get_args();
     struct doh *doh = &args->doh;
@@ -129,8 +131,8 @@ int doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args *
         memcpy(dohQuery + size, dnsQuery, querySize);
         size += querySize;
     }
-    
-    uint8_t *ans = malloc(size);
+
+    uint8_t *ans = malloc(MAX(size, bufSize));
     if(ans == NULL) {
         return -1;
     }
