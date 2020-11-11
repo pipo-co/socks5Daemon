@@ -15,8 +15,8 @@ static void request_successful_on_arrival(SelectorEvent *event) {
 
     session->socksHeader.requestHeader.bytes = 0;
     session->socksHeader.requestHeader.rep = SUCCESSFUL;
-
-    // TODO Esta bien esto?
+    
+    /* Primer escritura del mensaje antes de hacerle el primer send al cliente */
     request_marshall(&session->output, &session->socksHeader.requestHeader.bytes, session->socksHeader.requestHeader.rep);  
 
     selector_set_interest(event->s, session->clientConnection.fd, OP_WRITE);

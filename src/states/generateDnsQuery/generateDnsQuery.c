@@ -6,9 +6,11 @@
 static void generate_dns_query_on_arrival(SelectorEvent *event);
 static unsigned generate_dns_query_on_write(SelectorEvent *event);
 
+
 static void generate_dns_query_on_arrival(SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
-    
+
+    /* solo debo ocuparme de inicializar lo pertinente a aquellos connect que no fallaron en el estado anterior */
     if(session->dnsHeaderContainer->ipv4.dnsConnection.state == OPEN) {
         buffer_init(&session->dnsHeaderContainer->ipv4.buffer, 0, NULL);
         session->dnsHeaderContainer->ipv4.connected = false;
@@ -42,7 +44,7 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
         dnsHeaderOther = &session->dnsHeaderContainer->ipv4;
         family = AF_INET6;
     }
-
+    /* En caso de no estar ya en un estado invalido, se revisan las opciones del socket para comprobar si efectivamente se pudo establecer la conexion */
     if(dnsHeaderMe->dnsConnection.state == INVALID || getsockopt(dnsHeaderMe->dnsConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
         
         if(dnsHeaderOther->dnsConnection.state == INVALID){
@@ -65,6 +67,7 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
         return session->sessionStateMachine.current;  
     }
 
+    /* Cargar en mi buffer de salida la query dns*/
     if(doh_builder_build(&dnsHeaderMe->buffer, (char *)session->socksHeader.requestHeader.parser.address.domainName, family, socks5_get_args()) != 0) {
         
         if(dnsHeaderOther->dnsConnection.state == INVALID){
@@ -85,7 +88,7 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
     }
 
     dnsHeaderMe->connected = true;
-
+    // A mi no me tienen que despertar mas, ahora que termine el otro pedido, que todavia no esta conectado
     if(dnsHeaderOther->dnsConnection.state == OPEN && !dnsHeaderOther->connected){
         selector_set_interest_event(event, OP_NOOP);
         return session->sessionStateMachine.current;

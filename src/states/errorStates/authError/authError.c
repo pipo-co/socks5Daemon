@@ -12,11 +12,13 @@ static void auth_error_on_arrival(SelectorEvent *event) {
 
     session->socksHeader.authRequestHeader.bytes = 0;
 
+    /* Primer escritura del mensaje antes de hacerle el primer send al cliente */
     auth_error_marshall(&session->output, &session->socksHeader.authRequestHeader.bytes);  
     
     selector_set_interest(event->s, session->clientConnection.fd, OP_WRITE);
 }
 
+/* Una vez que envie el mensaje de error me voy al estado finnish que se ocupara de liberar los recursos de mi session */
 static unsigned auth_error_on_write(SelectorEvent *event) {
 
     SessionHandlerP session = (SessionHandlerP) event->data;

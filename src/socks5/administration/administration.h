@@ -20,8 +20,25 @@
 #include "netutils/netutils.h"
 #include "socks5/socks5.h"
 
-#define QUERY_BUFFER 128
 
+
+/**
+ *  administration.c -- clase encargada de manejar conexiones que usen el protocolo Pipo
+ * 
+ *  Un cliente se conecta con el servidor en el puerto 1080 y establece una conexión
+ * 
+ *  En primer lugar deberá autenticarse, solo un usuario valido podra usar esta funcionalidad.
+ *  
+ *  Una vez autenticado, el usuario podra pedirle al administrador cualquiera de los comandos 
+ *  ofrecidos por el protocolo
+ * 
+ *  Se reciben los datos enviados por el cliente, se parsean, y se devuelven los datos 
+ *  correspondientes al resultado
+ * 
+ **/
+
+
+/* Estados en los que puede encontrarse una conexion */
 typedef enum AdminStateEnum {
     ADMIN_AUTH_ARRIVAL,
     ADMIN_AUTHENTICATING,
@@ -34,18 +51,24 @@ typedef enum AdminStateEnum {
     ADMIN_METHOD_ERROR
  } AdminStateEnum;
 
+/* posibles codigos de estado */
 typedef enum AuthCodesStateEnum {
     SUCCESS,
     AUTH_FAILED,
     INVALID_VERSION
 } AuthCodesStateEnum;
 
+/* estructura contenedora del parser de autenticacion y su estado */
 typedef struct AdminAuthHeader {
     AuthRequestParser authParser;
+    /* bytes de la respuesta que ya han sido escritos */
     size_t bytes;
     AuthCodesStateEnum status;
 
 } AdminAuthHeader;
+
+/* estructura contenedora del parser del request del usuario y 
+* el encargado de enviar la respuesta correspondiente en base al comando */
 
 typedef struct AdminRequestHeader{
     AdminRequestParser requestParser;
@@ -53,10 +76,16 @@ typedef struct AdminRequestHeader{
 
 } AdminRequestHeader;
 
+/* el usuario o se esta autenticando o esta enviando un pedido pero nunca
+* ambas cosas a la vez */
 typedef union AdminHeaders{
     AdminAuthHeader authHeader;    
     AdminRequestHeader requestHeader;
 } AdminHeaders;
+
+/* Caracteriza una sesion de un cliente con el administrador con sus buffer
+de entrada y salida, el encabezado correspondiente al estado en que se encuentra
+la conexion y el usuario que esta conectado */
 
 typedef struct AdministrationHandler {
     Buffer input;
@@ -72,10 +101,17 @@ typedef struct AdministrationHandler {
 
 typedef AdministrationHandler * AdministrationHandlerP;
 
+/* encargado de inicializar el handler que se usara para las conexiones con el 
+administrador */
 void administration_init(void);
 
+/* encargado de aceptar conexiones para ipv4, generarles su sesion y cargarlos
+en el selector */
 void admin_passive_accept_ipv4(SelectorEvent *event);
 
+
+/* encargado de aceptar conexiones para ipv6, generarles su sesion y cargarlos
+en el selector */
 void admin_passive_accept_ipv6(SelectorEvent *event);
 
 #endif

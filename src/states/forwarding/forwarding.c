@@ -7,12 +7,12 @@
 static unsigned forwarding_on_read(SelectorEvent *event);
 static unsigned forwarding_on_write(SelectorEvent *event);
 static void forwarding_on_arrival(SelectorEvent *event);
-static void forwarding_calculate_new_fd_interest(SelectorEvent *event);
+static void forwarding_calculate_and_set_new_fd_interest(SelectorEvent *event);
 
 static void forwarding_on_arrival(SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
 
-    forwarding_calculate_new_fd_interest(event);
+    forwarding_calculate_and_set_new_fd_interest(event);
 
     Socks5Args *args = socks5_get_args();
 
@@ -32,7 +32,7 @@ static unsigned forwarding_on_read(SelectorEvent *event) {
         return FLUSH_CLOSER;
     }
 
-    forwarding_calculate_new_fd_interest(event);
+    forwarding_calculate_and_set_new_fd_interest(event);
 
     if(session->socksHeader.spoofingHeader.spoofingEnabled && !spoofing_parser_is_done(&session->socksHeader.spoofingHeader.parser)) {
 
@@ -71,12 +71,15 @@ static unsigned forwarding_on_read(SelectorEvent *event) {
 static unsigned forwarding_on_write(SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
 
-    forwarding_calculate_new_fd_interest(event);
+    forwarding_calculate_and_set_new_fd_interest(event);
 
     return session->sessionStateMachine.current;
 }
 
-static void forwarding_calculate_new_fd_interest(SelectorEvent *event) {
+/* calcula el interes que le corresponde al fd del cliente y del servidor en base 
+ * al estado de los buffer de input y output correspondientes de cada uno (los del servidor
+ * son los mismos que los del cliente pero invertidos). Una vez calculados los setea */
+static void forwarding_calculate_and_set_new_fd_interest(SelectorEvent *event) {
     SessionHandlerP session = (SessionHandlerP) event->data;
 
     unsigned clientInterest = OP_NOOP;

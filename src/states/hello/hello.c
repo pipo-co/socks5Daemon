@@ -12,6 +12,10 @@ static bool on_auth_method(HelloParser *p, uint8_t currentMethod);
 static void hello_on_arrival (SelectorEvent *event);
 static unsigned hello_on_read(SelectorEvent *event);
 
+/* encargado de seleccionar el metodo con mayor prioridad de los 
+* metodos que el cliente ofrece al servidor. La mayor prioridad se 
+* atribuira al metodo de usuario y contraseña y la menor al de no
+* autenticacion. */
 static bool on_auth_method(HelloParser *p, uint8_t currentMethod) {
 
     static uint8_t methodPriorityList[] = {

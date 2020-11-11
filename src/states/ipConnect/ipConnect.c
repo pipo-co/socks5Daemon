@@ -16,7 +16,7 @@ static unsigned ip_connect_on_write(SelectorEvent *event) {
 
     int error;
     socklen_t len = sizeof(error);
-
+    /* Se revisa si la conexion aun sigue en progreso, de no estarlo, ire a un estado de error */
     if(getsockopt(session->serverConnection.fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error) {
         session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(error);
         return REQUEST_ERROR;

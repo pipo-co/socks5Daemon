@@ -90,7 +90,9 @@ static unsigned dns_connection_handling (SelectorEvent * event){
     if (inet_pton(AF_INET, args->doh.ip, &ipv4addr)) {
         
         session->dnsHeaderContainer = calloc(1, sizeof(*session->dnsHeaderContainer));
-        
+        /* para todas las conexiones, en primer instancia se debera realizar un connect trial. Si el connect no falla, cuando nos vuelvan a llamar
+         * en un estado proximo, revisaremos las opciones del socket para ver si verdaderamente sI la conexion sigue en proceso */
+
         // Conexion para solicitud A
         session->dnsHeaderContainer->ipv4.dnsConnection.state = OPEN;
         session->dnsHeaderContainer->ipv4.dnsConnection.fd = 
@@ -130,7 +132,9 @@ static unsigned dns_connection_handling (SelectorEvent * event){
     if(session->dnsHeaderContainer->ipv6.dnsConnection.fd == -1){
         session->dnsHeaderContainer->ipv6.dnsConnection.state = INVALID;
     }  
-    
+    /* Si no se logro establecer el primer intento de conexion ni para pedidos de ipv4 ni de ipv6 entonces no se podra establecer la conexion
+     * con el servidor destino del pedido, por lo que habra un error. Si al menos una de las dos conexiones se logro, se debera
+     *intentar terminar de establecer la conexion y realizar el pedido dns*/
     if (session->dnsHeaderContainer->ipv4.dnsConnection.state == INVALID && session->dnsHeaderContainer->ipv6.dnsConnection.state == INVALID) {
         
         session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
@@ -140,11 +144,15 @@ static unsigned dns_connection_handling (SelectorEvent * event){
     session->clientInfo.addressTypeSelected = SOCKS_5_ADD_TYPE_DOMAIN_NAME;
     socks5_register_dns(session);
 
+    /* tendre que realizar un pedido al servidor doh para conseguir la ip del dominio enviado por el cliente */
     return GENERATE_DNS_QUERY; 
 }
 
 static unsigned ip_connection_handling(SelectorEvent * event){
     SessionHandlerP session = (SessionHandlerP) event->data;
+
+    /* para todas las conexiones, en primer instancia se debera realizar un connect trial. Si el connect no falla, cuando nos vuelvan a llamar
+     * en un estado proximo, revisaremos las opciones del socket para ver si verdaderamente sI la conexion sigue en proceso */
 
     if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP4){
         session->serverConnection.fd = 

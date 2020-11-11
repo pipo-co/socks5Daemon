@@ -15,6 +15,7 @@ static void auth_successful_on_arrival(SelectorEvent *event) {
 
     session->socksHeader.authRequestHeader.bytes = 0;
 
+    /* Primer escritura del mensaje antes de hacerle el primer send al cliente */
     auth_marshall(&session->output, &session->socksHeader.authRequestHeader.bytes);  
     
     selector_set_interest(event->s, session->clientConnection.fd, OP_WRITE);

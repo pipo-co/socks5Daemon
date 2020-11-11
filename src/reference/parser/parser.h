@@ -21,9 +21,6 @@
  * Cada tipo de evento tendrá sus reglas en relación a data.
  */
 
-
-
-
 struct parser_event {
     /** tipo de evento */
     unsigned type;

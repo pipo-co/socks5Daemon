@@ -6,7 +6,6 @@
 
 #include "buffer/buffer.h"
 
-
 enum HelloParserState {
     HELLO_PARSER_VERSION,
     HELLO_PARSER_NMETHODS,
@@ -29,7 +28,6 @@ typedef struct HelloParser {
     uint8_t methods_remaining;
 
 }HelloParser;
-
 
 // Assumes pre-allocation
 void hello_parser_init(HelloParser *p, bool (*on_auth_method)(HelloParser *p, uint8_t currentMethod), void * data);
