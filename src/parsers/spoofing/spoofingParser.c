@@ -461,9 +461,9 @@ static SpoofingParserState spoofing_state_http_searching_auth(SpoofingParser *pa
         parser_reset(&parser->primaryStringParser);
     }
 
-    if(foundEvent->type == STRING_CMP_NEQ) {
+    if(notFoundEvent->type == STRING_CMP_NEQ) {
 
-        parser_reset(&parser->primaryStringParser);
+        parser_reset(&parser->secondaryStringParser);
     }
 
     return parser->currentState;

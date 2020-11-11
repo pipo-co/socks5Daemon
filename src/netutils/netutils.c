@@ -1,3 +1,4 @@
+
 #include <stdbool.h>
 #include <errno.h>
 #include <string.h>
@@ -16,6 +17,11 @@
 extern const char *
 sockaddr_to_human(char *buff, const size_t buffsize,
                   const struct sockaddr *addr) {
+    
+    if(buff == NULL){
+        return NULL;
+    }
+    
     if(addr == 0) {
         strncpy(buff, "null", buffsize);
         return buff;
@@ -115,7 +121,7 @@ int new_ipv4_socket(struct in_addr ip, in_port_t port, struct sockaddr *outAddr)
     addr.sin_family = AF_INET;
     addr.sin_port = port; 
 	addr.sin_addr = ip;
-    memcpy(outAddr, (struct sockaddr*) &addr, sizeof(addr));
+    memcpy(outAddr, &addr, sizeof(addr));
     
     // socket create and varification 
     sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
@@ -153,7 +159,7 @@ int new_ipv6_socket(struct in6_addr ip, in_port_t port, struct sockaddr *outAddr
     addr.sin6_family = AF_INET6;
     addr.sin6_port = port; 
 	addr.sin6_addr = ip;
-    memcpy(outAddr, (struct sockaddr*) &addr, sizeof(addr));
+    memcpy(outAddr, &addr, sizeof(addr));
   
     // socket create and varification 
     sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP); 

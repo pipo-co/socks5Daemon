@@ -35,14 +35,14 @@ void statistics_dec_current_connection() {
 
 void statistics_add_bytes_sent(uint64_t bytes) {
 
-    if(statistics.bytesSent + bytes <= UINT64_MAX){
+    if(statistics.bytesSent + bytes < UINT64_MAX){
         statistics.bytesSent += bytes;
     }
 }
 
 void statistics_add_bytes_received(uint64_t bytes) {
 
-    if(statistics.bytesReceived + bytes <= UINT64_MAX){
+    if(statistics.bytesReceived + bytes < UINT64_MAX){
         statistics.bytesReceived += bytes;
     }
 }

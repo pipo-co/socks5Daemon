@@ -1,3 +1,4 @@
+
 #include <stdbool.h>		// bool
 #include <stdint.h>			// uint
 #include <stdio.h>			// fgets
@@ -317,7 +318,6 @@ static bool receiver_uint64(int fd) {
 					}
 				}
 			}
-
 		}	
     } while(bytesReceived < UINT64_LENGTH  && (bytes != -1 || errno !=  EINTR));
 
@@ -333,9 +333,9 @@ static bool receiver_user_list(int fd) {
 	ssize_t bytes;
 	uint16_t bytesReceived = 0;
 	uint16_t bytesWritten = 0;
-	uint8_t ucount;
+	uint8_t ucount = 0;
 	uint8_t thirdVal = 0;
-	char intialBuffer[NO_ARGS_LENGTH];
+	char intialBuffer[NO_ARGS_LENGTH] = {0};
 	char username[UINT8_STR_MAX_LENGTH] = {0};
 	uint8_t type, command, ulen = 0;
 	
@@ -392,6 +392,7 @@ static bool receiver_user_list(int fd) {
 	
 	if(command == 0xFE){
 		printf("STATUS: %X\n", thirdVal);
+		return true;
 	}
 	else{
 		ucount = thirdVal;
@@ -400,9 +401,10 @@ static bool receiver_user_list(int fd) {
 		printf("UCOUNT %d\n", ucount);
 		return true;
 	}
+
 	printf("UCOUNT %d\n", ucount);
 
-	bytesWritten = bytesReceived = 0;
+	bytesReceived = 0;
 	
 	do{
 		if(ulenFlag){
@@ -453,11 +455,6 @@ static bool receiver_user_list(int fd) {
 
 		if(bytes == 0){
 			printf("Connection closed\n");
-			return false;
-		}
-
-		if(bytes == -1) {
-			perror("Connection interrupted\n");
 			return false;
 		}
 

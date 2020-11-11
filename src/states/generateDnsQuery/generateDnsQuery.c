@@ -68,15 +68,11 @@ static unsigned generate_dns_query_on_write(SelectorEvent *event) {
     }
 
     /* Cargar en mi buffer de salida la query dns*/
-    if(doh_builder_build(&dnsHeaderMe->buffer, (char *)session->socksHeader.requestHeader.parser.address.domainName, family, socks5_get_args()) != 0) {
+    if(!doh_builder_build(&dnsHeaderMe->buffer, (char *)session->socksHeader.requestHeader.parser.address.domainName, family, socks5_get_args(), socks5_get_io_buffer_size())) {
         
         if(dnsHeaderOther->dnsConnection.state == INVALID){
-            if(error != 0){
-                session->socksHeader.requestHeader.rep = request_get_reply_value_from_errno(error);
-            }
-            else {
-                session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-            }
+            
+            session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
         }
         

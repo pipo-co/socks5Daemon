@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +22,7 @@
 #define DEFAULT_DNS_BUFFER_SIZE 512
 
 #define MIN_IO_BUFFER_SIZE 50
-#define MAX_IO_BUFFER_SIZE 1*1024*1024
+#define MAX_IO_BUFFER_SIZE (1*1024*1024)
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 
@@ -62,7 +63,7 @@ void socks5_init(Socks5Args *argsParam, double maxSessionInactivityParam, FdSele
 
     sessionInputBufferSize = DEFAULT_INPUT_BUFFER_SIZE;
     sessionOutputBufferSize = DEFAULT_OUTPUT_BUFFER_SIZE;
-    dnsBufferSize = dnsBufferSize;
+    dnsBufferSize = DEFAULT_DNS_BUFFER_SIZE;
 
     clientHandler.handle_read = socks5_client_read;
     clientHandler.handle_write = socks5_client_write;
@@ -628,7 +629,7 @@ static void socks5_cleanup_session(SelectorEvent *event, void *maxSessionInactiv
         return;
     }
 
-    double maxSessionInactivity = *((double*)maxSessionInactivityParam);
+    double sessionInactivityThreshold = *((double*)maxSessionInactivityParam);
 
     AbstractSession *absSession = (AbstractSession*) event->data;
 
@@ -636,7 +637,7 @@ static void socks5_cleanup_session(SelectorEvent *event, void *maxSessionInactiv
 
         SessionHandlerP session = (SessionHandlerP) absSession;
 
-        if(event->fd == session->clientConnection.fd && difftime(time(NULL), session->lastInteraction) >= maxSessionInactivity) {
+        if(event->fd == session->clientConnection.fd && difftime(time(NULL), session->lastInteraction) >= sessionInactivityThreshold) {
         
             socks5_close_session(event);
         }

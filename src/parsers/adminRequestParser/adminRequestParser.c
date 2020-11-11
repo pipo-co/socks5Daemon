@@ -1,3 +1,4 @@
+
 #include "parsers/adminRequestParser/adminRequestParser.h"
 #include "parsers/adminRequestParser/adminRequestQueryHandlers.h"
 #include "parsers/adminRequestParser/adminRequestModifierHandlers.h"
@@ -78,9 +79,6 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
                 p->args.string[p->parserCount++] = '\0';
                 p->state = ARP_STATE_DONE;
             }
-            else {
-                p->state = ARP_PARSE_STRING;
-            }
 
         break;
 
@@ -109,9 +107,7 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
             if(p->parserCount == p->argLength) {
                 p->state = ARP_STATE_DONE;
             }
-            else {
-                p->state = ARP_PARSE_UINT_32;
-            }
+            
         break;
 
         case ARP_PARSE_ADD_USER:
@@ -130,9 +126,7 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
                 p->args.user.uname[p->parserCount++] = '\0';
                 p->state = ARP_PARSE_ADD_PASS;
             }
-            else{
-                p->state = ARP_PARSE_ADD_USER;
-            }
+            
         break;
 
         case ARP_PARSE_ADD_PASS:
@@ -151,9 +145,7 @@ AdminRequestParserState admin_request_parser_feed(AdminRequestParser *p, uint8_t
                 p->args.user.pass[p->parserCount++] = '\0';
                 p->state = ARP_PARSE_ADD_PRIV;
             }
-            else {
-                p->state = ARP_PARSE_ADD_PASS;
-            }
+            
         break;
 
         case ARP_PARSE_ADD_PRIV:
