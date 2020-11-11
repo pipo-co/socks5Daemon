@@ -19,12 +19,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define BUFSIZE 512
-
-#define CREDENTIALS_LENGTH 256
-#define AUTH_MESSAGE_LENGTH 515
-#define AUTH_RESPONSE_LENGTH 2
-#define PIPO_PROTOCOL_VERSION 1
 
 static int new_ipv6_connection(struct in6_addr ip, in_port_t port) ;
 static int new_ipv4_connection(struct in_addr ip, in_port_t port) ;
@@ -140,8 +134,8 @@ static int new_ipv4_connection(struct in_addr ip, in_port_t port) {
 static bool log_in(int fd) {
 	char * newLine;
 	printf("Insert username: (max 255 characters. Finisish with enter) ");
-	char username[CREDENTIALS_LENGTH];
-	fgets(username, CREDENTIALS_LENGTH, stdin);
+	char username[UINT8_STR_MAX_LENGTH];
+	fgets(username, UINT8_STR_MAX_LENGTH, stdin);
 	newLine = strchr(username, '\n');
 	if(newLine){
 		*newLine = '\0';
@@ -152,8 +146,8 @@ static bool log_in(int fd) {
 	}
 
 	printf("Insert password: (max 255 characters. Finisish with enter) ");
-	char password[CREDENTIALS_LENGTH];
-	fgets(password, CREDENTIALS_LENGTH, stdin);
+	char password[UINT8_STR_MAX_LENGTH];
+	fgets(password, UINT8_STR_MAX_LENGTH, stdin);
 	newLine = strchr(password, '\n');
 	if(newLine){
 		*newLine = '\0';

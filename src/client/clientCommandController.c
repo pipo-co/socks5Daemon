@@ -45,15 +45,15 @@ static void client_command_controller_load_queries(CommandController controllers
     controllers[index + CQ_MAX_CURRENT_CONECTIONS].receiver = max_concurrent_conections_receiver;
     descriptions[index + CQ_MAX_CURRENT_CONECTIONS] = "Get Max. Concurrent Connections";
     
-    // X'04'   Get Total Sent Bytes
+    // X'04'   Get Total Bytes Sent
     controllers[index + CQ_TOTAL_BYTES_SENT].sender = total_bytes_sent_sender;
     controllers[index + CQ_TOTAL_BYTES_SENT].receiver = total_bytes_sent_receiver;
-    descriptions[index + CQ_TOTAL_BYTES_SENT] = "Get Total Sent Bytes";
+    descriptions[index + CQ_TOTAL_BYTES_SENT] = "Get Total Bytes Sent";
     
-    // X'05'   Get Total Received Bytes
+    // X'05'   Get Total Bytes Received
     controllers[index + CQ_TOTAL_BYTES_RECEIVED].sender = total_bytes_received_sender;
     controllers[index + CQ_TOTAL_BYTES_RECEIVED].receiver = total_bytes_received_receiver;
-    descriptions[index + CQ_TOTAL_BYTES_RECEIVED] = "Get Total Received Bytes";
+    descriptions[index + CQ_TOTAL_BYTES_RECEIVED] = "Get Total Bytes Received";
     
     // X'06'   Get Number of Users Connected
     controllers[index + CQ_CONNECTED_USERS].sender = connected_users_sender;

@@ -93,8 +93,8 @@ Acknowledgments
         o   X'01'   Get Total Historic Connections
         o   X'02'   Get Current Connections
         o   X'03'   Get Max. Concurrent Connections
-        o   X'04'   Get Total Sent Bytes
-        o   X'05'   Get Total Received Bytes
+        o   X'04'   Get Total Bytes Sent
+        o   X'05'   Get Total Bytes Received
         o   X'06'   Get Number of Users Connected
         o   X'07'   Get Total User Count     
         o   X'08'   Get I/O Buffer Sizes
@@ -365,12 +365,12 @@ Acknowledgments
             The use of this Command will provide an unsigned integer that indicates the maximum
             amount of concurrent connections historically held by the Server. 
                 
-        5.1.5. Get Total Sent Bytes
+        5.1.5. Get Total Bytes Sent
 
             The use of this Command will provide an unsigned integer that indicates the total amount of
             bytes sent by the Server. 
 
-        5.1.6. Get Total Received Bytes
+        5.1.6. Get Total Bytes Received
 
             The use of this Command will provide an unsigned integer that indicates the total amount of
             bytes received by the Server.   
@@ -471,7 +471,7 @@ Acknowledgments
             Where RESPONSE is a 2 bytes long unsigned integer in network byte order that indicates
             the maximum concurrent connections the Server had.
                 
-        5.2.5. Get Total Sent Bytes
+        5.2.5. Get Total Bytes Sent
 
             The server sends the following response:
 
@@ -484,7 +484,7 @@ Acknowledgments
             Where RESPONSE is an 8 bytes long unsigned integer in network byte order that
             represents the total sent bytes by the Server.
 
-        5.2.6. Get Total Received Bytes
+        5.2.6. Get Total Bytes Received
 
             The server sends the following response:
 
