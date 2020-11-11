@@ -23,7 +23,7 @@ port(const char *s) {
 }
 
 static void
-user(char *s, struct users *user) {
+user(char *s, struct users *user, bool admin) {
     char *p = strchr(s, ':');
     if(p == NULL) {
         fprintf(stderr, "password not found\n");
@@ -33,16 +33,19 @@ user(char *s, struct users *user) {
         p++;
         user->name = s;
         user->pass = p;
-        user->admin = false;
+        user->admin = admin;
     }
 
 }
 
 static void
 version(void) {
-    fprintf(stderr, "socks5v version 1.0\n"
-                    "ITBA Protocolos de Comunicación 2020/1 -- Grupo 4\n"
-                    "Copyleft (?\n");
+    fprintf(stderr, "Daemon de proxy Socks5v version 1.0\n"
+                    "ITBA Protocolos de Comunicación 2020/2 -- Grupo 4\n"
+                    "Alumnos:\n"
+                    "- Brandy, Tobias\n"
+                    "- Pannunzio, Faustino\n"
+                    "- Sagues, Ignacio\n");
 }
 
 static void
@@ -52,12 +55,14 @@ usage(const char *progname) {
         "\n"
         "   -h               Imprime la ayuda y termina.\n"
         "   -l <SOCKS addr>  Dirección donde servirá el proxy SOCKS.\n"
+        "   -N               Deshabilita los passwords disectors \n"
         "   -L <conf  addr>  Dirección donde servirá el servicio de management.\n"
         "   -p <SOCKS port>  Puerto entrante conexiones SOCKS.\n"
         "   -P <conf port>   Puerto entrante conexiones configuración\n"
         "   -u <name>:<pass> Usuario y contraseña de usuario que puede usar el proxy. Hasta 10.\n"
         "   -v               Imprime información sobre la versión versión y termina.\n"
         "   -D               Modo debug. Desactiva el servicio de cleanup\n"
+        "   -a <name>:<pass> Reemplazar credenciales de admin. \n"
         "\n"
         "   --doh-ip    <ip>    \n"
         "   --doh-port  <port>  XXX\n"
@@ -109,8 +114,8 @@ parse_args(const int argc, char **argv, Socks5Args *args) {
             { "doh-query", required_argument, 0, 0xD005 },
             { 0,           0,                 0, 0 }
         };
-
-        c = getopt_long(argc, argv, "hl:L:Np:P:u:v:D", long_options, &option_index);
+        //Los parametros que llevan argumentos son seguidos por ':'
+        c = getopt_long(argc, argv, "hl:NL:p:P:u:vDa:", long_options, &option_index);
         if (c == -1)
             break;
 
@@ -133,12 +138,15 @@ parse_args(const int argc, char **argv, Socks5Args *args) {
             case 'P':
                 args->mng_port   = port(optarg);
                 break;
+            case 'a':
+                user(optarg, &args->admin, true);
+                break;
             case 'u':
                 if(args->user_count >= MAX_USERS) {
                     fprintf(stderr, "maximum number of command line users reached: %d.\n", MAX_USERS);
                     exit(1);
                 } else {
-                    user(optarg, args->users + args->user_count);
+                    user(optarg, args->users + args->user_count, false);
                     args->user_count++;
                 }
                 break;
