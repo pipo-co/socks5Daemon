@@ -1,12 +1,5 @@
-                            
-                            
+
                         Socks5d Proxy Administration Protocol
-
-Status of this Memo
-
-   This document specifies an Internet standards track protocol for the
-   Internet community, and requests discussion and suggestions for
-   improvements. Distribution of this memo is unlimited.
 
 Acknowledgments
 
@@ -19,11 +12,11 @@ Acknowledgments
     The goal of this protocol is to provide a mechanism for interacting with a running
     Socks5d Server. The Client might ask for information held by the
     Server such as the list of users or the total historic connections of the Server.
-    Also, the Client will also be able to modify information and properties of the server
-    such as adding or deleting a user, set up spoofing or changing the I/O buffer sizes.
+    The Client will also be able to modify information and properties of the server
+    such as adding or deleting a user, setting up password sniffing or changing the I/O buffer sizes.
     In order to maintain security, authentication with the server upon connection is required.
     Once authenticated, the connection follows a Request/Response structure, where the
-    clients makes the requests, and the server processes and responds. Pipelining is supported.
+    Client makes the requests, and the Server processes and responds. Pipelining is supported.
 
 2. Connection and Authentication
 
@@ -44,9 +37,9 @@ Acknowledgments
         
         The Ver field contains the current version of the negotiation, which is X'01'. 
         The ULEN field contains a 1 byte unsigned integer which represents the length of the UNAME field that follows.
-        The UNAME field contains the username as known to the Server. 
+        The UNAME field contains the username as known to the Server. Only the ASCII charset is supported.
         The PLEN field contains a 1 byte unsigned integer which represents the length of the PASSWD field that follows. 
-        The PASSWD field contains the password associated with the given UNAME.
+        The PASSWD field contains the password associated with the given UNAME. Only the ASCII charset is supported.
 
         The server verifies the supplied UNAME and PASSWD, and if corresponds to a user
         with administrator privileges it sends the following response: 
@@ -65,15 +58,16 @@ Acknowledgments
 
         If the server returns a success status, then the session is fully established.
 
-3. General Requests and Responses Structure
+3. General Request and Response Structure
 
     Once the client is authenticated, the following messages will follow a Request/Response structure.
     The client sends a Request and the server answers with a corresponding Response message.
 
-    All messages from now on include the fields TYPE and CMD (Commands) which are 1 octet long. 
+    All messages from now on include the fields TYPE and CMD (Command) which are 1 byte long. 
     In the Request, this fields are the ones which indicate the server the action it must perform,
     the other fields are just arguments of that action.
-    In the Responses, the TYPE and CMD fields MUST match the ones from their corresponding Request.
+    In the Response, the TYPE and CMD fields MUST match the ones from their corresponding Request,
+    unless an error ocurred.
 
     The values currently defined as TYPE are:
 
@@ -159,12 +153,12 @@ Acknowledgments
                 A privilege value of X'00' will indicate that the new user will only be able to connect
                 with the proxy server whereas an X'01' value will indicate that the 
                 user is an administrator who will be able to connect with the server via
-                this protocol allowing them to use all it's provided functionalities.
+                this protocol, allowing them to use all it's provided functionalities.
         
-        4.1.2. Delete User
+        4.1.2. Remove User
 
-                The use of this Command will delete a user in the Server which has the provided username
-                associated if it exists.
+                The use of this Command will remove a user in the Server which has the provided username
+                associated, if it exists.
                 
                 For using it the Client provides the following Request:
 
@@ -276,11 +270,11 @@ Acknowledgments
             
                 o   X'00'   Succeeded
                 o   X'01'   Username Already Taken
-                o   X'02'   Max Total Users Reached
+                o   X'02'   Max. Total Users Reached
                 o   X'FE'   Invalid Parameter
                 o   X'FF'   General Server Error
 
-        4.2.2. Delete user
+        4.2.2. Remove user
 
             The possible values for STATUS are:
             
@@ -348,17 +342,17 @@ Acknowledgments
 
         5.1.1. List Users
 
-            The use of this Command will provide a list of all the users in the Server. 
+            The use of this Command will provide a list of all the users in the Server.
 
-        5.1.2 Get Current Connections
-
-            The use of this Command will provide an unsigned integer that indicates the current 
-            connections in the Server.
-
-        5.1.3. Get Total Historic Connections
+        5.1.2. Get Total Historic Connections
 
             The use of this Command will provide an unsigned integer that indicates the total
             current connections in the Server. 
+
+        5.1.3. Get Current Connections
+
+            The use of this Command will provide an unsigned integer that indicates the current 
+            connections in the Server.
 
         5.1.4. Get Max. Concurrent Connections
 
@@ -402,7 +396,7 @@ Acknowledgments
 
         5.1.12. Get User Total Current Connections
 
-            The use of this Command will provide a number that indicates the number of concurrent
+            The use of this Command will provide an unsigned integer that indicates the number of concurrent
             connections that a user has in the Server.
 
             For this Command, the message structure is:
@@ -421,31 +415,18 @@ Acknowledgments
 
             The Server sends the following response:
 
-            +------+-----+----------+--------+-----------+-------------+----------+--------+-----------+-------------+
-            | TYPE | CMD |  USRLEN  | ULEN_1 |  UNAME_1  |  PRIVILEGE  |    ...   | ULEN_n |  UNAME_n  | PRIVILEGE_n |
-            +------+-----+----------+--------+-----------+-------------+----------+--------+-----------+-------------+
-            |  1   |  1  |     1    |   1    | 1 to 255  |      1      |    ...   |   1    | 1 to 255  |      1      |
-            +------+-----+----------+--------+-----------+-------------+----------+--------+-----------+-------------+
+            +------+-----+----------+--------+-----------+---------------+----------+--------+-----------+-------------+
+            | TYPE | CMD |  USRLEN  | ULEN_1 |  UNAME_1  |  PRIVILEGE_1  |    ...   | ULEN_n |  UNAME_n  | PRIVILEGE_n |
+            +------+-----+----------+--------+-----------+---------------+----------+--------+-----------+-------------+
+            |  1   |  1  |     1    |   1    | 1 to 255  |       1       |    ...   |   1    | 1 to 255  |      1      |
+            +------+-----+----------+--------+-----------+---------------+----------+--------+-----------+-------------+
 
             Where USRLEN is a 1 byte long unsigned integer that describes the amount of users listed.
 
             The message contains that amount of fields ULEN, UNAME and PRIVILEGE, which are the same as
             those defined in 2.2 and 4.1.1.
 
-        5.2.2. Get Current Connections
-        
-            The server sends the following response:
-
-                    +------+-----+----------+
-                    | TYPE | CMD | RESPONSE |
-                    +------+-----+----------+
-                    |  1   |  1  |     2    |
-                    +------+-----+----------+
-
-            Where RESPONSE is a 2 bytes long unsigned integer in network byte order that indicates
-            the maximum concurrent connections the Server had.
-                
-        5.2.3. Get Total Historic Connections
+        5.2.2. Get Total Historic Connections
 
             The server sends the following response:
 
@@ -457,6 +438,19 @@ Acknowledgments
             
             Where RESPONSE is an 8 bytes long unsigned integer in network byte order that indicates
             the total number of connections the server had.
+
+        5.2.3. Get Current Connections
+        
+            The server sends the following response:
+
+                    +------+-----+----------+
+                    | TYPE | CMD | RESPONSE |
+                    +------+-----+----------+
+                    |  1   |  1  |     2    |
+                    +------+-----+----------+
+
+            Where RESPONSE is a 2 bytes long unsigned integer in network byte order that indicates
+            the maximum concurrent connections the Server had.
 
         5.2.4. Get Max. Concurrent Connections
         
@@ -507,7 +501,7 @@ Acknowledgments
                     |  1   |  1  |     1    |
                     +------+-----+----------+
             
-            Where RESPONSE is an unsigned integer that represents the number of users 
+            Where RESPONSE is a 1 byte unsigned integer that represents the number of users 
             connected.
 
         5.2.8. Get Total User Count
@@ -520,7 +514,7 @@ Acknowledgments
                     |  1   |  1  |     1    |
                     +------+-----+----------+
 
-            Where RESPONSE is an unsigned integer that indicates the Server's user total count.  
+            Where RESPONSE is a 1 byte unsigned integer that indicates the Server's user total count.  
 
         5.2.9. Get I/O Buffer Sizes
                 
@@ -558,7 +552,7 @@ Acknowledgments
                     |  1   |  1  |     1    |
                     +------+-----+----------+
 
-            Where RESPONSE is an unsigned integer that indicates the amount of seconds
+            Where RESPONSE is a 1 byte unsigned integer that indicates the amount of seconds
             a connection can be blocked in the server before being removed.
 
         5.2.12. Get User Total Current Connections
@@ -571,7 +565,7 @@ Acknowledgments
                     |  1   |  1  |     1    |
                     +------+-----+----------+
 
-            Where RESPONSE is an unsigned integer that indicates the amount concurrent
+            Where RESPONSE is a 1 byte unsigned integer that indicates the amount concurrent
             connections the the user has currently in server.
 
         5.2.13. Query Error
@@ -586,7 +580,7 @@ Acknowledgments
                 |  1   |  1  |    1   |
                 +------+-----+--------+
 
-            Where CMD takes the value X'FE' (Query Error) and STATUS takes one of the following values:
+            Where TYPE takes the value X'00' (Query), CMD takes the value X'FE' (Query Error) and STATUS takes one of the following values:
 
                 o   X'FE'   Invalid Parameter
                 o   X'FF'   General Server Error
@@ -594,5 +588,4 @@ Acknowledgments
 6. Pipelining
 
     A Server implementing this protocol MUST support pipelining (send multiple Requests without waiting
-    for it's Response). The server MUST send the Responses in different messages in the same order that
-    the Requests were received.
+    for it's Response). The server MUST send the Responses in the same order that the Requests were received.
