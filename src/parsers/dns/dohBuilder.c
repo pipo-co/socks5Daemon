@@ -119,7 +119,7 @@ bool doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args 
         doh_builder_add_header_value(dohQuery, &size, contentType, NULL);
 
         char querySizeBuff[MAX_QUERY_SIZE];
-        sprintf(querySizeBuff + size, "%zu", querySize);
+        snprintf(querySizeBuff, MAX_QUERY_SIZE, "%zu", querySize);
 
         doh_builder_add_header_value(dohQuery, &size, contentLength, querySizeBuff);
     }
