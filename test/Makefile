@@ -5,7 +5,9 @@ EXEC=test
 
 SOURCES=main.c
 
-CFLAGS += -I../src -lcheck -lrt -lpthread -lm -lsubunit
+CFLAGS += -I../src
+
+LIBRARIES = -lcheck -lrt -lpthread -lm -lsubunit 
 
 FILES_NOT_TESTED_OBJECTS = $(patsubst %.c, %.o, $(FILES_NOT_TESTED))
 
