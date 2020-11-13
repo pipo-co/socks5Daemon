@@ -79,24 +79,6 @@ struct parser_definition *parser_utils_strcmpi(struct parser_definition *pd, con
         return NULL;
     }
 
-    // struct parser_state_transition **states   = calloc(n + 2, sizeof(*states));
-    // size_t *nstates                           = calloc(n + 2, sizeof(*nstates));
-    // struct parser_state_transition *transitions= calloc(3 *(n + 2),
-    //                                                     sizeof(*transitions));
-    // if(states == NULL || nstates == NULL || transitions == NULL) {
-    //     free(states);
-    //     free(nstates);
-    //     free(transitions);
-
-    //     struct parser_definition def = {
-    //         .start_state   = 0,
-    //         .states_count  = 0,
-    //         .states        = NULL,
-    //         .states_n      = NULL,
-    //     };
-    //     return def;
-    // }
-    // estados fijos
     const size_t st_eq  = n;
     const size_t st_neq = n + 1;
     struct parser_state_transition states[MAX_STATES][TRANSITIONS_PER_STATE];
@@ -120,17 +102,6 @@ struct parser_definition *parser_utils_strcmpi(struct parser_definition *pd, con
         states[i][2].act1           = neq;
         nstates[i]                  = 3;
 
-        // transitions[i * 3 + 0].when = tolower(s[i]);
-        // transitions[i * 3 + 0].dest = dest;
-        // transitions[i * 3 + 0].act1 = i + 1 == n ? eq : may_eq;
-        // transitions[i * 3 + 1].when = toupper(s[i]);
-        // transitions[i * 3 + 1].dest = dest;
-        // transitions[i * 3 + 1].act1 = i + 1 == n ? eq : may_eq;
-        // transitions[i * 3 + 2].when = ANY;
-        // transitions[i * 3 + 2].dest = st_neq;
-        // transitions[i * 3 + 2].act1 = neq;
-        // states     [i]              = transitions + (i * 3 + 0);
-        // nstates    [i]              = 3;
     }
     // EQ
     
@@ -138,24 +109,13 @@ struct parser_definition *parser_utils_strcmpi(struct parser_definition *pd, con
     states[n][0].dest               = st_neq;
     states[n][0].act1               = neq;
     nstates[n]                      = 1;
-    
-    
-    // transitions[(n + 0) * 3].when   = ANY;
-    // transitions[(n + 0) * 3].dest   = st_neq;
-    // transitions[(n + 0) * 3].act1   = neq;
-    // states     [(n + 0)]            = transitions + ((n + 0) * 3 + 0);
-    // nstates    [(n + 0)]            = 1;
+
 
     // NEQ
     states[n + 1][0].when               = ANY;
     states[n + 1][0].dest               = st_neq;
     states[n + 1][0].act1               = neq;
     nstates[n + 1]                      = 1;
-    // transitions[(n + 1) * 3].when   = ANY;
-    // transitions[(n + 1) * 3].dest   = st_neq;
-    // transitions[(n + 1) * 3].act1   = neq;
-    // states     [(n + 1)]            = transitions + ((n + 1) * 3 + 0);
-    // nstates    [(n + 1)]            = 1;
 
 
     pd->start_state = 0;

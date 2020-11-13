@@ -207,5 +207,3 @@ time_t
 selector_get_timeout(FdSelector s);
 
 #endif
-
-

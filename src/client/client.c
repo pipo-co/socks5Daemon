@@ -230,28 +230,49 @@ static bool log_in(int fd) {
 
 static void interactive_client(int fd) {
 	uint8_t command;
+	char firstChar;
+	bool isUint;
+	print_help();
+
 	while(1) {
 		
-		print_help();
-		
-		command = client_read_uint("Insert new command: ", COMMAND_COUNT);
+		command = client_read_uint_or_char("Insert new command: ", COMMAND_COUNT, &firstChar, &isUint);
 
-		printf("----------------------------------------\n");
-		if(controllers[command].sender(fd)){
-			if(!controllers[command].receiver(fd)){
-				printf("Error ocurred receiving the request\n");
+		if(!isUint){
+			if(firstChar == 'h'){
+				print_help();
+			}
+			else if(firstChar == 'x'){
+				return;
 			}
 		}
-		else {
-			printf("Error ocurred sending the request\n");
+		else if(isUint && command < COMMAND_COUNT){
+			printf("\n----------------------------------------\n");
+			printf("Selected command: %s\n", descriptions[command]);
+			if(controllers[command].sender(fd)){
+				printf("----------------------------------------\n");
+				if(!controllers[command].receiver(fd)){
+					printf("Error ocurred receiving the request\n");
+					return;
+				}
+			}
+			else {
+				printf("Error ocurred sending the request\n");
+				return;
+			}
+			printf("----------------------------------------\n");
 		}
-		printf("----------------------------------------\n");
 	}
 }
 
 static void print_help(){
 
+	printf("\n----------------------------------------\n");
 	printf("Client help\n");
+	printf("----------------------------------------\n");
+	printf("In order to get this message again you must send 'h' as a command value\n");
+	printf("In order to close the session send 'x' as a command value\n");
+
 	for (size_t i = 0; i < COMMAND_COUNT; i++){
 		printf("Command number: %lu. Desc: %s\n", (unsigned long)i, descriptions[i]);
 	}

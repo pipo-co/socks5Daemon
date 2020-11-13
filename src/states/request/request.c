@@ -97,8 +97,9 @@ static unsigned dns_connection_handling (SelectorEvent * event){
             session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
             return REQUEST_ERROR;
         }
-        /* para todas las conexiones, en primer instancia se debera realizar un connect trial. Si el connect no falla, cuando nos vuelvan a llamar
-         * en un estado proximo, revisaremos las opciones del socket para ver si verdaderamente sI la conexion sigue en proceso */
+        /* para todas las conexiones, en primer instancia se debera realizar un connect trial. Si el connect devuelve en errno el valor
+         * EINPROGRES se registra el socket para de esta manera, cuando nos vuelvan a llamar en un estado proximo, revisar las 
+         * opciones del socket para ver si no ha habido error al establecer la conexion */
 
         // Conexion para solicitud A
         session->dnsHeaderContainer->ipv4.dnsConnection.state = OPEN;
@@ -143,7 +144,7 @@ static unsigned dns_connection_handling (SelectorEvent * event){
     }  
     /* Si no se logro establecer el primer intento de conexion ni para pedidos de ipv4 ni de ipv6 entonces no se podra establecer la conexion
      * con el servidor destino del pedido, por lo que habra un error. Si al menos una de las dos conexiones se logro, se debera
-     *intentar terminar de establecer la conexion y realizar el pedido dns*/
+     * intentar terminar de establecer la conexion y realizar el pedido dns*/
     if (session->dnsHeaderContainer->ipv4.dnsConnection.state == INVALID && session->dnsHeaderContainer->ipv6.dnsConnection.state == INVALID) {
         
         session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
@@ -160,8 +161,9 @@ static unsigned ip_connection_handling(SelectorEvent * event){
     SessionHandlerP session = (SessionHandlerP) event->data;
     session->clientInfo.addressTypeSelected = session->socksHeader.requestHeader.parser.addressType;
 
-    /* para todas las conexiones, en primer instancia se debera realizar un connect trial. Si el connect no falla, cuando nos vuelvan a llamar
-     * en un estado proximo, revisaremos las opciones del socket para ver si verdaderamente sI la conexion sigue en proceso */
+    /* para todas las conexiones, en primer instancia se debera realizar un connect trial. Si el connect devuelve en errno el valor
+     * EINPROGRES se registra el socket para de esta manera, cuando nos vuelvan a llamar en un estado proximo, revisar las 
+     * opciones del socket para ver si no ha habido error al establecer la conexion */
 
     if(session->socksHeader.requestHeader.parser.addressType == SOCKS_5_ADD_TYPE_IP4){
         session->serverConnection.fd = 

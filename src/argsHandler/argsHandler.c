@@ -65,11 +65,12 @@ usage(const char *progname) {
         "   -D               Modo debug. Desactiva el servicio de cleanup\n"
         "   -a <name>:<pass> Reemplazar credenciales de admin. \n"
         "\n"
-        "   --doh-ip    <ip>    \n"
-        "   --doh-port  <port>  XXX\n"
-        "   --doh-host  <host>  XXX\n"
-        "   --doh-path  <host>  XXX\n"
-        "   --doh-query <host>  XXX\n"
+        "   --doh-ip    <ip>     Establece la dirección del servidor DoH.  Por defecto 127.0.0.1.\n"
+        "   --doh-port  <port>   Establece el puerto del servidor DoH.  Por defecto 8053.\n"
+        "   --doh-host  <host>   Establece el valor del header Host.  Por defecto localhost.\n"
+        "   --doh-path  <path>   Establece el path del request doh.  Por defecto /getnsrecord.\n"
+        "   --doh-query <query>  Establece el query string si el request DoH utiliza el método Doh por defecto ?dns=.\n"
+        "   --doh-method-post    Establece POST como metodo utilizado. Por defecto GET.\n"
 
         "\n",
         progname);
@@ -114,6 +115,7 @@ parse_args(const int argc, char **argv, Socks5Args *args) {
             { "doh-host",  required_argument, 0, 0xD003 },
             { "doh-path",  required_argument, 0, 0xD004 },
             { "doh-query", required_argument, 0, 0xD005 },
+            { "doh-method-post", no_argument, 0, 0xD006 },
             { 0,           0,                 0, 0 }
         };
         //Los parametros que llevan argumentos son seguidos por ':'
@@ -174,11 +176,13 @@ parse_args(const int argc, char **argv, Socks5Args *args) {
             case 0xD005:
                 args->doh.query = optarg;
                 break;
+            case 0xD006:
+                args->doh.method = POST;
+                break;
             default:
                 fprintf(stderr, "unknown argument %d.\n", c);
                 exit(1);
         }
-
     }
     if (optind < argc) {
         fprintf(stderr, "argument not accepted: ");

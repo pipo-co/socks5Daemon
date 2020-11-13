@@ -4,9 +4,9 @@
 
 typedef SpoofingParserState (*SpoofingParserStateFunction)(SpoofingParser*, SpoofingParserSenderType, uint8_t);
 
-static SpoofingParserStateFunction stateFunctions[SP_FINISH + 1];
+static SpoofingParserStateFunction spoofingStateFunctions[SP_FINISH + 1];
 
-static bool isParserLoaded = false;
+static bool spoofingIsParserLoaded = false;
 
 static void spoofing_parser_load(void);
 static inline SpoofingParserState spoofing_parser_spoof_byte(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte);
@@ -43,40 +43,40 @@ static SpoofingParserState spoofing_state_http_credential_confirmation(SpoofingP
 
 static void spoofing_parser_load(void) {
 
-    stateFunctions[SP_INIT]                             = spoofing_state_init;
+    spoofingStateFunctions[SP_INIT]                             = spoofing_state_init;
 
     // POP3 Spoofing
-    stateFunctions[SP_CONFIRM_POP]                      = spoofing_state_confirm_pop;
+    spoofingStateFunctions[SP_CONFIRM_POP]                      = spoofing_state_confirm_pop;
 
     // User Extraction
-    stateFunctions[SP_POP_USER_SERVER_CONSUME]          = spoofing_state_pop_user_server_consume;
-    stateFunctions[SP_POP_USER_CLIENT_CONSUME]          = spoofing_state_pop_user_client_consume;
-    stateFunctions[SP_POP_CHECKING_USER]                = spoofing_state_pop_checking_user;
-    stateFunctions[SP_POP_EXTRACTING_USER]              = spoofing_state_pop_extracting_user;
-    stateFunctions[SP_POP_CHECKING_USER_RESPONSE]       = spoofing_state_pop_checking_user_response;
+    spoofingStateFunctions[SP_POP_USER_SERVER_CONSUME]          = spoofing_state_pop_user_server_consume;
+    spoofingStateFunctions[SP_POP_USER_CLIENT_CONSUME]          = spoofing_state_pop_user_client_consume;
+    spoofingStateFunctions[SP_POP_CHECKING_USER]                = spoofing_state_pop_checking_user;
+    spoofingStateFunctions[SP_POP_EXTRACTING_USER]              = spoofing_state_pop_extracting_user;
+    spoofingStateFunctions[SP_POP_CHECKING_USER_RESPONSE]       = spoofing_state_pop_checking_user_response;
 
     // Pass Extraction
-    stateFunctions[SP_POP_PASS_SERVER_CONSUME]          = spoofing_state_pop_pass_server_consume;
-    stateFunctions[SP_POP_PASS_CLIENT_CONSUME]          = spoofing_state_pop_pass_client_consume;
-    stateFunctions[SP_POP_CHECKING_PASS]                = spoofing_state_pop_checking_pass;
-    stateFunctions[SP_POP_EXTRACTING_PASS]              = spoofing_state_pop_extracting_pass;
-    stateFunctions[SP_POP_CHECKING_PASS_RESPONSE]       = spoofing_state_pop_checking_pass_response;
+    spoofingStateFunctions[SP_POP_PASS_SERVER_CONSUME]          = spoofing_state_pop_pass_server_consume;
+    spoofingStateFunctions[SP_POP_PASS_CLIENT_CONSUME]          = spoofing_state_pop_pass_client_consume;
+    spoofingStateFunctions[SP_POP_CHECKING_PASS]                = spoofing_state_pop_checking_pass;
+    spoofingStateFunctions[SP_POP_EXTRACTING_PASS]              = spoofing_state_pop_extracting_pass;
+    spoofingStateFunctions[SP_POP_CHECKING_PASS_RESPONSE]       = spoofing_state_pop_checking_pass_response;
 
     // HTTP Spoofing
-    stateFunctions[SP_CONFIRM_HTTP]                     = spoofing_state_confirm_http;
-    stateFunctions[SP_HTTP_SEARCHING_AUTH]              = spoofing_state_http_searching_auth;
-    stateFunctions[SP_HTTP_CONFIRM_BASIC_SCHEME]        = spoofing_state_http_confirm_basic_scheme;
-    stateFunctions[SP_HTTP_EXTRACTING_CREDENTIALS]      = spoofing_state_http_extracting_credentials;
-    stateFunctions[SP_HTTP_CLIENT_CONFIRMATION_CONSUME] = spoofing_state_http_client_confirmation_consume;
-    stateFunctions[SP_HTTP_CREDENTIAL_CONFIRMATION]     = spoofing_state_http_credential_confirmation;
+    spoofingStateFunctions[SP_CONFIRM_HTTP]                     = spoofing_state_confirm_http;
+    spoofingStateFunctions[SP_HTTP_SEARCHING_AUTH]              = spoofing_state_http_searching_auth;
+    spoofingStateFunctions[SP_HTTP_CONFIRM_BASIC_SCHEME]        = spoofing_state_http_confirm_basic_scheme;
+    spoofingStateFunctions[SP_HTTP_EXTRACTING_CREDENTIALS]      = spoofing_state_http_extracting_credentials;
+    spoofingStateFunctions[SP_HTTP_CLIENT_CONFIRMATION_CONSUME] = spoofing_state_http_client_confirmation_consume;
+    spoofingStateFunctions[SP_HTTP_CREDENTIAL_CONFIRMATION]     = spoofing_state_http_credential_confirmation;
     
 
-    isParserLoaded = true;
+    spoofingIsParserLoaded = true;
 }
 
 void spoofing_parser_init(SpoofingParser *parser) {
 
-    if(!isParserLoaded) {
+    if(!spoofingIsParserLoaded) {
         spoofing_parser_load();
     }
 
@@ -96,7 +96,7 @@ void spoofing_parser_spoof(SpoofingParser *parser, uint8_t *buffer, size_t bytes
 
 static inline SpoofingParserState spoofing_parser_spoof_byte(SpoofingParser *parser, SpoofingParserSenderType senderType, uint8_t byte) {
 
-    return stateFunctions[parser->currentState](parser, senderType, byte);
+    return spoofingStateFunctions[parser->currentState](parser, senderType, byte);
 }
 
 inline bool spoofing_parser_is_done(SpoofingParser *parser) {
@@ -621,4 +621,3 @@ static SpoofingParserState spoofing_state_http_credential_confirmation(SpoofingP
         return parser->currentState;
     }
 }
-

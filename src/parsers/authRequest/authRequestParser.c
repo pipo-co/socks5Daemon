@@ -14,7 +14,7 @@ typedef AuthRequestParserState (*AuthRequestStateFunction)(AuthRequestParser*, u
 
 static AuthRequestStateFunction stateFunctions[AUTH_REQUEST_PARSER_INVALID_STATE + 1];
 
-static bool isParserLoaded = false;
+static bool authIsParserLoaded = false;
 
 static void auth_request_parser_load(void) {
     stateFunctions[AUTH_REQUEST_PARSER_VERSION]         = auth_request_state_version;
@@ -25,12 +25,12 @@ static void auth_request_parser_load(void) {
     stateFunctions[AUTH_REQUEST_PARSER_SUCCESS]         = NULL;
     stateFunctions[AUTH_REQUEST_PARSER_INVALID_STATE]   = NULL;
 
-    isParserLoaded = true;
+    authIsParserLoaded = true;
 }
 
 void auth_request_parser_init(AuthRequestParser *p) {
 
-    if(!isParserLoaded) {
+    if(!authIsParserLoaded) {
         auth_request_parser_load();
     }
 
@@ -150,4 +150,3 @@ static AuthRequestParserState auth_request_state_password(AuthRequestParser *p, 
 
     return AUTH_REQUEST_PARSER_PASSWORD;
 }
-

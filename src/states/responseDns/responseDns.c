@@ -119,14 +119,15 @@ static unsigned response_dns_on_read(SelectorEvent *event) {
 
     if(dnsHeaderOther->connected){
 
-        // Los dos termianron de parsear y el otro ya pudo hacer primer conncet ->  DNS_CONNECT
+        // Los dos terminaron de parsear y el otro ya pudo hacer primer conncet ->  DNS_CONNECT
 
         return DNS_CONNECT;
     }
 
     /* debo probar una por una las ips obtenidas en el pedido dns hasta que pueda establecer la conexion con el servidor
-     * por lo que con cada una se realizara un intento de conexion. Si el connect no falla, cuando nos vuelvan a llamar
-     * en un estado proximo, revisaremos las opciones del socket para ver si verdaderamente sI la conexion sigue en proceso */
+     * por lo que con cada una se realizara un intento de conexion. Si el errno devuelve EINPROGRES se registra el socket en 
+     * el selector para asi cuando nos vuelvan a llamar en un estado proximo, revisaremos las opciones del socket para ver
+     * si verdaderamente sI la conexion sigue en proceso */
 
     do{
         if(dnsHeaderMe->responseParser.addresses[dnsHeaderMe->responseParser.counter].ipType == SOCKS_5_ADD_TYPE_IP4){

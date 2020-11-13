@@ -41,6 +41,22 @@ uint8_t request_dns_parser_test_input_success_ipv6[] = {
     0x20, 0x0e
 };
 
+uint8_t request_dns_parser_test_input_soa[] = {
+    0x43, 0x1b, 0x81, 0x80, 0x00, 0x01, 0x00, 0x00, 
+    0x00, 0x01, 0x00, 0x01, 0x06, 0x61, 0x6d, 0x61, 
+    0x7a, 0x6f, 0x6e, 0x03, 0x63, 0x6f, 0x6d, 0x00, 
+    0x00, 0x1c, 0x00, 0x01, 0xc0, 0x0c, 0x00, 0x06, 
+    0x00, 0x01, 0x00, 0x00, 0x00, 0x13, 0x00, 0x31, 
+    0x13, 0x64, 0x6e, 0x73, 0x2d, 0x65, 0x78, 0x74, 
+    0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2d, 0x6d, 0x61, 
+    0x73, 0x74, 0x65, 0x72, 0xc0, 0x0c, 0x04, 0x72, 
+    0x6f, 0x6f, 0x74, 0xc0, 0x0c, 0x77, 0xd0, 0x22, 
+    0xe5, 0x00, 0x00, 0x00, 0xb4, 0x00, 0x00, 0x00, 
+    0x3c, 0x00, 0x2e, 0x24, 0x80, 0x00, 0x00, 0x00, 
+    0x3c, 0x00, 0x00, 0x29, 0x02, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00
+};
+
 
 
 START_TEST (response_dns_test_parser_init) {
@@ -215,7 +231,7 @@ START_TEST (response_dns_test_parser_feed_success) {
     response_dns_parser_feed(p, request_dns_parser_test_input_success[pos++]);
     ck_assert(p->currentState == RESPONSE_DNS_IPV4_ADDRESS);
     ck_assert_uint_eq(p->dataLenght, 4);
-    ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, IPV4);
+    ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, DNS_IP4_ADD_TYPE);
     ck_assert_uint_eq(p->counter, 4);
 
     while (p->counter > 1)
@@ -237,7 +253,7 @@ START_TEST (response_dns_test_parser_feed_success) {
 }
 END_TEST
 
-START_TEST (response_dns_test_parser_consume) {
+START_TEST (response_dns_test_parser_consume_input_success) {
 
     ResponseDnsParser * p = malloc(sizeof(*p));
     response_dns_parser_init(p);
@@ -262,6 +278,74 @@ START_TEST (response_dns_test_parser_consume) {
 
     free(b);
     free(p->addresses);
+    free(p);
+}
+END_TEST
+
+START_TEST (response_dns_test_parser_feed_soa) {
+
+    ResponseDnsParser * p = malloc(sizeof(*p));
+
+    size_t pos = 0;
+    
+    response_dns_parser_init(p);
+
+    response_dns_parser_feed(p, request_dns_parser_test_input_soa[pos++]);
+    ck_assert(p->currentState == RESPONSE_DNS_TRANSACTION_STATE);
+    
+    response_dns_parser_feed(p, request_dns_parser_test_input_soa[pos++]);
+    ck_assert(p->currentState == RESPONSE_DNS_FLAGS_STATE);
+
+    response_dns_parser_feed(p, request_dns_parser_test_input_soa[pos++]);
+    ck_assert(p->currentState == RESPONSE_DNS_FLAGS_STATE);
+
+    response_dns_parser_feed(p, request_dns_parser_test_input_soa[pos++]);
+    ck_assert(p->currentState == RESPONSE_DNS_QUESTIONS_HIGH);
+
+    response_dns_parser_feed(p, request_dns_parser_test_input_soa[pos++]);
+    ck_assert(p->currentState == RESPONSE_DNS_QUESTIONS_LOW);
+
+    response_dns_parser_feed(p, request_dns_parser_test_input_soa[pos++]);
+    ck_assert(p->currentState == RESPONSE_DNS_ANSWERS_HIGH);
+    ck_assert_uint_eq(p->totalQuestions, 1);
+
+    response_dns_parser_feed(p, request_dns_parser_test_input_soa[pos++]);
+    ck_assert(p->currentState == RESPONSE_DNS_ANSWERS_LOW);
+
+    response_dns_parser_feed(p, request_dns_parser_test_input_soa[pos++]);
+    ck_assert(p->currentState == RESPONSE_DNS_DONE);
+    ck_assert_uint_eq(p->totalAnswers, 0);
+
+    free(p);
+
+}
+END_TEST
+
+START_TEST (response_dns_test_parser_consume_input_soa) {
+
+    ResponseDnsParser * p = malloc(sizeof(*p));
+    response_dns_parser_init(p);
+
+    bool errored;
+
+    Buffer *b = malloc(sizeof(*b));
+
+    buffer_init(b, N(request_dns_parser_test_input_soa), request_dns_parser_test_input_soa);
+    buffer_write_adv(b, N(request_dns_parser_test_input_soa));
+
+
+    ck_assert(response_dns_parser_consume(b, p, &errored));
+
+    ck_assert(!errored);
+
+    ck_assert_uint_eq(p->currentAnswers, 0);
+
+    ck_assert(response_dns_parser_is_done(p->currentState, &errored));
+
+    ck_assert(p->currentState == RESPONSE_DNS_DONE);
+    ck_assert(!errored);
+
+    free(b);
     free(p);
 }
 END_TEST
@@ -420,7 +504,7 @@ START_TEST (response_dns_test_parser_feed_multiple_success) {
     response_dns_parser_feed(p, request_dns_parser_test_input_multiple_success[pos++]);
     ck_assert(p->currentState == RESPONSE_DNS_IPV4_ADDRESS);
     ck_assert_uint_eq(p->dataLenght, 4);
-    ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, IPV4);
+    ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, DNS_IP4_ADD_TYPE);
     ck_assert_uint_eq(p->counter, 4);
 
     while (p->counter > 1)
@@ -472,7 +556,7 @@ START_TEST (response_dns_test_parser_feed_multiple_success) {
     response_dns_parser_feed(p, request_dns_parser_test_input_multiple_success[pos++]);
     ck_assert(p->currentState == RESPONSE_DNS_IPV4_ADDRESS);
     ck_assert_uint_eq(p->dataLenght, 4);
-    ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, IPV4);
+    ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, DNS_IP4_ADD_TYPE);
     ck_assert_uint_eq(p->counter, 4);
 
     while (p->counter > 1)
@@ -524,7 +608,7 @@ START_TEST (response_dns_test_parser_feed_multiple_success) {
     response_dns_parser_feed(p, request_dns_parser_test_input_multiple_success[pos++]);
     ck_assert(p->currentState == RESPONSE_DNS_IPV4_ADDRESS);
     ck_assert_uint_eq(p->dataLenght, 4);
-    ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, IPV4);
+    ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, DNS_IP4_ADD_TYPE);
     ck_assert_uint_eq(p->counter, 4);
 
     while (p->counter > 1)
@@ -729,7 +813,7 @@ START_TEST (response_dns_test_parser_feed_success_ipv6) {
     response_dns_parser_feed(p, request_dns_parser_test_input_success_ipv6[pos++]);
     ck_assert(p->currentState == RESPONSE_DNS_IPV6_ADDRESS);
     ck_assert_uint_eq(p->dataLenght, 16);
-    ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, IPV6);
+    ck_assert_uint_eq(p->addresses[p->currentAnswers].ipType, DNS_IP6_ADD_TYPE);
     ck_assert_uint_eq(p->counter, 16);
 
     while (p->counter > 1)
@@ -760,7 +844,9 @@ Suite * response_dns_parser_test_suite(void) {
 
     tcase_add_test(tc, response_dns_test_parser_init);
     tcase_add_test(tc, response_dns_test_parser_feed_success);
-    tcase_add_test(tc, response_dns_test_parser_consume);
+    tcase_add_test(tc, response_dns_test_parser_consume_input_success);
+    tcase_add_test(tc, response_dns_test_parser_feed_soa);
+    tcase_add_test(tc, response_dns_test_parser_consume_input_soa);
     tcase_add_test(tc, response_dns_test_parser_feed_multiple_success);
     tcase_add_test(tc, response_dns_test_parser_consume_multiple_success);
     tcase_add_test(tc, response_dns_test_parser_feed_success_ipv6);

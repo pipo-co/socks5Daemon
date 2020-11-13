@@ -92,7 +92,7 @@ UserInfoP user_handler_add_user(char *username, char *password, bool admin) {
 
     int ret;
 
-    khiter_t iter = kh_put(STRING_TO_CHAR_MAP, userMap, username, &ret);
+    khiter_t iter = kh_put(STRING_TO_CHAR_MAP, userMap, newUser->username, &ret);
     if(ret < 0) {
         free(newUser);
         return NULL;

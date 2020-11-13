@@ -1,8 +1,10 @@
 #include "parsers/dns/dohBuilder.c"
+#include <check.h>
 
 char * domain1 = "www.example.com";
 char * domain_max_size = "gligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgla.agligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgl.gligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgla.gligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgl";
 char * domain_too_long = "gligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgligvpgrlurqhvmayiaf.gligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgligvpgrlurqhvmayiaf.gligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgligvpgrlurqhvmayiaf.gligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgligvpgrlurqhvmayiafgligvpgrlurqhvmayiaf";
+
 uint8_t doh_query_succes_domain1[] = { /* Packet 172 */
     0x47, 0x45, 0x54, 0x20, 0x2f, 0x64, 0x6e, 0x73, 
     0x2d, 0x71, 0x75, 0x65, 0x72, 0x79, 0x3f, 0x64, 
@@ -32,7 +34,7 @@ START_TEST (doh_builder_test_succes_first_line) {
     parse_args(0, NULL, &args);
     args.doh.path = "/dns-query";
     uint8_t *ans = doh_query_succes_domain1;
-    doh_builder_build(&buf, domain1, AF_INET, &args);
+    doh_builder_build(&buf, domain1, AF_INET, &args, sizeof(domain1));
     uint8_t b;
 
     while (buffer_can_read(&buf) && b != '\n'){
@@ -47,7 +49,7 @@ END_TEST
 START_TEST (doh_builder_test_dns_query) {
     
     uint8_t buffer[MAX_DNS_QUERY_SIZE];
-    size_t size = doh_builder_build_dns_query(domain1, A, buffer, MAX_DNS_QUERY_SIZE);
+    size_t size = doh_builder_build_dns_query(domain1, DNS_QUERY_A, buffer, MAX_DNS_QUERY_SIZE);
 
     for (size_t i = 0; i < size; i++) {
         ck_assert_uint_eq(dns_query_succes_domain1[i], buffer[i]);
@@ -59,7 +61,7 @@ END_TEST
 START_TEST (doh_builder_test_url_too_long) {
     
     uint8_t buffer[MAX_DNS_QUERY_SIZE];
-    size_t size = doh_builder_build_dns_query(domain_too_long, A, buffer, MAX_DNS_QUERY_SIZE);
+    size_t size = doh_builder_build_dns_query(domain_too_long, DNS_QUERY_A, buffer, MAX_DNS_QUERY_SIZE);
 
     ck_assert_uint_eq(0, size);
 }
@@ -70,9 +72,9 @@ START_TEST (doh_builder_test_invalid_q_type) {
     Buffer buf;
     Socks5Args args;
     parse_args(0, NULL, &args);
-    int ans = doh_builder_build(&buf, domain1, 0, &args);
 
-    ck_assert_int_eq(-1, ans);
+    ck_assert(doh_builder_build(&buf, domain1, 0, &args, sizeof(domain1)) == false);
+    free(buf.data);
 }
 END_TEST
 
@@ -81,9 +83,8 @@ START_TEST (doh_builder_test_domain_name_max_size) {
     Buffer buf;
     Socks5Args args;
     parse_args(0, NULL, &args);
-    int ans = doh_builder_build(&buf, domain_max_size, AF_INET, &args);
 
-    ck_assert_int_eq(0, ans);
+    ck_assert(doh_builder_build(&buf, domain_max_size, AF_INET, &args, sizeof(domain_max_size)) == true);
     free(buf.data);
 }
 END_TEST

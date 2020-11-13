@@ -98,5 +98,3 @@ SelectorStateDefinition dns_connect_state_definition_supplier(void) {
 
     return stateDefinition;
 }
- 
- 
