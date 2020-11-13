@@ -110,7 +110,7 @@ void log_credential_spoofing(SessionHandlerP session) {
 }
 
 bool request_marshall(Buffer *b, size_t *bytes, ReplyValues rep) {
-
+    
     while(*bytes < RU_REPLY_SIZE && buffer_can_write(b)){
         if(*bytes == 0){
             buffer_write(b, SOCKS_VERSION);
@@ -128,8 +128,8 @@ bool request_marshall(Buffer *b, size_t *bytes, ReplyValues rep) {
             buffer_write(b, 0);
         }
         (*bytes)++;
+        
     }
-
     return *bytes >= RU_REPLY_SIZE;
 }
 

@@ -57,7 +57,7 @@ START_TEST (request_successful_test_core_on_write_success) {
     session->sessionStateMachine = stm;
 
     RequestHeader requestHeader;
-    requestHeader.bytes = 0;
+    requestHeader.bytes = RU_REPLY_SIZE;
     requestHeader.rep = SUCCESSFUL;
     
     
@@ -86,16 +86,14 @@ START_TEST (request_successful_test_core_on_write_success) {
     selector_register(selector, server, &socksv5, OP_READ, NULL);
 
     ClientInfo clientInfo;
-    Connection serverConnection;
     UserInfo * user = malloc(sizeof(*user));
 
     user->connectionCount = 0;
-    memcpy(user->username, "tobi", sizeof("tobi"));
+    memcpy(user->username, "admin", sizeof("admin"));
     
     clientInfo.user = user;
 
     session->clientInfo = clientInfo;
-    session->serverConnection = serverConnection;
     
     key->s = selector;
     key->data = session;
@@ -109,8 +107,6 @@ START_TEST (request_successful_test_core_on_write_success) {
     free(user);
     free(key);
     free(session);
-
-    
 }
 END_TEST
 

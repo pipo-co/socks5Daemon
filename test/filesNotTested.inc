@@ -18,3 +18,4 @@ FILES_NOT_TESTED += ../src/states/stateUtilities/request/requestUtilities.c
 FILES_NOT_TESTED += ../src/socks5/logger/logger.c
 FILES_NOT_TESTED += ../src/socks5/administration/administration.c
 FILES_NOT_TESTED += ../src/parsers/spoofing/spoofingParser.c    # Should be tested
+FILES_NOT_TESTED += ../src/reference/parser/parser.c

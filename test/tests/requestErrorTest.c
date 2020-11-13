@@ -24,7 +24,7 @@ START_TEST (request_error_test_core_request_marshall_complete) {
     uint8_t *dummyBuffer = malloc(11*sizeof(*dummyBuffer));
     buffer_init(&buff, 11, dummyBuffer);
     size_t bytes = 0;
-    uint8_t rep = 0x01;
+    uint8_t rep = GENERAL_SOCKS_SERVER_FAILURE;
 
     request_marshall(&buff, &bytes, rep);
 
@@ -59,8 +59,8 @@ START_TEST (request_error_test_core_on_write_success) {
     socks5_p->sessionStateMachine = stm;
 
     RequestHeader requestHeader;
+    requestHeader.bytes = RU_REPLY_SIZE;
     requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
-    //requestHeader.bytes = REQUEST_ERROR_SIZE;
     
     socks5_p->socksHeader.requestHeader = requestHeader;
 
@@ -85,6 +85,16 @@ START_TEST (request_error_test_core_on_write_success) {
     };
 
     selector_register(selector, server, &socksv5, OP_READ, NULL);
+
+    ClientInfo clientInfo;
+    UserInfo * user = malloc(sizeof(*user));
+
+    user->connectionCount = 0;
+    memcpy(user->username, "admin", sizeof("admin"));
+    
+    clientInfo.user = user;
+
+    socks5_p->clientInfo = clientInfo;
 
     key->s = selector;
     key->data = socks5_p;
