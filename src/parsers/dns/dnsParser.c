@@ -462,4 +462,3 @@ char * response_dns_parser_error_message(enum ResponseDnsParserState state) {
         break;
     }
 }
-

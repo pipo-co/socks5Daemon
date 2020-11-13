@@ -218,7 +218,7 @@ static bool no_args_builder (int fd, uint8_t type, uint8_t command) {
 			bytesSent += bytes;
 		}
 
-	} while(bytesSent < NO_ARGS_LENGTH && (bytes != -1 || errno !=  EINTR));
+	} while(bytesSent < NO_ARGS_LENGTH && (bytes != -1 && errno !=  EINTR));
 
 	if(bytes == -1) {
 		return false;

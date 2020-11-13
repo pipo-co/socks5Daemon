@@ -62,4 +62,3 @@ static unsigned classes[0xFF] = {0x00};
 unsigned * parser_no_classes(void) {
     return classes;
 }
-

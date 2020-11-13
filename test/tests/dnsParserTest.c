@@ -287,7 +287,6 @@ START_TEST (response_dns_test_parser_feed_soa) {
     ResponseDnsParser * p = malloc(sizeof(*p));
 
     size_t pos = 0;
-    size_t i = 0;
     
     response_dns_parser_init(p);
 

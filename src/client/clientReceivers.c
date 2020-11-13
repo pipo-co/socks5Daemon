@@ -469,4 +469,3 @@ static bool receiver_user_list(int fd) {
 
    return true;
 }
-
