@@ -17,9 +17,9 @@
 #include "statistics/statistics.h"
 #include "administration/administration.h"
 
-#define DEFAULT_INPUT_BUFFER_SIZE 512
-#define DEFAULT_OUTPUT_BUFFER_SIZE 512
-#define DEFAULT_DNS_BUFFER_SIZE 512
+#define DEFAULT_INPUT_BUFFER_SIZE 4096
+#define DEFAULT_OUTPUT_BUFFER_SIZE 4096
+#define DEFAULT_DNS_BUFFER_SIZE 4096
 
 #define MIN_IO_BUFFER_SIZE 50
 #define MAX_IO_BUFFER_SIZE (1*1024*1024)

@@ -94,7 +94,7 @@ bool doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args 
     uint8_t dohQuery[MAX_DOH_QUERY_SIZE];
     
     uint8_t dnsQuery[MAX_DNS_QUERY_SIZE];
-    size_t querySize = doh_builder_build_dns_query(domain, qtype, dnsQuery, MAX_DNS_QUERY_SIZE);
+    uint16_t querySize = doh_builder_build_dns_query(domain, qtype, dnsQuery, MAX_DNS_QUERY_SIZE);
     if(querySize == 0) {
         return false;
     }
@@ -119,7 +119,7 @@ bool doh_builder_build(Buffer * buff, char * domain, uint16_t qtype, Socks5Args 
         doh_builder_add_header_value(dohQuery, &size, contentType, NULL);
 
         char querySizeBuff[MAX_QUERY_SIZE];
-        snprintf(querySizeBuff, MAX_QUERY_SIZE, "%zu", querySize);
+        snprintf(querySizeBuff, MAX_QUERY_SIZE, "%u", querySize);
 
         doh_builder_add_header_value(dohQuery, &size, contentLength, querySizeBuff);
     }

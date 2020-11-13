@@ -74,7 +74,6 @@ START_TEST (doh_builder_test_invalid_q_type) {
     parse_args(0, NULL, &args);
 
     ck_assert(doh_builder_build(&buf, domain1, 0, &args, sizeof(domain1)) == false);
-    free(buf.data);
 }
 END_TEST
 

@@ -1,5 +1,6 @@
-#include <check.h>
 #include "parsers/adminRequestParser/adminResponseBuilder.c"
+
+#include <check.h>
 
 START_TEST (admin_response_builder_core_uint8) {
     Buffer buff;

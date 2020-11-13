@@ -4,23 +4,6 @@
 
 #include "parser_utils.h"
 
-const char *
-parser_utils_strcmpi_event(const enum string_cmp_event_types type) {
-    const char *ret;
-
-    switch(type) {
-        case STRING_CMP_MAYEQ:
-            ret = "wait(c)";
-            break;
-        case STRING_CMP_EQ:
-            ret = "eq(c)";
-            break;
-        case STRING_CMP_NEQ:
-            ret = "neq(c)";
-            break;
-    }
-    return ret;
-}
 
 static void
 may_eq(struct parser_event *ret, const uint8_t c) {

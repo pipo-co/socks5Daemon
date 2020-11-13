@@ -7,11 +7,9 @@ SOURCES=main.c
 
 CFLAGS += -I../src
 
-LIBRARIES = -lcheck -lrt -lpthread -lm -lsubunit 
+LIBRARIES = -lcheck -lrt -lpthread -lm -lsubunit
 
-FILES_NOT_TESTED_OBJECTS = $(patsubst %.c, %.o, $(FILES_NOT_TESTED))
-
-all: compile run clean
+all: compile run
 
 compile: $(SOURCES) $(FILES_NOT_TESTED)
 	$(CC) $(CFLAGS) $^ -o $(EXEC) $(LIBRARIES) 
@@ -20,6 +18,6 @@ run:
 	./$(EXEC)
 
 clean:
-	rm -f $(EXEC) $(FILES_NOT_TESTED_OBJECTS)
+	rm -f $(EXEC)
 
 .PHONY: all, run, clean

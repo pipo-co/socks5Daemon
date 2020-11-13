@@ -9,9 +9,8 @@ typedef Suite *(*suiteSupplier)(void);
 
 // Test files being exercised
 #include "tests/buffer_test.c"
-#include "tests/parser_test.c"
+#include "tests/parserTest.c"
 #include "tests/selector_test.c"
-#include "tests/parser_utils_test.c"
 #include "tests/netutils_test.c"
 #include "tests/helloParserTest.c"
 #include "tests/helloTest.c"
@@ -38,7 +37,6 @@ typedef Suite *(*suiteSupplier)(void);
 static const suiteSupplier suiteSuppliers[] = {
     buffer_test_suite,
     parser_test_suite,
-    parser_utils_test_suite,
     hello_test_suite,
     hello_parser_test_suite,
     hello_error_test_suite,
@@ -48,16 +46,17 @@ static const suiteSupplier suiteSuppliers[] = {
     selector_test_suite,
     request_parser_test_suite,
     request_test_suite,
-    // request_success_test_suite,
-    // request_error_test_suite,
+    request_success_test_suite,
+    request_error_test_suite,
     forwarding_test_suite,
     flush_closer_test_suite,
     flush_closy_test_suite,
     response_dns_parser_test_suite,
     http_dns_parser_test_suite,
-    //base64_test_suite,
+    base64_test_suite,
     doh_builder_test_suite,
     admin_request_parser_test_suite,
+    auth_request_parser_test_suite,
 };
 
 SRunner * test_srunner_init(void) {

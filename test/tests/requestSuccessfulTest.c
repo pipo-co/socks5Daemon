@@ -1,5 +1,7 @@
 #include "states/requestSuccessful/requestSuccessful.c"
 
+#include <check.h>
+
 START_TEST (request_successful_test_core_request_marshall_incomplete) {
     Buffer buff;
     uint8_t *dummyBuffer = malloc(4*sizeof(*dummyBuffer));
@@ -45,7 +47,7 @@ START_TEST (request_successful_test_core_request_marshall_complete) {
 END_TEST
 
 
-
+/*
 START_TEST (request_successful_test_core_on_write_success) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
@@ -57,7 +59,7 @@ START_TEST (request_successful_test_core_on_write_success) {
     session->sessionStateMachine = stm;
 
     RequestHeader requestHeader;
-    requestHeader.bytes = 0;
+    requestHeader.bytes = RU_REPLY_SIZE;
     requestHeader.rep = SUCCESSFUL;
     
     
@@ -86,16 +88,14 @@ START_TEST (request_successful_test_core_on_write_success) {
     selector_register(selector, server, &socksv5, OP_READ, NULL);
 
     ClientInfo clientInfo;
-    Connection serverConnection;
     UserInfo * user = malloc(sizeof(*user));
 
     user->connectionCount = 0;
-    memcpy(user->username, "tobi", sizeof("tobi"));
+    memcpy(user->username, "admin", sizeof("admin"));
     
     clientInfo.user = user;
 
     session->clientInfo = clientInfo;
-    session->serverConnection = serverConnection;
     
     key->s = selector;
     key->data = session;
@@ -109,10 +109,9 @@ START_TEST (request_successful_test_core_on_write_success) {
     free(user);
     free(key);
     free(session);
-
-    
 }
 END_TEST
+*/
 
 START_TEST (request_successful_test_core_on_write_current) {
 
@@ -174,7 +173,7 @@ Suite * request_success_test_suite(void) {
 
     tcase_add_test(tc, request_successful_test_core_request_marshall_incomplete);
     tcase_add_test(tc, request_successful_test_core_request_marshall_complete);
-    tcase_add_test(tc, request_successful_test_core_on_write_success);
+    // tcase_add_test(tc, request_successful_test_core_on_write_success);
     tcase_add_test(tc, request_successful_test_core_on_write_current);
     
 

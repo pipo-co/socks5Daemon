@@ -1,5 +1,5 @@
 
-all: tests server
+all: server
 
 server:
 	cd src; make;
