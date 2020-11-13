@@ -61,7 +61,7 @@ Thumbs.db
 server
 main
 pipoClient
-
+socks5d
 
 src/request/request_test.c
 src/main
