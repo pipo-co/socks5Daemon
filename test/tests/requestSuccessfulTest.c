@@ -47,7 +47,7 @@ START_TEST (request_successful_test_core_request_marshall_complete) {
 END_TEST
 
 
-
+/*
 START_TEST (request_successful_test_core_on_write_success) {
 
     SelectorEvent *key =  malloc(sizeof(*key));
@@ -111,6 +111,7 @@ START_TEST (request_successful_test_core_on_write_success) {
     free(session);
 }
 END_TEST
+*/
 
 START_TEST (request_successful_test_core_on_write_current) {
 
@@ -172,7 +173,7 @@ Suite * request_success_test_suite(void) {
 
     tcase_add_test(tc, request_successful_test_core_request_marshall_incomplete);
     tcase_add_test(tc, request_successful_test_core_request_marshall_complete);
-    tcase_add_test(tc, request_successful_test_core_on_write_success);
+    // tcase_add_test(tc, request_successful_test_core_on_write_success);
     tcase_add_test(tc, request_successful_test_core_on_write_current);
     
 
