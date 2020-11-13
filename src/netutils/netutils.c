@@ -14,6 +14,7 @@
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 
+// Funcion provista por la catedra
 extern const char *
 sockaddr_to_human(char *buff, const size_t buffsize,
                   const struct sockaddr *addr) {

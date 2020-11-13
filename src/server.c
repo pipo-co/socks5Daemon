@@ -1,6 +1,6 @@
 
 /**
- * main.c - servidor proxy socks concurrente
+ * server.c - servidor proxy socks concurrente
  *
  * Interpreta los argumentos de línea de comandos, y monta un socket
  * pasivo.
