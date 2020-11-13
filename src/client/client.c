@@ -242,6 +242,9 @@ static void interactive_client(int fd) {
 			if(firstChar == 'h'){
 				print_help();
 			}
+			else if(firstChar == 'x'){
+				return;
+			}
 		}
 		else if(isUint && command < COMMAND_COUNT){
 			printf("\n----------------------------------------\n");
@@ -268,6 +271,7 @@ static void print_help(){
 	printf("Client help\n");
 	printf("----------------------------------------\n");
 	printf("In order to get this message again you must send 'h' as a command value\n");
+	printf("In order to close the session send 'x' as a command value\n");
 
 	for (size_t i = 0; i < COMMAND_COUNT; i++){
 		printf("Command number: %lu. Desc: %s\n", (unsigned long)i, descriptions[i]);
