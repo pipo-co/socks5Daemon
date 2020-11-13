@@ -1,10 +1,11 @@
 include sourcePaths.inc
-include Makefile.inc
+include ../Makefile.inc
 
-INCLUDE= -I$(PWD)
+CFLAGS += -I$(PWD)
 
 SERVER=../socks5d
 CLIENT=../pipoClient
+
 CLIENT_SOURCES=client
 
 SOURCE_FILES = $(foreach dir, $(SOURCE_PATHS), $(wildcard $(dir)/*.c))

@@ -1,6 +1,4 @@
 
-#define _POSIX_C_SOURCE 200112L
-
 #include "buffer/buffer.h"
 #include "client/clientCommandController.h"
 #include "client/clientDefs.h"
