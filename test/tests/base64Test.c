@@ -1,12 +1,14 @@
 #include "utilities/base64/base64.c"
 
+#include <check.h>
+
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 
 START_TEST (base64_encode_test) {
 
     char input1[] = "holacomovasoytobiasbrandy";
 
-    char output1[BASE64_ENCODE_SIZE(N(input1) - 1)];
+    char output1[BASE64_ENCODE_SIZE(N(input1))];
 
     base64_encode((uint8_t*)input1, N(input1) - 1, output1, false);
 
@@ -14,7 +16,7 @@ START_TEST (base64_encode_test) {
 
     char input2[] = "una banana";
 
-    char output2[BASE64_ENCODE_SIZE(N(input2) - 1)];
+    char output2[BASE64_ENCODE_SIZE(N(input2))];
 
     base64_encode((uint8_t*)input2, N(input2) - 1, output2, true);
 

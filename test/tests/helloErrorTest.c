@@ -1,5 +1,7 @@
 #include "states/errorStates/helloError/helloError.c"
 
+#include <check.h>
+
 START_TEST (hello_error_test_core_request_marshall_incomplete) {
     Buffer buff;
     uint8_t *dummyBuffer = malloc(1*sizeof(*dummyBuffer));
