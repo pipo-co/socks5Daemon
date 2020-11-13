@@ -285,12 +285,13 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                     p->currentState = RESPONSE_DNS_ANSWERS_NAME_FIRST_BYTE;
                 }
                 else{
-                    IpAddress *auxAddresses = realloc(p->addresses, p->totalAnswers*sizeof(struct IpAddress));
-
-                    if(auxAddresses != NULL){
-                        p->addresses = auxAddresses;
-                    }
                     
+                    if(p->totalAnswers != 0){
+                        IpAddress *auxAddresses = realloc(p->addresses, p->totalAnswers*sizeof(struct IpAddress));
+                        if(auxAddresses != NULL){
+                            p->addresses = auxAddresses;
+                        }
+                    }
                     p->currentState = RESPONSE_DNS_DONE;
                 }
             }
