@@ -140,34 +140,34 @@ START_TEST (http_dns_test_parser_feed_success) {
 }
 END_TEST
 
-// START_TEST (response_dns_test_parser_consume) {
+START_TEST (http_dns_test_parser_consume) {
 
-//     ResponseDnsParser * p = malloc(sizeof(*p));
-//     response_dns_parser_init(p);
+    HttpDnsParser * p = malloc(sizeof(*p));
+    
+    http_dns_parser_init(p);
 
-//     bool errored;
+    bool errored;
 
-//     Buffer *b = malloc(sizeof(*b));
+    Buffer *b = malloc(sizeof(*b));
 
-//     buffer_init(b, N(request_dns_parser_test_input_success), request_dns_parser_test_input_success);
-//     buffer_write_adv(b, N(request_dns_parser_test_input_success));
+    buffer_init(b, N(http_dns_parser_test_input_success), http_dns_parser_test_input_success);
+    buffer_write_adv(b, N(http_dns_parser_test_input_success));
 
 
-//     ck_assert(response_dns_parser_consume(b, p, &errored));
+    ck_assert(http_dns_parser_consume(b, p, &errored));
 
-//     ck_assert(!errored);
+    ck_assert(!errored);
 
-//     ck_assert_uint_eq(p->currentAnswers, 1);
+    ck_assert(p->currentState == HTTP_DNS_DONE);
 
-//     ck_assert(response_dns_parser_is_done(p->currentState, &errored));
+    ck_assert(http_dns_parser_is_done(p->currentState, &errored));
 
-//     ck_assert(!errored);
+    ck_assert(!errored);
 
-//     free(b);
-//     free(p->addresses);
-//     free(p);
-// }
-// END_TEST
+    free(b);
+    free(p);
+}
+END_TEST
 
 
 Suite * http_dns_parser_test_suite(void) {
@@ -177,6 +177,7 @@ Suite * http_dns_parser_test_suite(void) {
 
     tcase_add_test(tc, http_dns_test_parser_init);
     tcase_add_test(tc, http_dns_test_parser_feed_success);
+    tcase_add_test(tc, http_dns_test_parser_consume);
     suite_add_tcase(s, tc);
     return s;
 }

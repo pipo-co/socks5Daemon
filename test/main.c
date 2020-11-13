@@ -50,6 +50,7 @@ typedef Suite *(*suiteSupplier)(void);
 #include "tests/requestUtilitiesTest.c"
 #include "tests/loggerTest.c"
 #include "tests/administrationTest.c"
+#include "tests/spoofingParserTest.c"
 // #include "tests/serverTest.c"
 
 
@@ -67,14 +68,14 @@ static const suiteSupplier suiteSuppliers[] = {
     selector_test_suite,
     request_parser_test_suite,
     request_test_suite,
-    request_success_test_suite,
-    request_error_test_suite,
+    // request_success_test_suite,
+    // request_error_test_suite,
     forwarding_test_suite,
     flush_closer_test_suite,
     flush_closy_test_suite,
     response_dns_parser_test_suite,
     http_dns_parser_test_suite,
-    base64_test_suite,
+    //base64_test_suite,
     doh_builder_test_suite,
     admin_request_parser_test_suite,
 };

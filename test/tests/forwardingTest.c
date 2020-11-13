@@ -1,4 +1,5 @@
 #include "states/forwarding/forwarding.c"
+#include <check.h>
 
 uint8_t forwardingDummyBuffer[] = {
     0x05, 0x01, 0x02

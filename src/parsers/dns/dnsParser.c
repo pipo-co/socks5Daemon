@@ -68,9 +68,20 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
         case RESPONSE_DNS_ANSWERS_LOW:
             
             p->totalAnswers += b;
-            p->addresses = calloc(p->totalAnswers, sizeof(struct IpAddress));
-            p->currentState = RESPONSE_DNS_AUTHORITY;
 
+            if(p->totalAnswers == 0){
+                p->currentState = RESPONSE_DNS_DONE;
+            }
+            else
+            {
+                p->addresses = calloc(p->totalAnswers, sizeof(struct IpAddress));
+                if(p->addresses == NULL){
+                    p->currentState = RESPONSE_DNS_ERROR;
+                }
+                else {
+                    p->currentState = RESPONSE_DNS_AUTHORITY;
+                }
+            }
         break;
         case RESPONSE_DNS_AUTHORITY:
             
@@ -274,12 +285,13 @@ enum ResponseDnsParserState response_dns_parser_feed(ResponseDnsParser *p, uint8
                     p->currentState = RESPONSE_DNS_ANSWERS_NAME_FIRST_BYTE;
                 }
                 else{
-                    IpAddress *auxAddresses = realloc(p->addresses, p->totalAnswers*sizeof(struct IpAddress));
-
-                    if(auxAddresses != NULL){
-                        p->addresses = auxAddresses;
-                    }
                     
+                    if(p->totalAnswers != 0){
+                        IpAddress *auxAddresses = realloc(p->addresses, p->totalAnswers*sizeof(struct IpAddress));
+                        if(auxAddresses != NULL){
+                            p->addresses = auxAddresses;
+                        }
+                    }
                     p->currentState = RESPONSE_DNS_DONE;
                 }
             }

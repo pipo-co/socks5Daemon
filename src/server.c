@@ -7,9 +7,6 @@
  *
  * Todas las conexiones entrantes se manejarán en éste hilo.
  *
- * Se descargará en otro hilos las operaciones bloqueantes (resolución de
- * DNS utilizando getaddrinfo), pero toda esa complejidad está oculta en
- * el selector.
  */
 
 #include <stdio.h>
@@ -111,9 +108,11 @@ int main(const int argc, char **argv) {
         if(generate_register_ipv6_socket(selector, &err_msg) != 0) {
 
             if(passiveSocketErrorCount == 0) {
+                fprintf(stderr, "Couldn't initilize IP4 passive socket\n");
                 perror(err_msg);
             }
             else {
+                fprintf(stderr, "Couldn't initilize ANY passive socket\n");
                 goto finally;
             }
         }
@@ -121,12 +120,14 @@ int main(const int argc, char **argv) {
     // -l 
     else if(inet_pton(AF_INET, args.socks_addr, &serverHandler.ipv4addr)) {
         if(generate_register_ipv4_socket(selector, &err_msg) != 0) {
+            fprintf(stderr, "Couldn't initilize ANY passive socket\n");
             goto finally;
         }
     } 
     
     else if (inet_pton(AF_INET6, args.socks_addr, &serverHandler.ipv6addr)) {
         if(generate_register_ipv6_socket(selector, &err_msg) != 0) {
+            fprintf(stderr, "Couldn't initilize ANY passive socket\n");
             goto finally;
         }
     } 
@@ -146,6 +147,7 @@ int main(const int argc, char **argv) {
     initialize_users();
 
     socks5_init(&args, DEFAULT_MAX_SESSION_INACTIVITY, selector);
+
     administration_init();
 
     cleanupInterval = DEFAULT_SELECT_TIMEOUT;
@@ -153,7 +155,9 @@ int main(const int argc, char **argv) {
     time_t lastFdCleanup = time(NULL);
 
     while(!done) {
+
         err_msg = NULL;
+
         ss = selector_select(selector);
 
         // Cleanup selector sockets every cleanupInterval seconds
@@ -162,13 +166,12 @@ int main(const int argc, char **argv) {
             lastFdCleanup = time(NULL);
         }
 
-        // statistics_print(); For logs every iteration
-
         if(ss != SELECTOR_SUCCESS) {
             err_msg = "serving";
             goto finally;
         }
     }
+
     if(err_msg == NULL) {
         err_msg = "closing";
     }
@@ -186,9 +189,11 @@ finally:
         perror(err_msg);
         ret = 1;
     }
+
     if(selector != NULL) {
         selector_destroy(selector);
     }
+    
     selector_close();
 
     user_handler_destroy();
@@ -200,7 +205,7 @@ finally:
     if(serverHandler.ipv6Fd >= 0) {
         close(serverHandler.ipv6Fd);
     }
-    statistics_print();
+
     return ret;
 }
 
