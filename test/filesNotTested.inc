@@ -1,3 +1,20 @@
 FILES_NOT_TESTED=
 
-FILES_NOT_TESTED += server.c
+FILES_NOT_TESTED += ../src/states/authRequest/authRequest.c
+FILES_NOT_TESTED += ../src/states/ipConnect/ipConnect.c
+FILES_NOT_TESTED += ../src/socks5/socks5.c
+FILES_NOT_TESTED += ../src/stateMachine/selectorStateMachine.c
+FILES_NOT_TESTED += ../src/socks5/stateMachineBuilder/stateMachineBuilder.c
+FILES_NOT_TESTED += ../src/states/dnsConnect/dnsConnect.c
+FILES_NOT_TESTED += ../src/states/responseDns/responseDns.c
+FILES_NOT_TESTED += ../src/states/generateDnsQuery/generateDnsQuery.c
+FILES_NOT_TESTED += ../src/argsHandler/argsHandler.c
+FILES_NOT_TESTED += ../src/userHandler/userHandler.c            # Should be tested
+FILES_NOT_TESTED += ../src/statistics/statistics.c
+FILES_NOT_TESTED += ../src/parsers/adminRequestParser/adminRequestQueryHandlers.c
+FILES_NOT_TESTED += ../src/parsers/adminRequestParser/adminRequestModifierHandlers.c
+FILES_NOT_TESTED += ../src/parsers/adminRequestParser/adminRequestErrorHandlers.c
+FILES_NOT_TESTED += ../src/states/stateUtilities/request/requestUtilities.c
+FILES_NOT_TESTED += ../src/socks5/logger/logger.c
+FILES_NOT_TESTED += ../src/socks5/administration/administration.c
+FILES_NOT_TESTED += ../src/parsers/spoofing/spoofingParser.c    # Should be tested

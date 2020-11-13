@@ -5,13 +5,13 @@ EXEC=test
 
 SOURCES=main.c
 
-CFLAGS += -lcheck -lrt -lpthread -lm -lsubunit
+CFLAGS += -I../src -lcheck -lrt -lpthread -lm -lsubunit
 
 FILES_NOT_TESTED_OBJECTS = $(patsubst %.c, %.o, $(FILES_NOT_TESTED))
 
 all: compile run clean
 
-compile: $(SOURCES) $(FILES_NOT_TESTED_OBJECTS)
+compile: $(SOURCES) $(FILES_NOT_TESTED)
 	$(CC) $(CFLAGS) $^ -o $(EXEC) $(LIBRARIES) 
 
 run:
