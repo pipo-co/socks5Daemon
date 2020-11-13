@@ -94,4 +94,3 @@ inline unsigned
 selector_state_machine_state(SSM ssm) {
     return ssm->current;
 }
-

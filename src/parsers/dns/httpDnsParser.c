@@ -164,4 +164,3 @@ bool http_dns_parser_is_done(enum HttpDnsParserState state, bool *errored) {
         break;
     }
 }
-

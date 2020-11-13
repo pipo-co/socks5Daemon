@@ -150,4 +150,3 @@ static AuthRequestParserState auth_request_state_password(AuthRequestParser *p, 
 
     return AUTH_REQUEST_PARSER_PASSWORD;
 }
-

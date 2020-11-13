@@ -621,4 +621,3 @@ static SpoofingParserState spoofing_state_http_credential_confirmation(SpoofingP
         return parser->currentState;
     }
 }
-
