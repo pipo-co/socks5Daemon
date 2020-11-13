@@ -86,7 +86,7 @@ static unsigned dns_connection_handling (SelectorEvent * event){
         session->socksHeader.requestHeader.rep = GENERAL_SOCKS_SERVER_FAILURE;
         return REQUEST_ERROR;
     }
-    strncpy(session->clientInfo.connectedDomain, (char *) session->socksHeader.requestHeader.parser.address.domainName, UINT8_STR_MAX_LENGTH - 1);
+    strncpy(session->clientInfo.connectedDomain, (char *) session->socksHeader.requestHeader.parser.address.domainName, UINT8_STR_MAX_LENGTH);
 
 
     // Verificar la IP del servidor DoH. (IPv4 o IPv6)

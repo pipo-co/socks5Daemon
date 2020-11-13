@@ -16,11 +16,6 @@ enum string_cmp_event_types {
     /** NO hay posibilidades de que el string sea igual */
     STRING_CMP_NEQ,
 };
-
-const char *
-parser_utils_strcmpi_event(const enum string_cmp_event_types type);
-
-
 /*
  * Crea un parser que verifica que los caracteres recibidos forment el texto
  * descripto por `s'.

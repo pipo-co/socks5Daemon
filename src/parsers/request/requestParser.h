@@ -8,8 +8,6 @@
 #include "buffer/buffer.h"
 #include "socksDefs.h"
 
-#define REQUEST_ADDRESS_MAX_LENGTH (DOMAIN_NAME_MAX_LENGTH + 1)
-
 // Valid Commands
 #define REQUEST_PARSER_COMMAND_CONNECT 0x01
 
@@ -31,7 +29,7 @@ typedef enum RequestParserState {
 
 typedef union RequestParserAddress {
 
-    uint8_t domainName[REQUEST_ADDRESS_MAX_LENGTH];
+    uint8_t domainName[DOMAIN_NAME_MAX_LENGTH];
     struct in_addr ipv4; 
     struct in6_addr ipv6; 
 } RequestParserAddress;
