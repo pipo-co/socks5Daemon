@@ -105,6 +105,7 @@ START_TEST (request_error_test_core_on_write_success) {
 
     ck_assert_uint_eq(state, FINISH);
 
+    free(user);
     selector_destroy(selector);
     free(key);
     free(socks5_p);
