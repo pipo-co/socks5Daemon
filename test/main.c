@@ -53,7 +53,7 @@ static const suiteSupplier suiteSuppliers[] = {
     flush_closy_test_suite,
     response_dns_parser_test_suite,
     http_dns_parser_test_suite,
-    //base64_test_suite,
+    base64_test_suite,
     doh_builder_test_suite,
     admin_request_parser_test_suite,
     auth_request_parser_test_suite,

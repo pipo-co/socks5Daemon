@@ -1,5 +1,7 @@
 #include "states/requestSuccessful/requestSuccessful.c"
 
+#include <check.h>
+
 START_TEST (request_successful_test_core_request_marshall_incomplete) {
     Buffer buff;
     uint8_t *dummyBuffer = malloc(4*sizeof(*dummyBuffer));
