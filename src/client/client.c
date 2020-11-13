@@ -243,7 +243,7 @@ static void interactive_client(int fd) {
 				print_help();
 			}
 		}
-		else if(isUint){
+		else if(isUint && command < COMMAND_COUNT){
 			printf("\n----------------------------------------\n");
 			printf("Selected command: %s\n", descriptions[command]);
 			if(controllers[command].sender(fd)){

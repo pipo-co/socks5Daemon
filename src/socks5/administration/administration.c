@@ -92,13 +92,13 @@ static AdministrationSessionP admin_session_init(void) {
         return NULL;
     }
 
-    uint8_t *inputBuffer = malloc(DEFAULT_INPUT_BUFFER_SIZE*sizeof(*inputBuffer));
+    uint8_t *inputBuffer = malloc(sessionInputBufferSize);
     if(inputBuffer == NULL){
         free(adminSession);
         return NULL;
     }
         
-    uint8_t *outputBuffer = malloc(DEFAULT_OUTPUT_BUFFER_SIZE*sizeof(*outputBuffer));
+    uint8_t *outputBuffer = malloc(sessionOutputBufferSize);
     if(outputBuffer == NULL){
         free(adminSession);
         free(inputBuffer);
