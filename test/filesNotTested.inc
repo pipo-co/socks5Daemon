@@ -1,0 +1,3 @@
+FILES_NOT_TESTED=
+
+FILES_NOT_TESTED += server.c
