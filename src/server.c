@@ -323,12 +323,13 @@ static int generate_administration_socket(FdSelector selector, char **errorMessa
     }
 
     
-    fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
+    fd = socket(admin->sa_family, SOCK_STREAM, IPPROTO_SCTP);
     if(fd == -1) {
         *errorMessage = "Unable to create socket";
         return -1;
     }
 
+    selector_fd_set_nio(fd);
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
 
     ret = bind(fd, admin, adminLen);
@@ -366,6 +367,7 @@ static int generate_new_socket(struct sockaddr *addr, socklen_t addrLen,char ** 
 
     // man 7 ip. no importa reportar nada si falla.
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
+    selector_fd_set_nio(fd);
 
     if(addr->sa_family == AF_INET6) {
         setsockopt(fd, SOL_IPV6, IPV6_V6ONLY, &(int){ 1 }, sizeof(int));
