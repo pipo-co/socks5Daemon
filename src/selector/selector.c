@@ -325,10 +325,16 @@ selector_destroy(FdSelector s) {
                 }
             }
             pthread_mutex_destroy(&s->resolution_mutex);
-            for(struct BlockingJob *j = s->resolution_jobs; j != NULL;
-                j = j->next) {
-                free(j);
+
+            struct BlockingJob *j = s->resolution_jobs;
+
+            while(j != NULL) {
+                struct BlockingJob *aux = j;
+                
+                j = j->next;
+                free(aux);
             }
+
             free(s->fds);
             s->fds     = NULL;
             s->fd_size = 0;
@@ -558,10 +564,10 @@ handle_block_notifications(FdSelector s) {
         .s = s,
     };
     pthread_mutex_lock(&s->resolution_mutex);
-    //Hace free y despues pregunta por el estado de j, pvs studio lo detecta como error
-    for(struct BlockingJob *j = s->resolution_jobs;
-        j != NULL ;
-        j  = j->next) {
+
+    struct BlockingJob *j = s->resolution_jobs;
+
+    while(j != NULL) {
 
         struct Item *item = s->fds + j->fd;
         if(ITEM_USED(item)) {
@@ -570,7 +576,9 @@ handle_block_notifications(FdSelector s) {
             item->handler->handle_block(&key);
         }
 
-        free(j);
+        struct BlockingJob *aux = j;
+        j = j->next;
+        free(aux);
     }
     s->resolution_jobs = 0;
     pthread_mutex_unlock(&s->resolution_mutex);
