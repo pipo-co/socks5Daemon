@@ -1,10 +1,8 @@
 #ifndef DNS_PARSER_H_237cf11b918a97e16402b064e7e5af5cd7f70661
 #define DNS_PARSER_H_237cf11b918a97e16402b064e7e5af5cd7f70661
 
-#include <stdlib.h>
-#include <stdint.h>
 #include <stdbool.h>
-#include <arpa/inet.h>
+#include <netinet/in.h>     // in_addr
 
 #include "buffer/buffer.h"
 #include "dnsDefs.h"

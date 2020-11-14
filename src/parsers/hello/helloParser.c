@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "helloParser.h"
 
 void hello_parser_init(HelloParser *p, bool (*on_auth_method)(HelloParser *p, uint8_t currentMethod), void * data) {

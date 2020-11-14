@@ -4,6 +4,7 @@
 #include "userHandler/userHandler.h"
 #include "statistics/statistics.h"
 #include "socks5/socks5.h"
+#include <stdlib.h>
 
 static void admin_request_parser_list_users_free(AdminResponseBuilderContainer *container);
 

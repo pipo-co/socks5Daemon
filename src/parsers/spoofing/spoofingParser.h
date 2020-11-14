@@ -2,8 +2,7 @@
 #define SPOOFING_PARSER_H_237cf11b918a97e16402b064e7e5af5cd7f70661
 
 #include "utilities/base64/base64.h"
-#include "reference/parser_utils/parser_utils.h"
-
+#include "reference/parser/parser.h"
 
 /*
 * HTTP 1.0 supported
@@ -54,7 +53,6 @@ typedef enum SpoofingProtocol {
     SPOOF_HTTP,
 } SpoofingProtocol;
 
-
 typedef struct SpoofingParser {
 
     SpoofingParserState currentState;
@@ -82,7 +80,6 @@ typedef struct SpoofingParser {
     bool ignoreSpaces;
 
 } SpoofingParser;
-
 
 void spoofing_parser_init(SpoofingParser *parser);
 

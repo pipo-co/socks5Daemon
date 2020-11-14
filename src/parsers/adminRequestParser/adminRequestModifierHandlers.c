@@ -5,7 +5,7 @@
 #include "userHandler/userHandler.h"
 #include "socks5/socks5.h"
 
-#include <string.h>
+#include <string.h>     // strcmp
 
 
 void admin_request_parser_add_user(uint8_t type, uint8_t cmd, AdminRequestParserArgs *args, AdminResponseBuilderContainer *outContainer) {

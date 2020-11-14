@@ -1,7 +1,5 @@
 #include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
+#include <string.h>     // memset, memcpy
 
 #include "parser.h"
 

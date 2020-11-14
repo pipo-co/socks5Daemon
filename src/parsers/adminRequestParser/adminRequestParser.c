@@ -6,8 +6,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include <string.h>     // memset
 
 static AdminRequestParserState admin_request_parser_get_arg_state_modifications(AdminRequestParserModification m);
 static AdminRequestParserState admin_request_parser_get_arg_state_queries(AdminRequestParserQuery q);

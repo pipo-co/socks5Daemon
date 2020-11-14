@@ -1,8 +1,6 @@
 #ifndef DNS_DEFS_H_00180a6350a1fbe79f133adf0a96eb6685c242b6
 #define DNS_DEFS_H_00180a6350a1fbe79f133adf0a96eb6685c242b6
 
-//#define STATUS_CODE 3
-
 typedef enum DnsAddressTypes { 
     DNS_IP4_ADD_TYPE            = 0x01, 
     DNS_IP6_ADD_TYPE            = 0x04,

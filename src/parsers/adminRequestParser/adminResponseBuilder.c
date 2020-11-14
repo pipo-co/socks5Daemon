@@ -1,6 +1,6 @@
 #include "adminResponseBuilder.h"
 
-#include <string.h>
+#include <string.h>      // strlen
 
 bool admin_response_builder_uint8(AdminResponseBuilderContainer * adminResponse, Buffer * b){
     uint16_t * currByte = &adminResponse->currByte;

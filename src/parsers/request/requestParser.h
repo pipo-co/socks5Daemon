@@ -56,7 +56,6 @@ typedef struct RequestParser {
 
 } RequestParser;
 
-
 // Assumes pre-allocation
 void request_parser_init(RequestParser *p);
 

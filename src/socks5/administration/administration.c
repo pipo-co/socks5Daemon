@@ -1,6 +1,13 @@
 #include "administration.h"
 #include "parsers/authRequest/authRequestParser.h"
-#include "parsers/adminRequestParser/adminRequestParser.h"
+#include "socksDefs.h"
+
+#include <stdlib.h>     // free
+#include <errno.h>
+#include <string.h>     // strcmp
+#include <sys/types.h>  // recv, send
+#include <sys/socket.h> // recv, send
+#include <arpa/inet.h>  // sockaddr
 
 #define DEFAULT_INPUT_BUFFER_SIZE 512
 #define DEFAULT_OUTPUT_BUFFER_SIZE 512

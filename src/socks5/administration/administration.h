@@ -1,28 +1,10 @@
 #ifndef ADMINISTRATION_H_wL7YxN65ZHqKGvCPrNbPtMJgL8B
 #define ADMINISTRATION_H_wL7YxN65ZHqKGvCPrNbPtMJgL8B
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <libgen.h>
-#include <errno.h>
-
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-#include "parsers/adminRequestParser/adminRequestParser.h"
-#include "parsers/adminRequestParser/adminResponseBuilder.h"
-#include "argsHandler/argsHandler.h"
 #include "selector/selector.h"
-#include "netutils/netutils.h"
-#include "socks5/socks5.h"
 #include "socks5/abstractSession.h"
-
-
-
+#include "parsers/adminRequestParser/adminRequestParser.h"
+#include "parsers/authRequest/authRequestParser.h"
 /**
  *  administration.c -- clase encargada de manejar conexiones que usen el protocolo Pipo
  * 
@@ -37,7 +19,6 @@
  *  correspondientes al resultado
  * 
  **/
-
 
 /* Estados en los que puede encontrarse una conexion */
 typedef enum AdminStateEnum {
@@ -110,7 +91,6 @@ void administration_init(void);
 /* encargado de aceptar conexiones para ipv4, generarles su sesion y cargarlos
 en el selector */
 void admin_passive_accept_ipv4(SelectorEvent *event);
-
 
 /* encargado de aceptar conexiones para ipv6, generarles su sesion y cargarlos
 en el selector */

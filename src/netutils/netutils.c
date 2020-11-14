@@ -1,16 +1,15 @@
 
 #include <stdbool.h>
 #include <errno.h>
-#include <string.h>
-#include <stdio.h>
-#include <fcntl.h>
+#include <string.h>         // memset, memcpy
+#include <stdio.h>          // strncpy
+#include <fcntl.h>          // fcntl
 
-#include <unistd.h>
-#include <arpa/inet.h>
+#include <arpa/inet.h>      // inet_pton, inet_ntop
+#include <netinet/tcp.h>    // TCP_SYNCNT
 
 #include "netutils.h"
 
-#include <netinet/tcp.h>
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 

@@ -1,14 +1,11 @@
 #ifndef HTTP_DNS_PARSER_H_237cf11b918a97e16402b064e7e5af5cd7f70661
 #define HTTP_DNS_PARSER_H_237cf11b918a97e16402b064e7e5af5cd7f70661
 
-#include <stdlib.h>
-#include <stdint.h>
 #include <stdbool.h>
-#include <arpa/inet.h>
+#include <stdint.h>
 
 #include "buffer/buffer.h"
 #include "reference/parser/parser.h"
-#include "reference/parser_utils/parser_utils.h"
 #include "dnsDefs.h"
 
 

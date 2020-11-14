@@ -1,6 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <string.h>     // memset
 
 #include "requestParser.h"
 
@@ -29,7 +27,6 @@ enum RequestParserState request_parser_feed(RequestParser *p, uint8_t b) {
         break;
 
         case REQUEST_PARSER_RESERVED:
-            //TODO se hace algo si esta no reserved
             p->currentState = REQUEST_PARSER_ADD_TYPE;
         break;
 

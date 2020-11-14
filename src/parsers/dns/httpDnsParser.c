@@ -1,8 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "httpDnsParser.h"
+#include "reference/parser_utils/parser_utils.h"
 
 void http_dns_parser_init(HttpDnsParser *p) {
 

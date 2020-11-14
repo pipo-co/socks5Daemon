@@ -1,8 +1,8 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <arpa/inet.h>
+#include <stdio.h>      // snprintf
+#include <stdlib.h>     // malloc
+#include <string.h>     // memcpy, memset
+#include <arpa/inet.h>  // htons
 
 #include "utilities/base64/base64.h"
 #include "parsers/dns/dohBuilder.h"
