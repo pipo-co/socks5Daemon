@@ -30,10 +30,11 @@ Para la ejecucion de los testeos de unidad implementados es necesario tener la l
 
 ## Ejecucion
 
-Para la ejecucion del servido basta con correrlo sin utilizar ningun parametro. De todas formas, el ejecutable cuenta con una lista de parametros para configurar opciones vinculadas a la direccion y puertos de binding, ajustes para el servidor DoH a utilizar, entre otros. Todos estos parametros puede ser encontrados en el archivo man `socks5d.8` o ejecuando el servidor con de la siguiente forma `./socks5d -h`.
+Para la ejecucion del servidor basta con correrlo sin utilizar ningun parametro. De todas formas, el ejecutable cuenta con una lista de parametros para configurar opciones vinculadas a la direccion y puertos de binding, ajustes para el servidor DoH a utilizar, entre otros. Todos estos parametros puede ser encontrados en el archivo man `socks5d.8` o ejecuando el servidor con de la siguiente forma `./socks5d -h`.
 
 ## Informacion extra
 
 En el archivo `informe.pdf` se puede encontrar un desarrollo de las decisiones de diseño, problemas encontrados, pruebas realizas y una descripcion un poco mas detallada del proyecto.
-Ademas, en el archivo `pipoProtocol.txt` se puede encontrar una descripcion detalla del protocolo de administracion diseñado e implementado. 
+Ademas, en el archivo `pipoProtocol.txt` se puede encontrar una descripcion en profundidad del
+protocolo de administracion diseñado e implementado. 
 Por ultimo, en el archivo `enunciado.txt` se encuentra la consiga del trabajo realizado.
