@@ -1,4 +1,4 @@
-
+#include <stdlib.h> //malloc
 #include "userHandler.h"
 
 #include "utilities/khash.h"

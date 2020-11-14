@@ -1,14 +1,10 @@
 #include "request.h"
-#include <errno.h>
 
+#include <stdlib.h> //malloc
 #include <stdint.h>
 #include <stdbool.h>
 #include <errno.h>
-#include <string.h>
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#include <string.h> 
 #include <arpa/inet.h>
 
 #include "buffer/buffer.h"

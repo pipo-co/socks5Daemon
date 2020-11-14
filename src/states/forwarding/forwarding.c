@@ -38,7 +38,7 @@ static unsigned forwarding_on_read(SelectorEvent *event) {
 
         SpoofingParserSenderType senderType;
         Buffer *spoofingBuffer;
-        size_t nbytes; // Not used
+        size_t nbytes;
 
         if(event->fd == session->clientConnection.fd) {
             senderType = SPOOF_CLIENT;

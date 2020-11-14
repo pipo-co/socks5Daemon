@@ -10,7 +10,6 @@
 #include "states/request/request.h"                                 // REQUEST
 #include "states/errorStates/requestError/requestError.h"           // REQUEST_ERROR
 #include "states/ipConnect/ipConnect.h"                             // IP_CONNECT
-// #include DNS
 #include "states/generateDnsQuery/generateDnsQuery.h"               // GENERATE_DNS_QUERY
 #include "states/responseDns/responseDns.h"                         // RESPONSE_DNS
 #include "states/dnsConnect/dnsConnect.h"                           // DNS_CONNECT
@@ -50,7 +49,6 @@ void socks5_session_state_machine_builder_init() {
     sessionStateDefinitions[REQUEST]                    = request_state_definition_supplier();
     sessionStateDefinitions[REQUEST_ERROR]              = request_error_state_definition_supplier();
     sessionStateDefinitions[IP_CONNECT]                 = ip_connect_state_definition_supplier();
-    // sessionStateDefinitions[DNS]                     = dns_state_definition_supplier();
     sessionStateDefinitions[GENERATE_DNS_QUERY]         = generate_dns_query_state_definition_supplier();
     sessionStateDefinitions[RESPONSE_DNS]               = response_dns_state_definition_supplier();
     sessionStateDefinitions[DNS_CONNECT]                = dns_connect_state_definition_supplier();

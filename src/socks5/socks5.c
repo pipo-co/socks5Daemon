@@ -1,8 +1,7 @@
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
+#include <stdlib.h> // calloc
+#include <string.h> // memcpy
 
 #include <errno.h>
 #include <unistd.h>
