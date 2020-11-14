@@ -4,18 +4,12 @@
 #include "client/clientDefs.h"
 #include "client/clientUtils.h"
 
-#include <arpa/inet.h>
-#include <netinet/in.h> 
-#include <netdb.h> 
-#include <stdio.h> 
-#include <stdlib.h> 
-#include <stdint.h> 
-#include <string.h> 
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <errno.h>
+#include <stdio.h> 		// fgets, printf
+#include <errno.h>		
+#include <string.h> 	// memset, memc
+#include <stdint.h> 	
+#include <stdlib.h> 	//atoi, exit
+#include <arpa/inet.h>	// recv, send
 
 
 static int new_ipv6_connection(struct in6_addr ip, in_port_t port) ;
@@ -32,10 +26,9 @@ int main(int argc, char *argv[]) {
 	int fd;
 	char * ip = "127.0.0.1";
 	uint16_t port = 8080;
-
 	if(argc == 3) {
-		ip = argv[2];
-		port = atoi(argv[3]);
+		ip = argv[1];
+		port = atol(argv[2]);
 	}
 
 	struct in_addr addr4;
