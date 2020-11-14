@@ -31,9 +31,6 @@ uint8_t request_parser_test_input_unsupported_address_type[] = {
 };
 
 
-// TODO: test IP4 success case and all error cases
-
-
 START_TEST (request_parser_test_domain_name_feed) {
 
     uint8_t *input = request_parser_test_input_domain_success;

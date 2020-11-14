@@ -621,7 +621,6 @@ void socks5_selector_cleanup(void) {
     selector_fd_cleanup(selector, socks5_cleanup_session, (void*) &maxSessionInactivity);
 }
 
-// TODO: Don't clean up pending connections to servers (they may take a long time)
 static void socks5_cleanup_session(SelectorEvent *event, void *maxSessionInactivityParam) {
 
     // Socket pasivo

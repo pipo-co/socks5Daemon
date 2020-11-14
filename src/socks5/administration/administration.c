@@ -147,7 +147,6 @@ static void admin_on_read_handler(SelectorEvent *event){
 
     // Connection Was Closed
     else if(readBytes == 0){      
-        //TODO ver el destroy de admin_method
         admin_close_session(event);  
     }
         

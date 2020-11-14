@@ -98,7 +98,6 @@ void log_credential_spoofing(SessionHandlerP session) {
     char printBuffer[CREDENTIAL_SPOOFING_LOG_MAX_SIZE];
     int logLen;
 
-    //TODO tuve que cambiar esta
     // dateSize (RU_DATE_SIZE) + user (RU_CREDENTIAL_MAX_SIZE) + protocol (4) + printableServerAddress (RU_DOMAIN_NAME_MAX_LENGTH + 1) + username (RU_CREDENTIAL_MAX_SIZE) + password (RU_CREDENTIAL_MAX_SIZE)
     logLen = snprintf(printBuffer, CREDENTIAL_SPOOFING_LOG_MAX_SIZE, "%s\t%s\tP\t%s\t%s\t%s\t%s\t%s\n", date, session->clientInfo.user->username, protocol, printableServerAddress, serverPort,username, password);
 

@@ -588,7 +588,6 @@ SelectorStatus
 selector_notify_block(FdSelector  s, const int fd) {
     SelectorStatus ret = SELECTOR_SUCCESS;
 
-    // TODO(juan): usar un pool
     struct BlockingJob *job = malloc(sizeof(*job));
     if(job == NULL) {
         ret = SELECTOR_ENOMEM;
