@@ -1,7 +1,6 @@
 #include "authMethodAnnouncement.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "userHandler/userHandler.h"
 

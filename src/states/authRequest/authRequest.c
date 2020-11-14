@@ -1,6 +1,6 @@
 #include "authRequest.h"
 
-#include <string.h>
+#include <string.h> //strcmp
 
 #include "parsers/authRequest/authRequestParser.h"
 

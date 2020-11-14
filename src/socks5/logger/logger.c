@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <errno.h>
-#include <string.h>
+#include <string.h> //memcpy
 
 #include "buffer/buffer.h"
 

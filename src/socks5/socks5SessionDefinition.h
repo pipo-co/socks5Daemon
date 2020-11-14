@@ -2,7 +2,6 @@
 #define SOCKS5_SESSION_DEFINITION_H_a7f0b7011d5bc49decb646a7852c4531c07e17b5
 
 #include <stdint.h>
-#include <arpa/inet.h>
 #include <time.h>
 
 #include "selector/selector.h"
