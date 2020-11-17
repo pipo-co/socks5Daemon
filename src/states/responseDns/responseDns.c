@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include "buffer/buffer.h"
 #include "socks5/socks5.h"

@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <errno.h>
+#include <arpa/inet.h>
 
 #include "netutils/netutils.h"
 #include "states/stateUtilities/request/requestUtilities.h"

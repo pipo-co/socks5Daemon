@@ -30,6 +30,8 @@
 #include "socks5/administration/administration.h"
 #include "userHandler/userHandler.h"
 #include "statistics/statistics.h"
+#include <arpa/inet.h>
+
 
 #define SERVER_BACKLOG 20
 #define SELECTOR_MAX_ENTRIES 1024

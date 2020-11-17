@@ -1,6 +1,7 @@
 #include "dnsConnect.h"
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "socks5/socks5.h"
 #include "netutils/netutils.h"

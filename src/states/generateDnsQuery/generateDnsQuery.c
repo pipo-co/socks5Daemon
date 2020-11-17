@@ -2,7 +2,7 @@
 #include "parsers/dns/dohBuilder.h"
 #include "socks5/socks5.h"
 #include "states/stateUtilities/request/requestUtilities.h"
-
+#include <stdlib.h>
 static void generate_dns_query_on_arrival(SelectorEvent *event);
 static unsigned generate_dns_query_on_write(SelectorEvent *event);
 
